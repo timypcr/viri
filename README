@@ -1,0 +1,10 @@
+viri is a distributed system for easy deployment and execution of Python
+scripts.
+
+To build a viri infrastructure, you need to install the viri daemon
+(virid) in every host, including your workstation, and in the later
+you also need to install the viri command line utility (viric). From
+viric, you can send instructions to some or all hosts in your
+infrastructure, to run some Python script that you just have in your
+local host.
+
