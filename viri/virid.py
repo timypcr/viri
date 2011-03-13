@@ -4,6 +4,7 @@ import time
 import logging
 from optparse import OptionParser
 import settings
+from rpcserver import RPCServer
 
 LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
 
@@ -25,10 +26,8 @@ class Virid:
             settings.APP_NAME,
             self.port)
         )
+        RPCServer(self.port, settings.TASK_DIR)
 
-        while True:
-            time.sleep(1)
-        
     def stop(self):
         logging.info('Stopped %s daemon' % settings.APP_NAME)
 

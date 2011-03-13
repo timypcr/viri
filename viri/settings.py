@@ -2,6 +2,7 @@ import logging
 
 PORT = 6808
 PID_FILENAME = '/var/run/virid.pid'
+TASK_DIR = 'tasks'
 LOG_FILENAME = None
 LOG_LEVEL = logging.DEBUG
 LOG_FORMAT = '%(levelname)s::%(asctime)s::%(message)s'
