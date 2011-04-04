@@ -1,5 +1,6 @@
 import sys
 import os
+import binascii
 import xmlrpc.client
 from optparse import OptionParser
 import settings
@@ -11,8 +12,50 @@ COMMANDS = {
     'send_data': 'FILENAME',
     'exec_task': 'TASK'}
 
+
 class UsageError(Exception):
     pass
+
+
+class RSAError(Exception):
+    pass
+
+
+class SignRSA:
+    def __init__(self, key_filename):
+        self.key = self._load_key(key_filename)
+
+    def _load_key(self, filename):
+        START_LINE = '-----BEGIN RSA PRIVATE KEY-----'
+        END_LINE = '-----END RSA PRIVATE KEY-----'
+        BEFORE_KEY = -1
+        IN_KEY = 0
+        AFTER_KEY = 1
+
+        if not os.path.isfile(filename):
+            raise RSAError('File not found: %s' % filename)
+
+        position = BEFORE_KEY
+        key = ''
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                if position == IN_KEY:
+                    if END_LINE in line:
+                        position = AFTER_KEY
+                        break
+                    else:
+                        key += line.strip()
+                elif position == BEFORE_KEY and START_LINE in line:
+                    position = IN_KEY
+
+        if position == AFTER_KEY:
+            return binascii.a2b_base64(bytes(key, 'ascii'))
+        else:
+            raise RSAError(
+                'Invalid key file %s, "%s" expected but not found' % (
+                    filename,
+                    START_LINE if position == BEFORE_KEY else END_LINE))
+
 
 class ViriClient:
     def __init__(self, host, port, **kwargs):
