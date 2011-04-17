@@ -14,7 +14,7 @@ class ViriDaemon:
         logging.basicConfig(
             filename=self.logfile,
             format=self.logformat,
-            level=self.loglevel)
+            level=getattr(logging, self.loglevel))
 
     def start(self):
         logging.info('Started %s daemon on port %s' % (
