@@ -3,9 +3,8 @@ import os
 import datetime
 import logging
 import traceback
-import xmlrpc.server
-import xmlrpc.client
 from hashlib import sha1
+from securexmlrpc import SimpleXMLRPCServerTLS
 
 SUCCESS = 0
 ERROR = 1
@@ -48,7 +47,7 @@ class RPCServer:
         """Starts the XML-RPC server, and registers all public
         methods.
         """
-        server = xmlrpc.server.SimpleXMLRPCServer(
+        server = SimpleXMLRPCServerTLS(
             ('', self.port),
             logRequests=self.log_requests)
         for method in RPC_METHODS:

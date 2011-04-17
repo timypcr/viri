@@ -3,6 +3,7 @@ import os
 import xmlrpc.client
 from optparse import OptionParser
 import settings
+from securexmlrpc import TransportTLS
 
 BASE_USAGE = 'Usage: %prog [OPTIONS]'
 COMMANDS = {
@@ -17,7 +18,8 @@ class UsageError(Exception):
 
 class ViriClient:
     def __init__(self, host, port, **kwargs):
-        self.server = xmlrpc.client.ServerProxy('http://%s:%s/' % (host, port))
+        self.server = xmlrpc.client.ServerProxy(
+            'https://%s:%s/' % (host, port), transport=TransportTLS(use_datetime=False))
 
     def _parse_result(self, result):
         (code, msg) = result.split(' ', 1)
