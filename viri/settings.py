@@ -2,6 +2,7 @@ from logging import DEBUG
 
 PORT = 6808
 PID_FILENAME = '/var/run/virid.pid'
+CERTIFICATE_FILENAME = 'keys/virid.cert'
 TASK_DIR = 'tasks'
 DATA_DIR = 'data'
 LOG_FILENAME = None

@@ -15,12 +15,13 @@ except ImportError:
 PROTOCOL = ssl.PROTOCOL_TLSv1
 
 class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
-    def __init__(self, addr, requestHandler=SimpleXMLRPCRequestHandler,
+    def __init__(self, addr, certfile, requestHandler=SimpleXMLRPCRequestHandler,
                  logRequests=True, allow_none=False, encoding=None, bind_and_activate=True):
         """Overriding __init__ method of the SimpleXMLRPCServer
 
-        The method is an exact copy, except the TCPServer __init__
-        call, which is rewritten using TLS
+        The method is an exact copy, except for the TCPServer __init__
+        call, which is rewritten using TLS, and the certfile argument
+        which is required for TLS
         """
         self.logRequests = logRequests
 
@@ -45,7 +46,7 @@ class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
         self.socket = ssl.wrap_socket(
             socket.socket(self.address_family, self.socket_type),
             server_side=True,
-            certfile='cert.pem',
+            certfile=certfile,
             cert_reqs=ssl.CERT_NONE,
             ssl_version=PROTOCOL,
             )
@@ -92,9 +93,19 @@ class HTTPConnectionTLS(HTTPSConnection):
 
 
 class TransportTLS(Transport):
+    def __init__(self, key_file, cert_file, *args, **kwargs):
+        self.key_file = key_file
+        self.cert_file = cert_file
+        super(TransportTLS, self).__init__(*args, **kwargs)
+
     def send_request(self, host, handler, request_body, debug):
         host, extra_headers, x509 = self.get_host_info(host)
-        connection = HTTPConnectionTLS(host, None, **(x509 or {}))
+        connection = HTTPConnectionTLS(
+            host,
+            None,
+            self.key_file,
+            self.cert_file,
+            **(x509 or {}))
         if debug:
             connection.set_debuglevel(1)
         headers = {}

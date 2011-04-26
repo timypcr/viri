@@ -17,9 +17,13 @@ class UsageError(Exception):
     pass
 
 class ViriClient:
-    def __init__(self, host, port, **kwargs):
+    def __init__(self, host, port, keyfile, certfile, **kwargs):
         self.server = xmlrpc.client.ServerProxy(
-            'https://%s:%s/' % (host, port), transport=TransportTLS(use_datetime=False))
+            'https://%s:%s/' % (host, port),
+            transport=TransportTLS(
+                keyfile,
+                certfile,
+                use_datetime=False))
 
     def _parse_result(self, result):
         (code, msg) = result.split(' ', 1)
@@ -75,6 +79,10 @@ if __name__ == '__main__':
         help='destination host', default='localhost')
     parser.add_option('-p', '--port', dest='port',
         help='destination port', type='int', default=6808)
+    parser.add_option('-k', '--keyfile', dest='keyfile',
+        help='TLS key', default='keys/viric.key')
+    parser.add_option('-c', '--certfile', dest='certfile',
+        help='TLS certificate', default='keys/viric.cert')
     parser.add_option('-o', '--overwrite', dest='overwrite',
         help='destination port', action='store_true', default=False)
     (options, args) = parser.parse_args()

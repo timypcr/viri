@@ -1,3 +1,5 @@
+import sys
+import os
 import logging
 from optparse import OptionParser
 import settings
@@ -6,8 +8,12 @@ from rpcserver import RPCServer
 LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
 
 class ViriDaemon:
-    def __init__(self, port, logfile, loglevel, logformat):
+    def __init__(self, port, certfile, logfile, loglevel, logformat):
         self.port = port or settings.PORT
+        self.certfile = certfile or settings.CERTIFICATE_FILENAME
+        if not os.path.isfile(self.certfile):
+            sys.stderr.write('Invalid certificate file %s' % self.certfile)
+            sys.exit(1)
         self.logfile = logfile or settings.LOG_FILENAME
         self.loglevel = loglevel or settings.LOG_LEVEL
         self.logformat = logformat or settings.LOG_FORMAT
@@ -23,6 +29,7 @@ class ViriDaemon:
         )
         self.server = RPCServer(
             self.port,
+            self.certfile,
             settings.TASK_DIR,
             settings.DATA_DIR,
             settings.LOG_REQUESTS)
@@ -38,6 +45,8 @@ if __name__ == '__main__':
         version=settings.APP_VERSION)
     parser.add_option('-p', '--port', dest='port',
         help='port to listen on')
+    parser.add_option('-c', '--certfile', dest='certfile',
+        help='CA certificate used to sign viric public key')
     parser.add_option('--logfile', dest='logfile',
         help='file name where the log will be saved')
     parser.add_option('--loglevel', dest='loglevel',
