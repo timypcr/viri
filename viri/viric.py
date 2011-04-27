@@ -80,9 +80,9 @@ if __name__ == '__main__':
     parser.add_option('-p', '--port', dest='port',
         help='destination port', type='int', default=6808)
     parser.add_option('-k', '--keyfile', dest='keyfile',
-        help='TLS key', default='keys/viric.key')
+        help='TLS key', default='keys/ca.key')
     parser.add_option('-c', '--certfile', dest='certfile',
-        help='TLS certificate', default='keys/viric.cert')
+        help='TLS certificate', default='keys/ca.cert')
     parser.add_option('-o', '--overwrite', dest='overwrite',
         help='destination port', action='store_true', default=False)
     (options, args) = parser.parse_args()

@@ -26,20 +26,20 @@ class RPCServer:
         in the task_dir using the hash as its name
     exec -- executes a task previously send, given its hash
     """
-    def __init__(self, port, cert_file, task_dir, data_dir, log_requests):
+    def __init__(self, port, ca_file, task_dir, data_dir, log_requests):
         """Saves arguments as class attributes and prepares
         task and data directories
         
         Arguments:
         port -- port number where server will be listening
-        cert_file -- CA certificate (including public key)
-            used to sign the viric public key
+        cert_file -- Recognized CA certificates
         task_dir -- directory where tasks will be stored
         data_dir -- directory where data files will be stored
         log_requests -- boolean specifying if requests have
             to be recorded in the log
         """
         self.port = port
+        self.ca_file = ca_file
         self.task_dir = task_dir
         self.data_dir = data_dir
         self.log_requests = log_requests
@@ -51,7 +51,7 @@ class RPCServer:
         """
         server = SimpleXMLRPCServerTLS(
             ('', self.port),
-            cert_file=self.cert_file,
+            ca_file=self.ca_file,
             logRequests=self.log_requests)
         for method in RPC_METHODS:
             server.register_function(getattr(self, method))

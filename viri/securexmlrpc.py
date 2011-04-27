@@ -15,7 +15,7 @@ except ImportError:
 PROTOCOL = ssl.PROTOCOL_TLSv1
 
 class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
-    def __init__(self, addr, certfile, requestHandler=SimpleXMLRPCRequestHandler,
+    def __init__(self, addr, ca_file, requestHandler=SimpleXMLRPCRequestHandler,
                  logRequests=True, allow_none=False, encoding=None, bind_and_activate=True):
         """Overriding __init__ method of the SimpleXMLRPCServer
 
@@ -46,8 +46,8 @@ class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
         self.socket = ssl.wrap_socket(
             socket.socket(self.address_family, self.socket_type),
             server_side=True,
-            certfile=certfile,
-            cert_reqs=ssl.CERT_NONE,
+            ca_certs=ca_file,
+            cert_reqs=ssl.CERT_REQUIRED,
             ssl_version=PROTOCOL,
             )
         if bind_and_activate:
