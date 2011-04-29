@@ -46,6 +46,7 @@ class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
         self.socket = ssl.wrap_socket(
             socket.socket(self.address_family, self.socket_type),
             server_side=True,
+            certfile='keys/virid.pem', # FIXME set as an argument
             ca_certs=ca_file,
             cert_reqs=ssl.CERT_REQUIRED,
             ssl_version=PROTOCOL,
