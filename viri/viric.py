@@ -134,9 +134,9 @@ if __name__ == '__main__':
     parser.add_option('-p', '--port', dest='port',
         help='destination port', type='int', default=DEFAULT_PORT)
     parser.add_option('-k', '--keyfile', dest='keyfile',
-        help='TLS key', default='keys/ca.key')
+        help='TLS key')
     parser.add_option('-c', '--certfile', dest='certfile',
-        help='TLS certificate', default='keys/ca.cert')
+        help='TLS certificate', default='keys/viric.pem')
     parser.add_option('-o', '--overwrite', dest='overwrite',
         help='destination port', action='store_true', default=False)
     (options, args) = parser.parse_args()
