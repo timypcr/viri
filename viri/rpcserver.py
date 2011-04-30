@@ -3,9 +3,13 @@ import os
 import datetime
 import logging
 import traceback
+import socket
+import socketserver
+import ssl
 from hashlib import sha1
-from securexmlrpc import SimpleXMLRPCServerTLS
+from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, SimpleXMLRPCRequestHandler
 
+PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
 ERROR = 1
 
@@ -13,6 +17,48 @@ RPC_METHODS = (
     'send_data',
     'send_task',
     'exec_task')
+
+
+"""Overriding standard xmlrpc.server.SimpleXMLRPCServer to run over TLS
+Changes inspired on http://www.cs.technion.ac.il/~danken/SecureXMLRPCServer.py
+"""
+class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
+    def __init__(self, addr, ca_file, requestHandler=SimpleXMLRPCRequestHandler,
+                 logRequests=True, allow_none=False, encoding=None, bind_and_activate=True):
+        """Overriding __init__ method of the SimpleXMLRPCServer
+
+        The method is a copy, except for the TCPServer __init__
+        call, which is rewritten using TLS, and the certfile argument
+        which is required for TLS
+        """
+        self.logRequests = logRequests
+        SimpleXMLRPCDispatcher.__init__(self, allow_none, encoding)
+        socketserver.BaseServer.__init__(self, addr, requestHandler)
+        self.socket = ssl.wrap_socket(
+            socket.socket(self.address_family, self.socket_type),
+            server_side=True,
+            certfile='keys/virid.pem', # FIXME set as an argument
+            ca_certs=ca_file,
+            cert_reqs=ssl.CERT_REQUIRED,
+            ssl_version=PROTOCOL,
+            )
+        if bind_and_activate:
+            self.server_bind()
+            self.server_activate()
+
+        # [Bug #1222790] If possible, set close-on-exec flag; if a
+        # method spawns a subprocess, the subprocess shouldn't have
+        # the listening socket open.
+        try:
+            import fcntl
+        except ImportError:
+            pass
+        else:
+            if hasattr(fcntl, 'FD_CLOEXEC'):
+                flags = fcntl.fcntl(self.fileno(), fcntl.F_GETFD)
+                flags |= fcntl.FD_CLOEXEC
+                fcntl.fcntl(self.fileno(), fcntl.F_SETFD, flags)
+
 
 class RPCServer:
     """XML-RPC server, implementing the main functionality of the

@@ -1,10 +1,16 @@
 import sys
 import os
+import socket
+import ssl
+import http.client
 import xmlrpc.client
 from optparse import OptionParser
-import settings
-from securexmlrpc import TransportTLS
 
+APP_NAME = 'viric'
+APP_DESC = 'Sends tasks to be executed in virid instances'
+APP_VERSION = '0.0.1'
+DEFAULT_PORT = 6808
+PROTOCOL = ssl.PROTOCOL_TLSv1
 BASE_USAGE = 'Usage: %prog [OPTIONS]'
 COMMANDS = {
     'send_task': 'FILENAME',
@@ -13,10 +19,58 @@ COMMANDS = {
     'exec_task': 'TASK'}
 
 
+class HTTPConnectionTLS(http.client.HTTPSConnection):
+    """Extending http.client.HTTPSConnection class, so we can specify which
+    protocol we want to use (we'll use TLS instead SSL)
+    """
+    def connect(self):
+        sock = socket.create_connection((self.host, self.port), self.timeout)
+        if self._tunnel_host:
+            self.sock = sock
+            self._tunnel()
+        self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
+            ssl_version=PROTOCOL)
+
+
+class TransportTLS(xmlrpc.client.Transport):
+    """Extending xmlrpc.client.Transport class, so we can specify client
+    certificates needed for client authentication.
+    """
+    def __init__(self, key_file, cert_file, *args, **kwargs):
+        self.key_file = key_file
+        self.cert_file = cert_file
+        super(TransportTLS, self).__init__(*args, **kwargs)
+
+    def send_request(self, host, handler, request_body, debug):
+        host, extra_headers, x509 = self.get_host_info(host)
+        connection = HTTPConnectionTLS(
+            host,
+            None,
+            self.key_file,
+            self.cert_file,
+            **(x509 or {}))
+        if debug:
+            connection.set_debuglevel(1)
+        headers = {}
+        if extra_headers:
+            for key, val in extra_headers:
+                headers[key] = val
+        headers['Content-Type'] = 'text/xml'
+        headers['User-Agent'] = self.user_agent
+        connection.request('POST', handler, request_body, headers)
+        return connection
+
+
 class UsageError(Exception):
+    """Custom exception representing the error raised when a user
+    is using the program with wrong options or arguments
+    """
     pass
 
+
 class ViriClient:
+    """
+    """
     def __init__(self, host, port, keyfile, certfile, **kwargs):
         self.server = xmlrpc.client.ServerProxy(
             'https://%s:%s/' % (host, port),
@@ -73,12 +127,12 @@ class ViriClient:
 if __name__ == '__main__':
     parser = OptionParser(
         BASE_USAGE + ' command',
-        description=settings.APP_DESC,
-        version=settings.APP_VERSION)
+        description=APP_DESC,
+        version=APP_VERSION)
     parser.add_option('--host', dest='host',
         help='destination host', default='localhost')
     parser.add_option('-p', '--port', dest='port',
-        help='destination port', type='int', default=6808)
+        help='destination port', type='int', default=DEFAULT_PORT)
     parser.add_option('-k', '--keyfile', dest='keyfile',
         help='TLS key', default='keys/ca.key')
     parser.add_option('-c', '--certfile', dest='certfile',
@@ -91,7 +145,7 @@ if __name__ == '__main__':
         parser.error('Command argument is required')
     elif args[0] not in COMMANDS.keys():
         parser.error('%s is not a %s command' % (
-            args[0], settings.APP_NAME))
+            args[0], APP_NAME))
     else:
         parser.set_usage(BASE_USAGE + ' %s %s' % (args[0], COMMANDS[args[0]]))
 
