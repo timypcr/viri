@@ -1,17 +1,19 @@
 import sys
 import os
 import logging
+import multiprocessing
 from optparse import OptionParser
 from rpcserver import RPCServer
+from schedserver import SchedServer
 
 APP_NAME = 'virid'
 APP_VERSION = '0.0.1'
-APP_DESC = 'Accepts and executes tasks from a viric instance'
+APP_DESC = 'Accepts and executes tasks from viric instances'
 
 PID_FILE = '/var/run/virid.pid' # XXX Not sure if the pid shold be managed here
 DEFAULT_KNOWN_CA_FILE = 'keys/ca.cert'
-TASK_DIR = 'tasks' # FIXME allow to set as an argument
-DATA_DIR = 'data' # FIXME allow to set as an argument
+TASK_DIR = 'tasks' # TODO allow to set as an argument
+DATA_DIR = 'data' # TODO allow to set as an argument
 
 DEFAULT_PORT = 6808
 DEFAULT_LOG_FILE = None
@@ -39,21 +41,30 @@ class ViriDaemon:
             level=getattr(logging, self.loglevel))
 
     def start(self):
+        """Starts the ViriDaemon. It starts the SchedServer for task
+        scheduling, and the RPCServer to accept connections form viric
+        instances
+        """
         logging.info('Started %s daemon on port %s' % (
             APP_NAME,
             self.port)
         )
-        self.server = RPCServer(
+        self.sched_server = SchedServer()
+        self.sched_server_proc = multiprocessing.Process(
+            target=self.sched_server.start)
+        self.sched_server_proc.start()
+
+        self.rpc_server = RPCServer(
             self.port,
             self.cafile,
             TASK_DIR,
             DATA_DIR,
             LOG_REQUESTS)
-        self.server.start()
+        self.rpc_server.start()
 
     def stop(self):
+        self.sched_server_proc.join()
         logging.info('Stopped %s daemon' % APP_NAME)
-
 
 if __name__ == '__main__':
     parser = OptionParser(
