@@ -49,7 +49,7 @@ class ViriDaemon:
             APP_NAME,
             self.port)
         )
-        self.sched_server = SchedServer()
+        self.sched_server = SchedServer(DATA_DIR)
         self.sched_server_proc = multiprocessing.Process(
             target=self.sched_server.start)
         self.sched_server_proc.start()
