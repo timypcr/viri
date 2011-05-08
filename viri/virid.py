@@ -3,42 +3,76 @@ import os
 import logging
 import multiprocessing
 from optparse import OptionParser
+from configparser import RawConfigParser
 from rpcserver import RPCServer
 from schedserver import SchedServer
 
 APP_NAME = 'virid'
 APP_VERSION = '0.0.1'
 APP_DESC = 'Accepts and executes tasks from viric instances'
-
-PID_FILE = '/var/run/virid.pid' # XXX Not sure if the pid shold be managed here
-DEFAULT_KNOWN_CA_FILE = 'keys/ca.cert'
-TASK_DIR = 'tasks' # TODO allow to set as an argument
-DATA_DIR = 'data' # TODO allow to set as an argument
-
-DEFAULT_PORT = 6808
-DEFAULT_LOG_FILE = None
-DEFAULT_LOG_LEVEL = 'DEBUG'
-DEFAULT_LOG_FORMAT = '%(levelname)s::%(asctime)s::%(message)s'
-
-LOG_REQUESTS = False
 LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
+TASK_DIR = 'tasks'
+DATA_DIR = 'data'
+DEFAULT_CONFIG_FILE = '/etc/viri/virid.conf'
+DEFAULTS = {
+    'General': {
+        'Port': '6806'},
+    'Paths': {
+        'PidFile': '/var/run/virid.pid',
+        'KnownCAs': '/etc/viri/ca.cert',
+        'WorkingDir': '/var/viri'},
+    'Logging': {
+        'LogFile': '/var/log/virid.log',
+        'LogLevel': 'WARNING',
+        'LogFormat': '%(levelname)s::%(asctime)s::%(message)s'},
+}
 
 class ViriDaemon:
     """
     """
-    def __init__(self, port, cafile, logfile, loglevel, logformat):
-        self.port = port
-        self.cafile = cafile
-        if not os.path.isfile(self.cafile):
-            sys.stderr.write('Certificate file %s does not exist\n' % self.cafile)
-            sys.exit(1)
-        self.logfile = logfile
-        self.loglevel = loglevel
-        self.logformat = logformat
+    def __init__(self, config_file):
+        self._set_config(config_file)
+        self.data_dir = os.path.abspath(
+            os.path.join(self.working_dir, DATA_DIR))
+        self.task_dir = os.path.abspath(
+            os.path.join(self.working_dir, TASK_DIR))
+        self._prepare_dirs()
         logging.basicConfig(
             filename=self.logfile,
             format=self.logformat,
             level=getattr(logging, self.loglevel))
+
+    def _set_config(self, config_file):
+        config = RawConfigParser(DEFAULTS)
+        config.read((config_file,))
+
+        self.port = int(config.get('General', 'Port'))
+        self.cafile = config.get('Paths', 'KnownCAs')
+        self.working_dir = config.get('Paths', 'WorkingDir')
+        self.logfile = config.get('Logging', 'LogFile')
+        self.loglevel = config.get('Logging', 'LogLevel')
+        self.logformat = config.get('Logging', 'LogFormat')
+
+    def _prepare_dirs(self):
+        """Creates the structure for the working directory, which
+        contains directories for data, tasks, and a system directory
+        which is used to store files like the base task or the crontab
+        file. It also creates required __init__.py files.
+        """
+        create_dirs = (self.working_dir,
+            self.data_dir,
+            self.task_dir)
+
+        for create_dir in create_dirs:
+            if not os.path.isdir(create_dir):
+                os.mkdir(create_dir)
+
+        init_filename = os.path.join(self.task_dir, '__init__.py')
+        if not os.path.isfile(init_filename):
+            open(init_filename, 'w').close()
+
+        if self.task_dir not in sys.path:
+            sys.path.append(self.task_dir)
 
     def start(self):
         """Starts the ViriDaemon. It starts the SchedServer for task
@@ -49,7 +83,7 @@ class ViriDaemon:
             APP_NAME,
             self.port)
         )
-        self.sched_server = SchedServer(DATA_DIR)
+        self.sched_server = SchedServer(self.data_dir)
         self.sched_server_proc = multiprocessing.Process(
             target=self.sched_server.start)
         self.sched_server_proc.start()
@@ -57,9 +91,8 @@ class ViriDaemon:
         self.rpc_server = RPCServer(
             self.port,
             self.cafile,
-            TASK_DIR,
-            DATA_DIR,
-            LOG_REQUESTS)
+            self.data_dir,
+            self.task_dir)
         self.rpc_server.start()
 
     def stop(self):
@@ -70,24 +103,13 @@ if __name__ == '__main__':
     parser = OptionParser(
         description=APP_DESC,
         version=APP_VERSION)
-    parser.add_option('-p', '--port', dest='port',
-        help='port to listen on', type='int', default=DEFAULT_PORT)
-    parser.add_option('-c', '--cafile', dest='cafile',
-        help='authorized CA certificates', default=DEFAULT_KNOWN_CA_FILE)
-    parser.add_option('--logfile', dest='logfile',
-        help='file name where the log will be saved', default=DEFAULT_LOG_FILE)
-    parser.add_option('--loglevel', dest='loglevel',
-        help='minimum logging level (%s)' % ', '.join(LOG_LEVELS),
-        default=DEFAULT_LOG_LEVEL)
-    parser.add_option('--logformat', dest='logformat',
-        help='logging format', default=DEFAULT_LOG_FORMAT)
+    parser.add_option('-c', '--config', dest='config_file',
+        help='configuration file with settings to be used by virid',
+        default=DEFAULT_CONFIG_FILE)
     (options, args) = parser.parse_args()
 
-    if not os.path.isfile(options.cafile):
-        sys.stderr.write('Certificate file %s does not exist\n' % options.cafile)
-        sys.exit(1)
-
     virid = ViriDaemon(**vars(options))
+
     try:
         virid.start()
     except KeyboardInterrupt:

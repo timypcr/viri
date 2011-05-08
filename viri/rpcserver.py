@@ -1,30 +1,31 @@
 import sys
 import os
-import datetime
 import logging
 import traceback
 import socket
 import socketserver
 import ssl
-from hashlib import sha1
-from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, SimpleXMLRPCRequestHandler
+from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
+    SimpleXMLRPCRequestHandler
+from viritask import Task
 
 PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
 ERROR = 1
 
-RPC_METHODS = (
-    'send_data',
+RPC_METHODS = ('send_data',
     'send_task',
     'exec_task')
 
 
-"""Overriding standard xmlrpc.server.SimpleXMLRPCServer to run over TLS
-Changes inspired on http://www.cs.technion.ac.il/~danken/SecureXMLRPCServer.py
-"""
 class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
-    def __init__(self, addr, ca_file, requestHandler=SimpleXMLRPCRequestHandler,
-                 logRequests=True, allow_none=False, encoding=None, bind_and_activate=True):
+    """Overriding standard xmlrpc.server.SimpleXMLRPCServer to run over TLS.
+    Changes inspired by
+    http://www.cs.technion.ac.il/~danken/SecureXMLRPCServer.py
+    """
+    def __init__(self, addr, ca_file,
+        requestHandler=SimpleXMLRPCRequestHandler, logRequests=True,
+        allow_none=False, encoding=None, bind_and_activate=True):
         """Overriding __init__ method of the SimpleXMLRPCServer
 
         The method is a copy, except for the TCPServer __init__
@@ -65,63 +66,36 @@ class RPCServer:
     application.
 
     Public methods:
-    send_data -- Receives a data file from the client and
-        saves it in data_dir directory
-    send_script -- Receives a Python source file from the
-        client, calculates a hash for it, and saves it
-        in the task_dir using the hash as its name
-    exec -- executes a task previously send, given its hash
+    send_data -- Receives a data file from the client and saves it in
+        data_dir directory
+    send_task -- Receives a Python source file from the client, calculates a
+        hash for it, and saves it in the task_dir using the hash as its name
+    exec_task -- executes a task previously send, given its id (hash)
     """
-    def __init__(self, port, ca_file, task_dir, data_dir, log_requests):
+    def __init__(self, port, ca_file, data_dir, task_dir):
         """Saves arguments as class attributes and prepares
         task and data directories
         
         Arguments:
         port -- port number where server will be listening
         cert_file -- Recognized CA certificates
-        task_dir -- directory where tasks will be stored
-        data_dir -- directory where data files will be stored
-        log_requests -- boolean specifying if requests have
-            to be recorded in the log
+        data_dir -- directory to store non-code sent files
+        task_dir -- directory to store python code representing tasks
         """
         self.port = port
         self.ca_file = ca_file
-        self.task_dir = task_dir
         self.data_dir = data_dir
-        self.log_requests = log_requests
-        self._prepare_dirs()
+        self.task_dir = task_dir
 
     def start(self):
-        """Starts the XML-RPC server, and registers all public
-        methods.
-        """
+        """Starts the XML-RPC server, and registers all public methods."""
         server = SimpleXMLRPCServerTLS(
             ('', self.port),
             ca_file=self.ca_file,
-            logRequests=self.log_requests)
+            logRequests=False)
         for method in RPC_METHODS:
             server.register_function(getattr(self, method))
         server.serve_forever()
-
-    def _prepare_dirs(self):
-        """Creates the directories for storing scripts
-        and data, in case they doesn't exist. Also
-        creates an empty __init__.py file in scripts
-        directory, so scripts can be imported.
-        """
-        if not os.path.isdir(self.task_dir):
-            os.mkdir(self.task_dir)
-
-        init_filename = os.path.join(self.task_dir, '__init__.py')
-        if not os.path.isfile(init_filename):
-            open(init_filename, 'w').close()
-
-        abs_task_dir = os.path.abspath(self.task_dir)
-        if abs_task_dir not in sys.path:
-            sys.path.append(abs_task_dir)
-
-        if not os.path.isdir(self.data_dir):
-            os.mkdir(self.data_dir)
 
     def _get_error(self):
         """Captures the error and the traceback, and formats
@@ -160,71 +134,38 @@ class RPCServer:
                 str(exc)))
             return self._get_error()
 
-    def send_task(self, script_filename, script_binary):
-        """Receives a source file and stores it in the scripts
-        directory. To do so, a hash of the script content is
-        calculated and used as the file name.
-        This way we will only need to send scripts which are
-        not yet on the remote host, and we'll handle versioning
-        of the scripts in a reliable way.
+    def send_task(self, task_filename, task_binary):
+        """Receives a source file and stores it in the tasks directory.
+        To do so, a hash of the task content is calculated and used as the
+        file name. This way we will only need to send tasks which are not
+        yet on the remote host, and we'll handle versioning of the tasks in
+        a reliable way.
 
-        Script is threated as binary, so .pyc and .pyo files
-        can be used.
+        Script is threated as binary, so .pyc and .pyo files can be used.
 
         Arguments:
-        script_filename -- original file name
-        script_binary -- content of the script processed usgin
-            xmlrpc.client.Binary.encode()
+            task_filename -- original file name
+            task_binary -- content of the task processed using
+                xmlrpc.client.Binary.encode()
         """
         try:
-            file_type = script_filename.split('.')[-1]
-            script_hash = sha1(script_binary.data).hexdigest()
-            base_dst = os.path.join(self.task_dir, script_hash)
-            dst_script = '%s.%s' % (base_dst, file_type)
-            if not os.path.isfile(dst_script):
-                with open(dst_script, 'wb') as script_file:
-                    script_file.write(script_binary.data)
-                    with open('%s.info' % base_dst, 'w') as info_file:
-                        info_file.write(script_filename),
-                        info_file.write(str(datetime.datetime.now()))
-            return '%s %s' % (SUCCESS, script_hash)
+            task = Task(self.data_dir)
+            task_id = task.save(task_filename, task_binary)
+            return '%s %s' % (SUCCESS, task_id)
         except Exception as exc:
-            logging.error('Unable to save script file %s: %s' % (
-                script_filename, str(exc)))
+            logging.error('Unable to save task file %s: %s' % (
+                task_filename, str(exc)))
             return self._get_error()
 
-    def exec_task(self, script_hash):
-        """Executes the specified script. The script must
-        contain a class named ViriTask, which implements
-        a run method, containing the entry point for all
-        the script functionality.
-        This way, we're able to add some attributes to the
-        class with host specific information.
-
-        Example script, returning if data directory has
-        already been created (note that the data_dir
-        attribute is not defined on the class, but is
-        added on execution time):
-        >>> import os
-        >>>
-        >>> class ViriTask:
-        >>>     def run(self):
-        >>>         return os.path.isdir(self.data_dir)
-
-        Arguments:
-        script_hash -- sha1 hash of the code to execute,
-            this hash is the one returned by send_script
-            function
-        """
+    def exec_task(self, task_id):
         try:
-            mod = __import__(script_hash)
-            extra_attrs = dict(data_dir=self.data_dir)
-            result = type('ExecTask', (mod.ViriTask,), extra_attrs)().run()
-            logging.info('Task %s succesfully executed' % script_hash)
+            task = Task(self.data_dir)
+            result = task.execute(task_id)
+            logging.info('Task %s succesfully executed' % task_id) # FIXME log name, not id
             return '%s %s' % (SUCCESS, result)
         except Exception as exc:
             logging.warning('Task %s failed: %s' % (
-                script_hash,
+                task_id,
                 str(exc)))
             return self._get_error()
 

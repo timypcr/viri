@@ -3,29 +3,29 @@ import datetime
 import logging
 import time
 import threading
+from viritask import Task
 
 SLEEP_TIME = 5 # seconds
 JOBS_FILE = '__crontab__' # in data dir
 
 
 class InvalidCronSyntax(Exception):
-    """Error when parsing a cron syntax execution schedule
-    """
+    """Error when parsing a cron syntax execution schedule"""
     pass
 
 
 class Job:
-    """Represents a scheduled execution of a script
-    """
+    """Represents a scheduled execution of a script"""
     # TODO improve the way the job is defined. We actually don't know
     # if the job is valid until we check if it has to run
-    def __init__(self, cron_def):
+    def __init__(self, cron_def, data_dir):
         """
         """
         COMMENT_CHAR = '#'
         DIVISION_CHAR = ' '
-
         to_int = lambda x: x if x == '*' else int(x)
+
+        self.data_dir = data_dir
 
         self.is_valid_job = False
 
@@ -53,7 +53,10 @@ class Job:
         """Method executed when the job has to run. It executes the task
         specified in the cron definition
         """
-        return self.task_id # FIXME execute the task, not return the id
+        # FIXME capture any exception and log, this should never raise an
+        # exception
+        task = Task(self.data_dir)
+        task.execute(self.task_id)
 
     def has_to_run(self, now):
         """Returns a boolean representing if the job has to run in the
@@ -86,6 +89,7 @@ class SchedServer:
     def __init__(self, data_dir):
         """Initializes the SchedServer, by setting the path of the jobs file
         """
+        self.data_dir = data_dir
         self.job_file = os.path.join(data_dir, JOBS_FILE)
 
     def _run_job(self, job_def, now):
@@ -93,7 +97,7 @@ class SchedServer:
         specified time.
         """
         try:
-            job = Job(job_def)
+            job = Job(job_def, self.data_dir)
         except InvalidCronSyntax:
             logging.warn('Invalid job definition: %s' % job_def)
         else:
@@ -136,7 +140,8 @@ class SchedServer:
         now = datetime.datetime.now()
         if now.second:
             time.sleep(60 - now.second)
-            now = now.replace(second=0, microsecond=0) + datetime.timedelta(minutes=1)
+            now = now.replace(second=0,
+                microsecond=0) + datetime.timedelta(minutes=1)
 
         while True: # TODO allow terminating by signal
             try:
