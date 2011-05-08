@@ -11,6 +11,11 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   introduction
+   security
+   userdoc/index
+   develdoc/index
+
 Indices and tables
 ==================
 
