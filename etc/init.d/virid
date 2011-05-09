@@ -1,0 +1,40 @@
+#!/bin/sh
+# Launcher for the virid daemon
+
+PIDFILE=/var/run/${NAME}.pid
+EXEC=/usr/local/sbin/virid
+
+test -f $DAEMON || exit 0
+
+set -e
+
+start() {
+    echo -n "Starting ${0}: "
+    start-stop-daemon --start --quiet --pidfile ${PIDFILE} --exec ${EXEC}
+}
+
+stop() {
+    echo -n "Stopping ${0}: "
+    start-stop-daemon --stop --quiet --pidfile ${PIDFILE} --exec ${EXEC}
+}
+
+case "${1}" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    sleep 1
+    start
+    ;;
+  *)
+    echo "Usage: ${0} {start|stop|restart}" >&2
+    exit 1
+    ;;
+esac
+
+exit 0
+
