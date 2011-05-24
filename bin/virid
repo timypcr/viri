@@ -5,8 +5,8 @@ import logging
 import multiprocessing
 from optparse import OptionParser
 from configparser import RawConfigParser
-from rpcserver import RPCServer
-from schedserver import SchedServer
+from viri.rpcserver import RPCServer
+from viri.schedserver import SchedServer
 
 APP_NAME = 'virid'
 APP_VERSION = '0.0.1'
