@@ -1,13 +1,15 @@
 import sys
 import os
 import logging
+import datetime
 import traceback
 import socket
 import socketserver
 import ssl
+from hashlib import sha1
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from viri.viritask import Task
+from viri.viritask import TaskExecutor
 
 PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
@@ -72,7 +74,8 @@ class RPCServer:
         hash for it, and saves it in the task_dir using the hash as its name
     exec_task -- executes a task previously send, given its id (hash)
     """
-    def __init__(self, port, ca_file, cert_key_file, data_dir, task_dir):
+    def __init__(self, port, ca_file, cert_key_file,
+        data_dir, task_dir, context):
         """Saves arguments as class attributes and prepares
         task and data directories
         
@@ -83,12 +86,15 @@ class RPCServer:
             for TLS negotiation
         data_dir -- directory to store non-code sent files
         task_dir -- directory to store python code representing tasks
+        custom_settings -- dictionary containing configuration directives
+            which will be available on `conf' attribute of tasks
         """
         self.port = port
         self.ca_file = ca_file
         self.cert_key_file = cert_key_file
         self.data_dir = data_dir
         self.task_dir = task_dir
+        self.context = context
 
     def start(self):
         """Starts the XML-RPC server, and registers all public methods."""
@@ -109,16 +115,42 @@ class RPCServer:
         tb = '\n'.join(traceback.format_tb(exc_tb))
         return '%s %s\n%s' % (ERROR, tb, str(exc_val))
 
+    def save(self, task_filename, task_binary):
+        """Receives a source file and stores it in the scripts directory. To
+        do so, a hash of the script content is calculated and used as the file
+        name. This way we will only need to send scripts which are not yet on
+        the remote host, and we'll handle versioning of the scripts in a
+        reliable way.
+
+        Script is threated as binary, so .pyc and .pyo files can be used.
+
+        Arguments:
+        task_filename -- original file name
+        task_binary -- content of the task processed using
+            xmlrpc.client.Binary.encode()
+        """
+        file_type = task_filename.split('.')[-1]
+        task_id = sha1(task_binary.data).hexdigest()
+        base_dst = os.path.join(self.task_dir, task_id)
+        dst_file = '%s.%s' % (base_dst, file_type)
+        if not os.path.isfile(dst_file):
+            with open(dst_file, 'wb') as task_file:
+                task_file.write(task_binary.data)
+                with open('%s.info' % base_dst, 'a') as info_file:
+                    info_file.write('%s %s' % (datetime.datetime.now(),
+                        task_filename))
+        return task_id
+    
     def send_data(self, data_filename, data_binary, overwrite=False):
-        """Receives a data file from the remote instance,
-        and copies it to the data directory.
+        """Receives a data file from the remote instance, and copies it to the
+        data directory.
 
         Arguments:
         data_filename -- original file name
         data_binary -- content of the file processed using
             xmlrpc.client.Binary.encode()
-        overwrite -- specifies if overwrite in case a file with
-            same name exists
+        overwrite -- specifies if file should be overwritten in case a file
+            with same name exists
         """
         try:
             filename = os.path.join(self.data_dir, data_filename)
@@ -148,13 +180,12 @@ class RPCServer:
         Script is threated as binary, so .pyc and .pyo files can be used.
 
         Arguments:
-            task_filename -- original file name
-            task_binary -- content of the task processed using
-                xmlrpc.client.Binary.encode()
+        task_filename -- original file name
+        task_binary -- content of the task processed using
+            xmlrpc.client.Binary.encode()
         """
         try:
-            task = Task(self.data_dir)
-            task_id = task.save(task_filename, task_binary)
+            task_id = self.save(task_filename, task_binary)
             return '%s %s' % (SUCCESS, task_id)
         except Exception as exc:
             logging.error('Unable to save task file %s: %s' % (
@@ -162,8 +193,10 @@ class RPCServer:
             return self._get_error()
 
     def exec_task(self, task_id):
+        """Executes a task
+        """
         try:
-            task = Task(self.data_dir)
+            task = TaskExecutor(self.context)
             result = task.execute(task_id)
             logging.info('Task %s succesfully executed' % task_id) # FIXME log name, not id
             return '%s %s' % (SUCCESS, result)

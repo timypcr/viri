@@ -32,18 +32,6 @@ class ViriDaemon:
     """
     """
     def __init__(self, config_file):
-        self._set_config(config_file)
-        self.data_dir = os.path.abspath(
-            os.path.join(self.working_dir, DATA_DIR))
-        self.task_dir = os.path.abspath(
-            os.path.join(self.working_dir, TASK_DIR))
-        self._prepare_dirs()
-        logging.basicConfig(
-            filename=self.logfile,
-            format=self.logformat,
-            level=getattr(logging, self.loglevel))
-
-    def _set_config(self, config_file):
         config = RawConfigParser(DEFAULTS)
         config.read((config_file,))
 
@@ -54,6 +42,30 @@ class ViriDaemon:
         self.logfile = config.get('Logging', 'LogFile')
         self.loglevel = config.get('Logging', 'LogLevel')
         self.logformat = config.get('Logging', 'LogFormat')
+
+        conf = None
+        if config.has_section('Custom'):
+            Conf = type('Conf', tuple(), {})
+            conf = Conf()
+            for key, val in dict(config.items('Custom')).items():
+                if key not in DEFAULTS.keys():
+                    setattr(conf, key, val)
+
+        self.data_dir = os.path.abspath(
+            os.path.join(self.working_dir, DATA_DIR))
+        self.task_dir = os.path.abspath(
+            os.path.join(self.working_dir, TASK_DIR))
+
+        self.context = {}
+        self.context['conf'] = conf
+        self.context['data_dir'] = self.data_dir
+
+        self._prepare_dirs()
+
+        logging.basicConfig(
+            filename=self.logfile,
+            format=self.logformat,
+            level=getattr(logging, self.loglevel))
 
     def _prepare_dirs(self):
         """Creates the structure for the working directory, which
@@ -85,7 +97,8 @@ class ViriDaemon:
             APP_NAME,
             self.port)
         )
-        self.sched_server = SchedServer(self.data_dir)
+        self.sched_server = SchedServer(
+            self.data_dir, self.context)
         self.sched_server_proc = multiprocessing.Process(
             target=self.sched_server.start)
         self.sched_server_proc.start()
@@ -95,7 +108,8 @@ class ViriDaemon:
             self.ca_file,
             self.cert_key_file,
             self.data_dir,
-            self.task_dir)
+            self.task_dir,
+            self.context)
         self.rpc_server.start()
 
     def stop(self):

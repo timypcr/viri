@@ -3,7 +3,7 @@ import datetime
 import logging
 import time
 import threading
-from viri.viritask import Task
+from viri.viritask import TaskExecutor
 
 SLEEP_TIME = 5 # seconds
 JOBS_FILE = '__crontab__' # in data dir
@@ -18,14 +18,14 @@ class Job:
     """Represents a scheduled execution of a script"""
     # TODO improve the way the job is defined. We actually don't know
     # if the job is valid until we check if it has to run
-    def __init__(self, cron_def, data_dir):
+    def __init__(self, cron_def, context):
         """
         """
         COMMENT_CHAR = '#'
         DIVISION_CHAR = ' '
         to_int = lambda x: x if x == '*' else int(x)
 
-        self.data_dir = data_dir
+        self.context = context
 
         self.is_valid_job = False
 
@@ -55,7 +55,7 @@ class Job:
         """
         # FIXME capture any exception and log, this should never raise an
         # exception
-        task = Task(self.data_dir)
+        task = TaskExecutor(self.context)
         task.execute(self.task_id)
 
     def has_to_run(self, now):
@@ -86,10 +86,11 @@ class SchedServer:
     """Daemon which simulates the cron application, but instead of executing
     shell commands, it executes viri tasks. 
     """
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, context):
         """Initializes the SchedServer, by setting the path of the jobs file
         """
         self.data_dir = data_dir
+        self.context = context
         self.job_file = os.path.join(data_dir, JOBS_FILE)
 
     def _run_job(self, job_def, now):
@@ -97,7 +98,7 @@ class SchedServer:
         specified time.
         """
         try:
-            job = Job(job_def, self.data_dir)
+            job = Job(job_def, self.context)
         except InvalidCronSyntax:
             logging.warn('Invalid job definition: %s' % job_def)
         else:
