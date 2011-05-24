@@ -3,7 +3,7 @@ import datetime
 import logging
 import time
 import threading
-from viritask import Task
+from viri.viritask import Task
 
 SLEEP_TIME = 5 # seconds
 JOBS_FILE = '__crontab__' # in data dir

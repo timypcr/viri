@@ -7,7 +7,7 @@ import socketserver
 import ssl
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from viritask import Task
+from viri.viritask import Task
 
 PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
