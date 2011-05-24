@@ -23,7 +23,7 @@ class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
     Changes inspired by
     http://www.cs.technion.ac.il/~danken/SecureXMLRPCServer.py
     """
-    def __init__(self, addr, ca_file,
+    def __init__(self, addr, ca_file, cert_key_file,
         requestHandler=SimpleXMLRPCRequestHandler, logRequests=True,
         allow_none=False, encoding=None, bind_and_activate=True):
         """Overriding __init__ method of the SimpleXMLRPCServer
@@ -38,7 +38,7 @@ class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
         self.socket = ssl.wrap_socket(
             socket.socket(self.address_family, self.socket_type),
             server_side=True,
-            certfile='keys/virid.pem', # FIXME set as an argument
+            certfile=cert_key_file,
             ca_certs=ca_file,
             cert_reqs=ssl.CERT_REQUIRED,
             ssl_version=PROTOCOL,
@@ -72,18 +72,21 @@ class RPCServer:
         hash for it, and saves it in the task_dir using the hash as its name
     exec_task -- executes a task previously send, given its id (hash)
     """
-    def __init__(self, port, ca_file, data_dir, task_dir):
+    def __init__(self, port, ca_file, cert_key_file, data_dir, task_dir):
         """Saves arguments as class attributes and prepares
         task and data directories
         
         Arguments:
         port -- port number where server will be listening
-        cert_file -- Recognized CA certificates
+        ca_file -- Recognized CA certificates
+        cert_key_file -- File with daemon's certificate and private key,
+            for TLS negotiation
         data_dir -- directory to store non-code sent files
         task_dir -- directory to store python code representing tasks
         """
         self.port = port
         self.ca_file = ca_file
+        self.cert_key_file = cert_key_file
         self.data_dir = data_dir
         self.task_dir = task_dir
 
@@ -92,6 +95,7 @@ class RPCServer:
         server = SimpleXMLRPCServerTLS(
             ('', self.port),
             ca_file=self.ca_file,
+            cert_key_file=self.cert_key_file,
             logRequests=False)
         for method in RPC_METHODS:
             server.register_function(getattr(self, method))

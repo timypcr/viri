@@ -19,8 +19,8 @@ DEFAULTS = {
     'General': {
         'Port': '6806'},
     'Paths': {
-        'PidFile': '/var/run/virid.pid',
         'KnownCAs': '/etc/viri/ca.cert',
+        'CertKeyFile': '/etc/viri/virid.pem',
         'WorkingDir': '/var/viri'},
     'Logging': {
         'LogFile': '/var/log/virid.log',
@@ -48,7 +48,8 @@ class ViriDaemon:
         config.read((config_file,))
 
         self.port = int(config.get('General', 'Port'))
-        self.cafile = config.get('Paths', 'KnownCAs')
+        self.ca_file = config.get('Paths', 'KnownCAs')
+        self.cert_key_file = config.get('Paths', 'CertKeyFile')
         self.working_dir = config.get('Paths', 'WorkingDir')
         self.logfile = config.get('Logging', 'LogFile')
         self.loglevel = config.get('Logging', 'LogLevel')
@@ -91,7 +92,8 @@ class ViriDaemon:
 
         self.rpc_server = RPCServer(
             self.port,
-            self.cafile,
+            self.ca_file,
+            self.cert_key_file,
             self.data_dir,
             self.task_dir)
         self.rpc_server.start()
