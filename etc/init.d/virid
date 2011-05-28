@@ -1,10 +1,10 @@
 #!/bin/sh
 # Launcher for the virid daemon
 
-PIDFILE=/var/run/${NAME}.pid
+PIDFILE=/var/run/virid.pid
 EXEC=/usr/local/sbin/virid
 
-test -f $DAEMON || exit 0
+test -f ${EXEC} || exit 0
 
 set -e
 
