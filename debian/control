@@ -1,0 +1,8 @@
+Source: viri
+Section: utils
+Priority: optional
+Maintainer: Marc Garcia <garcia.marc@gmail.com>
+Architecture: all
+Homepage: http://www.viriproject.com
+Standards-Version: 3.9.1.0 
+
