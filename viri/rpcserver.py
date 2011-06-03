@@ -15,7 +15,7 @@ PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
 ERROR = 1
 
-RPC_METHODS = ('send_data',
+RPC_METHODS = ('put', 'get', 'ls', 'mv',
     'send_task',
     'exec_task')
 
@@ -141,34 +141,6 @@ class RPCServer:
                         task_filename))
         return task_id
     
-    def send_data(self, data_filename, data_binary, overwrite=False):
-        """Receives a data file from the remote instance, and copies it to the
-        data directory.
-
-        Arguments:
-        data_filename -- original file name
-        data_binary -- content of the file processed using
-            xmlrpc.client.Binary.encode()
-        overwrite -- specifies if file should be overwritten in case a file
-            with same name exists
-        """
-        try:
-            filename = os.path.join(self.data_dir, data_filename)
-            if not os.path.isfile(filename) or overwrite:
-                with open(filename, 'wb') as f:
-                    f.write(data_binary.data)
-                msg = 'Data file %s saved' % data_filename
-                logging.info(msg)
-                return '%s %s' % (SUCCESS, msg)
-            else:
-                msg = 'Not overwriting file %s' % data_filename
-                logging.debug(msg)
-                return '%s %s' % (SUCCESS, msg)
-        except Exception as exc:
-            logging.error('Unable to save data file %s: %s' % (
-                data_filename,
-                str(exc)))
-            return self._get_error()
 
     def send_task(self, task_filename, task_binary):
         """Receives a source file and stores it in the tasks directory.
@@ -205,4 +177,62 @@ class RPCServer:
                 task_id,
                 str(exc)))
             return self._get_error()
+
+    def put(self, filename, content, overwrite=False):
+        """Receives a data file from the remote instance, and copies it to the
+        data directory.
+
+        Arguments:
+        filename -- original file name
+        content -- content of the file processed using
+            xmlrpc.client.Binary.encode()
+        overwrite -- specifies if file should be overwritten in case a file
+            with same name exists
+        """
+        try:
+            filename = os.path.join(self.data_dir, filename)
+            if not os.path.isfile(filename) or overwrite:
+                with open(filename, 'wb') as f:
+                    f.write(content.data)
+                msg = 'Data file %s saved' % filename
+                logging.info(msg)
+                return '%s %s' % (SUCCESS, msg)
+            else:
+                msg = 'Not overwriting file %s' % filename
+                logging.debug(msg)
+                return '%s %s' % (SUCCESS, msg)
+        except Exception as exc:
+            logging.error('Unable to save data file %s: %s' % (
+                filename,
+                str(exc)))
+            return self._get_error()
+
+    def ls(self):
+        """List the files in the data directory"""
+        return os.listdir(self.data_dir)
+
+    def get(self, filename):
+        """Returns the content of a file"""
+        full_filename = os.path.join(self.data_dir, filename)
+        if os.path.split(full_filename) == full_filename:
+            if os.path.isfile(full_filename):
+                with open(full_filename, 'r') as f:
+                    # FIXME send SUCCESS code and encode
+                    return f.read()
+            else:
+                return '%s File does not exist' % ERROR
+        else:
+            return '%s No paths allowed on file names' % ERROR
+
+    def mv(self, src, dst):
+        """Renames a file in the data directory"""
+        if src == os.path.split(src) and dst == os.path.split(dst):
+            if os.path.isfile(os.path.join(self.data_dir, src)):
+                os.rename(
+                    os.path.join(self.data_dir, src),
+                    os.path.join(self.data_dir, dst))
+            else:
+                return '%s File does not exist' % ERROR
+        else:
+            return '%s No paths allowed on file names' % ERROR
 
