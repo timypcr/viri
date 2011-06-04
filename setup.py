@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='viri',
-    version='0.0.1',
+    version='0.1',
     description='Remote execution of Python scripts',
     author='Marc Garcia',
     author_email='garcia.marc@gmail.com',

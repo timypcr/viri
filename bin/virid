@@ -10,7 +10,7 @@ from viri.schedserver import SchedServer
 
 APP_NAME = 'virid'
 APP_VERSION = '0.0.1'
-APP_DESC = 'Accepts and executes tasks from viric instances'
+APP_DESC = 'Receives and executes scripts from viric instances'
 LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
 TASK_DIR = 'tasks'
 DATA_DIR = 'data'
