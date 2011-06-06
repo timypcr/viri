@@ -6,6 +6,7 @@ import traceback
 import socket
 import socketserver
 import ssl
+import xmlrpc.client
 from hashlib import sha1
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
@@ -15,9 +16,7 @@ PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
 ERROR = 1
 
-RPC_METHODS = ('put', 'get', 'ls', 'mv',
-    'send_task',
-    'exec_task')
+RPC_METHODS = ('put', 'get', 'ls', 'mv', 'execute')
 
 
 class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
@@ -63,6 +62,17 @@ class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
                 fcntl.fcntl(self.fileno(), fcntl.F_SETFD, flags)
 
 
+def public(func):
+    """Decorator that controls arguments of public methods. XMLRPC only
+    works with positional arguments, so the client always sends only one
+    parameter with a dictionary. This decorator executes the method
+    passing the items in the dictionary as keyword arguments.
+    """
+    def inner(self, kwargs):
+        return func(self, **kwargs)
+    return inner
+
+
 class RPCServer:
     """XML-RPC server, implementing the main functionality of the
     application.
@@ -75,7 +85,7 @@ class RPCServer:
     exec_task -- executes a task previously send, given its id (hash)
     """
     def __init__(self, port, ca_file, cert_key_file,
-        data_dir, task_dir, context):
+        data_dir, script_dir, context):
         """Saves arguments as class attributes and prepares
         task and data directories
         
@@ -93,7 +103,7 @@ class RPCServer:
         self.ca_file = ca_file
         self.cert_key_file = cert_key_file
         self.data_dir = data_dir
-        self.task_dir = task_dir
+        self.script_dir = script_dir
         self.context = context
 
     def start(self):
@@ -104,7 +114,7 @@ class RPCServer:
             cert_key_file=self.cert_key_file,
             logRequests=False)
         for method in RPC_METHODS:
-            server.register_function(getattr(self, method))
+            server.register_function(getattr(self, method), method)
         server.serve_forever()
 
     def _get_error(self):
@@ -113,9 +123,9 @@ class RPCServer:
         """
         (exc_type, exc_val, exc_tb) = sys.exc_info()
         tb = '\n'.join(traceback.format_tb(exc_tb))
-        return '%s %s\n%s' % (ERROR, tb, str(exc_val))
+        return (ERROR, '%s\n%s' % (tb, str(exc_val)))
 
-    def save(self, task_filename, task_binary):
+    def _save_script(self, filename, content):
         """Receives a source file and stores it in the scripts directory. To
         do so, a hash of the script content is calculated and used as the file
         name. This way we will only need to send scripts which are not yet on
@@ -129,56 +139,34 @@ class RPCServer:
         task_binary -- content of the task processed using
             xmlrpc.client.Binary.encode()
         """
-        file_type = task_filename.split('.')[-1]
-        task_id = sha1(task_binary.data).hexdigest()
-        base_dst = os.path.join(self.task_dir, task_id)
+        file_type = filename.split('.')[-1]
+        script_id = sha1(content.data).hexdigest()
+        base_dst = os.path.join(self.script_dir, script_id)
         dst_file = '%s.%s' % (base_dst, file_type)
         if not os.path.isfile(dst_file):
             with open(dst_file, 'wb') as task_file:
-                task_file.write(task_binary.data)
+                task_file.write(content.data)
                 with open('%s.info' % base_dst, 'a') as info_file:
                     info_file.write('%s %s' % (datetime.datetime.now(),
-                        task_filename))
-        return task_id
-    
+                        filename))
+        return script_id
 
-    def send_task(self, task_filename, task_binary):
-        """Receives a source file and stores it in the tasks directory.
-        To do so, a hash of the task content is calculated and used as the
-        file name. This way we will only need to send tasks which are not
-        yet on the remote host, and we'll handle versioning of the tasks in
-        a reliable way.
-
-        Script is threated as binary, so .pyc and .pyo files can be used.
-
-        Arguments:
-        task_filename -- original file name
-        task_binary -- content of the task processed using
-            xmlrpc.client.Binary.encode()
-        """
-        try:
-            task_id = self.save(task_filename, task_binary)
-            return '%s %s' % (SUCCESS, task_id)
-        except Exception as exc:
-            logging.error('Unable to save task file %s: %s' % (
-                task_filename, str(exc)))
-            return self._get_error()
-
-    def exec_task(self, task_id):
-        """Executes a task
+    @public
+    def execute(self, script_id):
+        """Executes a script
         """
         try:
             task = TaskExecutor(self.context)
-            result = task.execute(task_id)
-            logging.info('Task %s succesfully executed' % task_id) # FIXME log name, not id
-            return '%s %s' % (SUCCESS, result)
+            result = task.execute(script_id)
+            logging.info('Script %s succesfully executed' % script_id) # FIXME log name, not id
+            return (SUCCESS, result)
         except Exception as exc:
-            logging.warning('Task %s failed: %s' % (
-                task_id,
-                str(exc)))
+            logging.warning('Script %s execution failed: %s' % (
+                script_id, str(exc)))
             return self._get_error()
 
-    def put(self, filename, content, overwrite=False):
+    @public
+    def put(self, filename, content, data=False, overwrite=False):
         """Receives a data file from the remote instance, and copies it to the
         data directory.
 
@@ -190,40 +178,49 @@ class RPCServer:
             with same name exists
         """
         try:
-            filename = os.path.join(self.data_dir, filename)
-            if not os.path.isfile(filename) or overwrite:
-                with open(filename, 'wb') as f:
-                    f.write(content.data)
-                msg = 'Data file %s saved' % filename
-                logging.info(msg)
-                return '%s %s' % (SUCCESS, msg)
+            if not data:
+                script_id = self._save_script(filename, content)
+                return (SUCCESS, script_id)
             else:
-                msg = 'Not overwriting file %s' % filename
-                logging.debug(msg)
-                return '%s %s' % (SUCCESS, msg)
+                filename = os.path.join(self.data_dir, filename)
+                if not os.path.isfile(filename) or overwrite:
+                    with open(filename, 'wb') as f:
+                        f.write(content.data)
+                    msg = 'Data file %s saved' % filename
+                    logging.info(msg)
+                    return (SUCCESS, msg)
+                else:
+                    msg = 'Not overwriting file %s' % filename
+                    logging.debug(msg)
+                    return (SUCCESS, msg)
         except Exception as exc:
-            logging.error('Unable to save data file %s: %s' % (
+            logging.error('Error saving file %s: %s' % (
                 filename,
                 str(exc)))
             return self._get_error()
 
-    def ls(self):
+    @public
+    def ls(self, data=False):
         """List the files in the data directory"""
-        return os.listdir(self.data_dir)
+        if data:
+            return (SUCCESS, '\n'.join(os.listdir(self.data_dir)))
+        else:
+            return (SUCCESS, '\n'.join(os.listdir(self.script_dir)))
 
+    @public
     def get(self, filename):
         """Returns the content of a file"""
         full_filename = os.path.join(self.data_dir, filename)
         if os.path.split(full_filename) == full_filename:
             if os.path.isfile(full_filename):
                 with open(full_filename, 'r') as f:
-                    # FIXME send SUCCESS code and encode
-                    return f.read()
+                    return (SUCCESS, xmlrpc.client.Binary(f.read()))
             else:
-                return '%s File does not exist' % ERROR
+                return (ERROR, 'File does not exist')
         else:
-            return '%s No paths allowed on file names' % ERROR
+            return (ERROR, 'No paths allowed on file names')
 
+    @public
     def mv(self, src, dst):
         """Renames a file in the data directory"""
         if src == os.path.split(src) and dst == os.path.split(dst):
@@ -232,7 +229,7 @@ class RPCServer:
                     os.path.join(self.data_dir, src),
                     os.path.join(self.data_dir, dst))
             else:
-                return '%s File does not exist' % ERROR
+                return (ERROR, 'File does not exist')
         else:
-            return '%s No paths allowed on file names' % ERROR
+            return (ERROR, 'No paths allowed on file names')
 

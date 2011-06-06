@@ -7,11 +7,29 @@ import http.client
 import xmlrpc.client
 from optparse import OptionParser
 
-APP_DESC = 'Sends scripts to be executed in virid instances'
+APP_DESC = 'Performs operation on remote hosts using virid'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
 
+(DESCRIPTION,
+PARAMETERS,
+ENCODE_FILENAME) = range(3)
+
+CMD_DEF = {
+    'ls': ('Lists remote scripts or files',
+        [], None),
+    'get': ('Downloads a remote script or file',
+        ('filename',), False),
+    'put': ('Uploads a script or file to the remote host',
+        ('filename',), True),
+    'mv': ('Renames a file in the remote host',
+        ('source', 'destination'), None),
+    'rm': ('Removes a file in the remote host',
+        ('filename',), False),
+    'execute': ('Executes a script in the remote host',
+        ('filename',), True),
+}
 
 class HTTPConnectionTLS(http.client.HTTPSConnection):
     """Extending http.client.HTTPSConnection class, so we can specify which
@@ -54,7 +72,7 @@ class TransportTLS(xmlrpc.client.Transport):
         connection.request('POST', handler, request_body, headers)
         return connection
 
-def main(command, *args, **kwargs):
+def main(command, kwargs):
     """Handles the connection to the remote virid server, and the execution of
     remote methods. All logic is implemented on the server, so if a invalid
     command is specified, the connection will be established. This makes this
@@ -72,16 +90,17 @@ def main(command, *args, **kwargs):
     del kwargs['keyfile']
     del kwargs['certfile']
 
-    if kwargs['filename']:
+    if CMD_DEF[command][ENCODE_FILENAME] == True:
         with open(kwargs['filename'], 'rb') as f:
             kwargs['content'] = xmlrpc.client.Binary(f.read())
             kwargs['filename'] = os.path.split(kwargs['filename'])[1]
-    else:
+    elif CMD_DEF[command][ENCODE_FILENAME] == None:
         del kwargs['filename']
+
     if not kwargs['overwrite']:
         del kwargs['overwrite']
-    res = getattr(server, command)(*args, **kwargs)
-    return res.split(' ', 1)
+
+    return getattr(server, command)(kwargs)
 
 
 if __name__ == '__main__':
@@ -97,26 +116,47 @@ if __name__ == '__main__':
         help='TLS key')
     parser.add_option('-c', '--certfile', dest='certfile',
         help='TLS certificate', default='keys/viric.pem')
-    parser.add_option('-f', '--filename', dest='filename',
-        help='path to the file name')
+    parser.add_option('-d', '--data', dest='data',
+        help='specifies that the operation is performed for data files',
+        action='store_true', default=False)
     parser.add_option('-o', '--overwrite', dest='overwrite',
         help='overwrite the file if it exists on the remote host',
         action='store_true', default=False)
     (options, args) = parser.parse_args()
 
-    if len(args) < 1:
-        parser.error('Command argument is required')
+    cmd_def = ''.join(['\t%s: %s\n' % (
+        cmd, CMD_DEF[cmd][DESCRIPTION]) for cmd in CMD_DEF.keys()])
 
-    try:
-        code, msg = main(*args, **vars(options))
-    except Exception as exc:
-        sys.stderr.write('%s\n' % str(exc))
+    if len(args) < 1:
+        sys.stderr.write(
+            'Command argument is required. Available commands are:\n' + cmd_def)
+        sys.exit(1)
+    elif args[0] not in CMD_DEF.keys(): 
+        sys.stderr.write(
+            'Invalid command %s. Available commands are:\n%s' % (
+                args[0], cmd_def))
+        sys.exit(1)
+    elif len(args) - 1 != len(CMD_DEF[args[0]][PARAMETERS]):
+        sys.stderr.write(
+            'Invalid number of parameters for command %s.' % args[0] +
+            ' Required parameters are:\n' +
+            ''.join('\t%s\n' % param for param in CMD_DEF[args[0]][PARAMETERS]))
         sys.exit(1)
     else:
-        sys.stdout.write('%s\n' % msg)
+        cmd = args[0]
+        params = dict(zip(args[1:], CMD_DEF[args[0]][PARAMETERS]))
+        params.update(vars(options))
         try:
-            code_int = int(code)
-        except ValueError:
-            sys.stderr.write('Invalid response from the server: %s %s' % (code, msg))
+            (code, msg) = main(cmd, params)
+        except Exception as exc:
+            sys.stderr.write('%s\n' % str(exc))
             sys.exit(1)
+        else:
+            sys.stdout.write('%s\n' % msg)
+            try:
+                code_int = int(code)
+            except ValueError:
+                sys.stderr.write(
+                    'Invalid response from the server: %s %s' % (code, msg))
+                sys.exit(1)
 
