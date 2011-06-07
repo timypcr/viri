@@ -3,20 +3,20 @@
 Usage:
     tests.py [modules_to_test]
 
-    modules_to_test: Optional list of test modules to execute,
-        if not provided, all test modules are tested
+    modules_to_test: Optional list of test modules to execute, if not provided,
+        all test modules are tested
 
 Example usage:
-    test.py -- Executes all tests
-    test.py schedserver -- Executes schedserver.py tests
-    test.py schedserver rpcserver -- Executes schedserver.py
-        and rpcserver.py tests
+    tests.py -- Executes all tests
+    tests.py schedserver -- Executes schedserver.py tests
+    tests.py schedserver rpcserver -- Executes schedserver.py and rpcserver.py
+        tests
 """
 import sys
 import os
 import doctest
 
-ALL_TESTS = ('schedserver',)
+ALL_TESTS = ('rpcserver', 'schedserver')
 
 def set_path():
     parent_dir = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]

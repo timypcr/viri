@@ -44,7 +44,8 @@ CMD_DEF = {
         desc='Downloads a remote script or file',
         args=(
             ('filename_or_id', False),),
-        options=(OPT_DATA, OPT_USE_ID)),
+        options=(OPT_DATA, OPT_USE_ID),
+        result=lambda x: x.data),
     'history': dict(
         desc='Displays script execution history',
         args=[],
@@ -218,6 +219,9 @@ if __name__ == '__main__':
         sys.stderr.write('%s\n' % str(exc))
         sys.exit(1)
     else:
+        result_callback = CMD_DEF[cmd].get('result_callback')
+        if result_callback:
+            msg = result_callback(msg)
         sys.stdout.write('%s\n' % msg)
         try:
             code_int = int(code)

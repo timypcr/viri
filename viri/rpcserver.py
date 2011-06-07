@@ -173,10 +173,14 @@ class RPCServer:
                 return (SUCCESS, script_id)
             else:
                 filename = os.path.join(self.data_dir, file_name)
-                if not os.path.isfile(filename) or overwrite:
+                exists = os.path.isfile(filename)
+                if not exists or overwrite:
                     with open(filename, 'wb') as f:
                         f.write(file_content.data)
-                    msg = 'Data file %s saved' % file_name
+                    if exists:
+                        msg = 'Data file %s overwrote' % file_name
+                    else:
+                        msg = 'Data file %s saved' % file_name
                     logging.info(msg)
                     return (SUCCESS, msg)
                 else:

@@ -25,6 +25,14 @@ class ScriptManager:
         self.history_file = os.path.join(info_dir, HISTORY_FILE)
         self.names_file = os.path.join(self.info_dir, NAMES_FILE)
 
+    def _get_name_map(self):
+        # TODO check if data is corrupted and regenerate the whole file
+        if os.path.isfile(self.names_file):
+            with open(self.names_file, 'r') as f:
+                return json.load(f)
+        else:
+            return {}
+
     def id_by_name(self, script_name):
         """Returns the id of the last version of a script given its name"""
         with open(os.path.join(self.info_dir), 'r') as f:
@@ -34,8 +42,7 @@ class ScriptManager:
 
     def name_by_id(self, script_id):
         """Returns the name of a script given its id"""
-        name_map = json.load(self.names_file)
-        return name_map.get(script_id)
+        return self._get_name_map.get(script_id)
 
     def save_script(self, filename, content):
         """Saves the script in the scripts directory, adds its id to the
@@ -59,9 +66,10 @@ class ScriptManager:
         with open(info_path, 'a') as info_file:
             info_file.write('%s %s' % (script_id, datetime.datetime.now()))
 
-        name_map = json.load(self.names_file)
+        name_map = self._get_name_map()
         name_map[script_id] = filename
-        json.dump(name_map, self.names_file)
+        with open(self.names_file, 'w') as f:
+            json.dump(name_map, f)
 
         return script_id
 
