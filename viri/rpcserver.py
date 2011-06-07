@@ -1,22 +1,19 @@
 import sys
 import os
 import logging
-import datetime
 import traceback
+import glob
 import socket
 import socketserver
 import ssl
 import xmlrpc.client
-from hashlib import sha1
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from viri.viritask import TaskExecutor
 
+RPC_METHODS = ('execute', 'put', 'ls', 'get', 'history', 'mv', 'rm')
 PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
 ERROR = 1
-
-RPC_METHODS = ('execute', 'put', 'get', 'ls', 'mv', 'rm')
 
 
 class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
@@ -72,20 +69,27 @@ def public(func):
         return func(self, **kwargs)
     return inner
 
+def protect(directory, filename):
+    """Returns the absolute path to the file in the directory, only if the
+    filename is in the directory. This is done to prevent access to files
+    outside the Viri working directory, if the user sends as a parameter
+    something like ../../../etc/passwd
+    """
+    req_path = os.path.abspath(os.path.normpath(os.path.join(
+        directory, filename)))
+    allowed_path = os.path.abspath(os.path.normpath(os.path.join(
+        directory, os.path.basename(filename))))
+    if req_path == allowed_path:
+        return req_path
+    else:
+        return None
+
 
 class RPCServer:
-    """XML-RPC server, implementing the main functionality of the
-    application.
-
-    Public methods:
-    send_data -- Receives a data file from the client and saves it in
-        data_dir directory
-    send_task -- Receives a Python source file from the client, calculates a
-        hash for it, and saves it in the task_dir using the hash as its name
-    exec_task -- executes a task previously send, given its id (hash)
+    """XML-RPC server, implementing the main functionality of the application.
     """
     def __init__(self, port, ca_file, cert_key_file,
-        script_dir, info_dir, data_dir, context):
+        script_dir, data_dir, script_manager):
         """Saves arguments as class attributes and prepares
         task and data directories
         
@@ -95,18 +99,16 @@ class RPCServer:
         cert_key_file -- File with daemon's certificate and private key,
             for TLS negotiation
         script_dir -- directory to store python code representing tasks
-        info_dir -- directory to store information about scripts
         data_dir -- directory to store non-code sent files
-        custom_settings -- dictionary containing configuration directives
-            which will be available on `conf' attribute of tasks
+        script_manager -- ScriptManager instance used to handle script
+            operations
         """
         self.port = port
         self.ca_file = ca_file
         self.cert_key_file = cert_key_file
         self.script_dir = script_dir
-        self.info_dir = info_dir
         self.data_dir = data_dir
-        self.context = context
+        self.script_manager = script_manager
 
     def start(self):
         """Starts the XML-RPC server, and registers all public methods."""
@@ -120,21 +122,27 @@ class RPCServer:
         server.serve_forever()
 
     def _get_error(self):
-        """Captures the error and the traceback, and formats
-        them to be sent to the client.
+        """Captures the error and the traceback, and formats them to be sent
+        to the client.
         """
         (exc_type, exc_val, exc_tb) = sys.exc_info()
         tb = '\n'.join(traceback.format_tb(exc_tb))
         return (ERROR, '%s\n%s' % (tb, str(exc_val)))
 
     @public
-    def execute(self, script_id):
-        """Executes a script
-        """
+    def execute(self, file_or_id=None, file_name=None, file_content=None,
+        use_id=False):
+        """Executes a script"""
         try:
-            task = TaskExecutor(self.context)
-            result = task.execute(script_id)
-            logging.info('Script %s succesfully executed' % script_id) # FIXME log name, not id
+            result = ''
+            if use_id:
+                script_id = file_or_id
+            else:
+                script_id = self.script_manager.save_script(
+                    file_name, file_content)
+                result += '%s ' % script_id
+            result += self.script_manager.execute(script_id, self.context)
+            logging.info('Script %s succesfully executed' % script_id)
             return (SUCCESS, result)
         except Exception as exc:
             logging.warning('Script %s execution failed: %s' % (
@@ -159,18 +167,8 @@ class RPCServer:
         """
         try:
             if not data:
-                file_type = file_name.rsplit('.')[-1]
-                script_id = sha1(file_content.data).hexdigest()
-
-                script_path = os.path.join(self.script_dir,
-                    '%s.%s' % (script_id, file_type))
-                with open(script_path, 'wb') as script_file:
-                    script_file.write(file_content.data)
-
-                info_path = os.path.join(self.info_dir,
-                    '%s.info' % file_name)
-                with open(info_path, 'a') as info_file:
-                    info_file.write('%s %s' % (script_id, datetime.datetime.now()))
+                script_id = self.script_manager.save_script(
+                    file_name, file_content.data)
 
                 return (SUCCESS, script_id)
             else:
@@ -192,21 +190,25 @@ class RPCServer:
             return self._get_error()
 
     @public
-    def ls(self, data=False):
+    def ls(self, data=False, verbose=False):
         """List the files in the data directory"""
         if not data:
-            return (SUCCESS, '\n'.join(
-                [f.rstrip('.info') for f in os.listdir(self.info_dir)]))
+            return (SUCCESS, '\n'.join(self.script_manager.list(verbose)))
         else:
             return (SUCCESS, '\n'.join(os.listdir(self.data_dir)))
 
     @public
-    def get(self, filename):
+    def get(self, filename_or_id, use_id=False, data=False):
         """Returns the content of a file"""
-        full_filename = os.path.join(self.data_dir, filename)
-        if os.path.split(full_filename) == full_filename:
-            if os.path.isfile(full_filename):
-                with open(full_filename, 'r') as f:
+        if not data:
+            # FIXME implement
+            pass
+            filename = ''
+        else:
+            filename = protect(self.data_dir, filename_or_id)
+        if filename:
+            if os.path.isfile(filename):
+                with open(filename, 'rb') as f:
                     return (SUCCESS, xmlrpc.client.Binary(f.read()))
             else:
                 return (ERROR, 'File does not exist')
@@ -214,14 +216,29 @@ class RPCServer:
             return (ERROR, 'No paths allowed on file names')
 
     @public
-    def mv(self, source, destination):
+    def history(self):
+        # FIXME implement
+        return (ERROR, 'Not implemented')
+
+    @public
+    def mv(self, source, destination, overwrite=False):
         """Renames a file in the data directory"""
-        if source == os.path.split(source) and \
-        destination == os.path.split(destination):
-            if os.path.isfile(os.path.join(self.data_dir, source)):
-                os.rename(
-                    os.path.join(self.data_dir, source),
-                    os.path.join(self.data_dir, destination))
+        source_path = protect(self.data_dir, source)
+        destination_path = protect(self.data_dir, destination)
+        if source_path and destination_path:
+            if os.path.isfile(source_path):
+                dst_exists = os.path.isfile(destination_path)
+                if not dst_exists or overwrite == True:
+                    os.rename(source_path, destination_path)
+                if not dst_exists:
+                    return (SUCCESS, 'File %s successfully renamed to %s' % (
+                        source, destination))
+                elif overwrite == True:
+                    return (SUCCESS, 'Existing file %s replaced'
+                    ' by renamed %s' % (destination, source))
+                else:
+                    return (ERROR, 'Rename aborted because destination file'
+                        ' already exists. Use --overwrite to force it.')
             else:
                 return (ERROR, 'File does not exist')
         else:
@@ -229,5 +246,10 @@ class RPCServer:
 
     @public
     def rm(self, filename):
-        pass
+        path = protect(self.data_dir, filename)
+        if path:
+            os.remove(path)
+            return (SUCCESS, 'File %s successfully removed' % filename)
+        else:
+            return (ERROR, 'No paths allowed on file names')
 

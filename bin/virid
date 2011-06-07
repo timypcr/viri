@@ -5,6 +5,7 @@ import logging
 import multiprocessing
 from optparse import OptionParser
 from configparser import RawConfigParser
+from viri.scriptmanager import ScriptManager
 from viri.rpcserver import RPCServer
 from viri.schedserver import SchedServer
 
@@ -63,6 +64,9 @@ class ViriDaemon:
         self.context['conf'] = conf
         self.context['data_dir'] = self.data_dir
 
+        self.script_manager = ScriptManager(
+            self.script_dir, self.info_dir, self.context)
+
         self._prepare_dirs()
 
         logging.basicConfig(
@@ -112,9 +116,8 @@ class ViriDaemon:
             self.ca_file,
             self.cert_key_file,
             self.script_dir,
-            self.info_dir,
             self.data_dir,
-            self.context)
+            self.script_manager)
         self.rpc_server.start()
 
     def stop(self):

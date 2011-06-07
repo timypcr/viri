@@ -18,22 +18,37 @@ OPT_DATA = (('-d', '--data'), dict(dest='data',
 OPT_OVERWRITE = (('-o', '--overwrite'), dict(dest='overwrite',
     help='overwrite the file if it exists on the remote host',
     action='store_true', default=False))
+OPT_USE_ID = (('-i', '--use-id'), dict(dest='use_id',
+    help='use script id instead of script file name',
+    action='store_true', default=False))
+OPT_VERBOSE = (('-v', '--verbose'), dict(dest='verbose',
+    help='displays extended information',
+    action='store_true', default=False))
 
 CMD_DEF = {
-    'ls': dict(
-        desc='Lists remote scripts or files',
-        args=[],
-        options=(OPT_DATA,)),
-    'get': dict(
-        desc='Downloads a remote script or file',
+    'execute': dict(
+        desc='Executes a script in the remote host',
         args=(
-            ('filename', False),),
-        options=(OPT_DATA,)),
+            ('file_or_id', True),),
+        options=(OPT_USE_ID,)),
     'put': dict(
         desc='Uploads a script or file to the remote host',
         args=(
             ('file', True),),
         options=(OPT_DATA,)),
+    'ls': dict(
+        desc='Lists remote scripts or files',
+        args=[],
+        options=(OPT_DATA, OPT_VERBOSE)),
+    'get': dict(
+        desc='Downloads a remote script or file',
+        args=(
+            ('filename_or_id', False),),
+        options=(OPT_DATA, OPT_USE_ID)),
+    'history': dict(
+        desc='Displays script execution history',
+        args=[],
+        options=[]),
     'mv': dict(
         desc='Renames a file in the remote host',
         args=(
@@ -44,11 +59,6 @@ CMD_DEF = {
         desc='Removes a file in the remote host',
         args=(
             ('filename', False),),
-        options=[]),
-    'execute': dict(
-        desc='Executes a script in the remote host',
-        args=(
-            ('file', True),),
         options=[]),
 }
 
