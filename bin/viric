@@ -7,28 +7,49 @@ import http.client
 import xmlrpc.client
 from optparse import OptionParser
 
-APP_DESC = 'Performs operation on remote hosts using virid'
+APP_DESC = 'Performs operations on remote hosts using Viri'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
 
-(DESCRIPTION,
-PARAMETERS,
-ENCODE_FILENAME) = range(3)
+OPT_DATA = (('-d', '--data'), dict(dest='data',
+    help='specifies that the operation is performed for data files',
+    action='store_true', default=False))
+OPT_OVERWRITE = (('-o', '--overwrite'), dict(dest='overwrite',
+    help='overwrite the file if it exists on the remote host',
+    action='store_true', default=False))
 
 CMD_DEF = {
-    'ls': ('Lists remote scripts or files',
-        [], None),
-    'get': ('Downloads a remote script or file',
-        ('filename',), False),
-    'put': ('Uploads a script or file to the remote host',
-        ('filename',), True),
-    'mv': ('Renames a file in the remote host',
-        ('source', 'destination'), None),
-    'rm': ('Removes a file in the remote host',
-        ('filename',), False),
-    'execute': ('Executes a script in the remote host',
-        ('filename',), True),
+    'ls': dict(
+        desc='Lists remote scripts or files',
+        args=[],
+        options=(OPT_DATA,)),
+    'get': dict(
+        desc='Downloads a remote script or file',
+        args=(
+            ('filename', False),),
+        options=(OPT_DATA,)),
+    'put': dict(
+        desc='Uploads a script or file to the remote host',
+        args=(
+            ('file', True),),
+        options=(OPT_DATA,)),
+    'mv': dict(
+        desc='Renames a file in the remote host',
+        args=(
+            ('source', False),
+            ('destination', False)),
+        options=(OPT_OVERWRITE,)),
+    'rm': dict(
+        desc='Removes a file in the remote host',
+        args=(
+            ('filename', False),),
+        options=[]),
+    'execute': dict(
+        desc='Executes a script in the remote host',
+        args=(
+            ('file', True),),
+        options=[]),
 }
 
 class HTTPConnectionTLS(http.client.HTTPSConnection):
@@ -72,7 +93,7 @@ class TransportTLS(xmlrpc.client.Transport):
         connection.request('POST', handler, request_body, headers)
         return connection
 
-def main(command, kwargs):
+def main(cmd, kwargs):
     """Handles the connection to the remote virid server, and the execution of
     remote methods. All logic is implemented on the server, so if a invalid
     command is specified, the connection will be established. This makes this
@@ -90,18 +111,61 @@ def main(command, kwargs):
     del kwargs['keyfile']
     del kwargs['certfile']
 
-    if CMD_DEF[command][ENCODE_FILENAME] == True:
-        with open(kwargs['filename'], 'rb') as f:
-            kwargs['content'] = xmlrpc.client.Binary(f.read())
-            kwargs['filename'] = os.path.split(kwargs['filename'])[1]
-    elif CMD_DEF[command][ENCODE_FILENAME] == None:
-        del kwargs['filename']
+    for (arg, is_file) in CMD_DEF[cmd]['args']:
+        if is_file:
+            kwargs['%s_name' % arg] = os.path.basename(kwargs[arg])
+            with open(kwargs[arg], 'rb') as f:
+                kwargs['%s_content' % arg] = xmlrpc.client.Binary(f.read())
+            del kwargs[arg]
 
-    if not kwargs['overwrite']:
-        del kwargs['overwrite']
+    return getattr(server, cmd)(kwargs)
 
-    return getattr(server, command)(kwargs)
+def print_error(msg, cmd=None):
+    program = sys.argv[0]
+    sys.stderr.write('%s: %s\n' % (program, msg % dict(cmd=cmd)))
+    sys.stderr.write('Try `%s help\' for more information.\n' % program)
+    sys.exit(1)
 
+def print_help(program):
+    opts = 'Options:\n'
+    for opt in parser.option_list:
+        if len(opt._short_opts) > 0:
+            short = ' (%s)' % opt._short_opts[0]
+        else:
+            short = ''
+        if not isinstance(opt.default, tuple):
+            default = ' (Default: %s)' % opt.default
+        else:
+            default = ''
+        opts += '\t%s%s%s\n' % (
+            ('%s%s' % (opt._long_opts[0], short)).ljust(20),
+            opt.help, default)
+
+    if len(sys.argv) > 2 and CMD_DEF.get(sys.argv[2]):
+        help_cmd = CMD_DEF.get(sys.argv[2])
+        sys.stdout.write(
+            'Usage: %s %s %s [OPTIONS]\n\n' % (
+                program, sys.argv[2],
+                ' '.join([a[0] for a in help_cmd['args']])))
+        sys.stdout.write('%s\n\n' % help_cmd['desc'])
+        sys.stdout.write('%s\n' % opts)
+        if help_cmd['options']:
+            sys.stdout.write('Command options:\n')
+            for cmd_opt in help_cmd['options']:
+                sys.stdout.write('\t%s%s\n' % (
+                ('%s (%s)' % (cmd_opt[0][1], cmd_opt[0][0])).ljust(20),
+                cmd_opt[1]['help']))
+    else:
+        sys.stdout.write('Usage: %s COMMAND [OPTIONS]\n\n' % program)
+        sys.stdout.write('Available commands:\n%s\n' %
+            ''.join(['\t%s%s\n' % (key.ljust(12), val['desc'])
+                for key, val in CMD_DEF.items()]))
+        sys.stdout.write('%s\n' % opts)
+            
+        sys.stdout.write('See \'%s help COMMAND\' for more information '
+            'on a specific command.\n' % program)
+
+    sys.exit(0)
 
 if __name__ == '__main__':
     parser = OptionParser(
@@ -116,47 +180,39 @@ if __name__ == '__main__':
         help='TLS key')
     parser.add_option('-c', '--certfile', dest='certfile',
         help='TLS certificate', default='keys/viric.pem')
-    parser.add_option('-d', '--data', dest='data',
-        help='specifies that the operation is performed for data files',
-        action='store_true', default=False)
-    parser.add_option('-o', '--overwrite', dest='overwrite',
-        help='overwrite the file if it exists on the remote host',
-        action='store_true', default=False)
+
+    if len(sys.argv) < 2:
+        print_error('command argument is required')
+
+    (program, cmd) = sys.argv[:2]
+    program = os.path.basename(program)
+    if cmd == 'help':
+        print_help(program)
+
+    if not CMD_DEF.get(cmd): 
+        print_error('invalid command %(cmd)s', cmd)
+
+    for opt in CMD_DEF[cmd]['options']:
+        parser.add_option(*opt[0], **opt[1])
     (options, args) = parser.parse_args()
 
-    cmd_def = ''.join(['\t%s: %s\n' % (
-        cmd, CMD_DEF[cmd][DESCRIPTION]) for cmd in CMD_DEF.keys()])
+    if len(args) - 1 != len(CMD_DEF[cmd]['args']):
+        print_error('invalid number of parameters for command %(cmd)s', cmd)
 
-    if len(args) < 1:
-        sys.stderr.write(
-            'Command argument is required. Available commands are:\n' + cmd_def)
-        sys.exit(1)
-    elif args[0] not in CMD_DEF.keys(): 
-        sys.stderr.write(
-            'Invalid command %s. Available commands are:\n%s' % (
-                args[0], cmd_def))
-        sys.exit(1)
-    elif len(args) - 1 != len(CMD_DEF[args[0]][PARAMETERS]):
-        sys.stderr.write(
-            'Invalid number of parameters for command %s.' % args[0] +
-            ' Required parameters are:\n' +
-            ''.join('\t%s\n' % param for param in CMD_DEF[args[0]][PARAMETERS]))
+    params = dict(zip([arg[0] for arg in CMD_DEF[cmd]['args']], args[1:]))
+    params.update(vars(options))
+    try:
+        (code, msg) = main(cmd, params)
+    except Exception as exc:
+        raise
+        sys.stderr.write('%s\n' % str(exc))
         sys.exit(1)
     else:
-        cmd = args[0]
-        params = dict(zip(args[1:], CMD_DEF[args[0]][PARAMETERS]))
-        params.update(vars(options))
+        sys.stdout.write('%s\n' % msg)
         try:
-            (code, msg) = main(cmd, params)
-        except Exception as exc:
-            sys.stderr.write('%s\n' % str(exc))
+            code_int = int(code)
+        except ValueError:
+            sys.stderr.write(
+                'Invalid response from the server: %s %s' % (code, msg))
             sys.exit(1)
-        else:
-            sys.stdout.write('%s\n' % msg)
-            try:
-                code_int = int(code)
-            except ValueError:
-                sys.stderr.write(
-                    'Invalid response from the server: %s %s' % (code, msg))
-                sys.exit(1)
 
