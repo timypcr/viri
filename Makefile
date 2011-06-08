@@ -1,4 +1,5 @@
-BINDIR = $(DESTDIR)/usr/bin
+BINDIR = $(DESTDIR)/usr/local/bin
+SBINDIR = $(DESTDIR)/usr/local/sbin
 LIBDIR = $(DESTDIR)/usr/share/pyshared/viri
 ETCDIR = $(DESTDIR)/etc/viri
 INITDIR = $(DESTDIR)/etc/init.d
@@ -6,13 +7,11 @@ INITDIR = $(DESTDIR)/etc/init.d
 clean:
 	rm -f *.py[co] */*.py[co]
 
-install_viric:
+install:
 	mkdir -p $(BINDIR)
 	cp viric.py $(BINDIR)/viric
-
-install_virid:
-	mkdir -p $(BINDIR)
-	cp virid.py $(BINDIR)/virid
+	mkdir -p $(SBINDIR)
+	cp virid.py $(SBINDIR)/virid
 	mkdir -p $(LIBDIR)
 	cp viri/*.py $(LIBDIR)/
 	mkdir -p $(ETCDIR)
@@ -20,15 +19,10 @@ install_virid:
 	mkdir -p $(INITDIR)
 	cp virid $(INITDIR)/
 
-install: install_viric install_virid
-
-uninstall_viric:
-	rm $(BINDIR)/viric
-	rmdir --ignore-fail-on-non-empty $(BINDIR)
-
-uninstall_virid:
-	rm $(BINDIR)/virid
-	rmdir --ignore-fail-on-non-empty $(BINDIR)
-
-uninstall: uninstall_viric uninstall_virid
+uninstall:
+	rm -f $(BINDIR)/viric
+	rm -f $(SBINDIR)/virid
+	rm -rf $(DESTDIR)
+	rm -rf $(ETCDIR)
+	rm -f $(INITDIR)/virid
 
