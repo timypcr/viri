@@ -10,4 +10,14 @@ Package: viri
 Architecture: all
 Depends: python (>= 3.1)
 Description: Remote execution of Python scripts
+ Viri is an application to easily deploy Python scripts, tracking its
+ execution results. Viri has two different components, the virid daemon,
+ which should be installed on all hosts that will be managed, and the
+ viric command line utility. The client program viric can be used directly
+ by system administrators, but also can be integrated with third party
+ applications to automate tasks.
+
+ Some examples on what Viri can be useful for include data gathering,
+ synchronization of files, deployment of software; but it can be used
+ for everything which can be coded in the Python language.
 

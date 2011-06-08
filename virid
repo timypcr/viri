@@ -25,13 +25,13 @@ case "${1}" in
   stop)
     stop
     ;;
-  restart)
+  restart|force-reload)
     stop
     sleep 1
     start
     ;;
   *)
-    echo "Usage: ${0} {start|stop|restart}" >&2
+    echo "Usage: ${0} {start|stop|restart|force-reload}" >&2
     exit 1
     ;;
 esac
