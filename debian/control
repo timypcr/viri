@@ -2,7 +2,12 @@ Source: viri
 Section: utils
 Priority: optional
 Maintainer: Marc Garcia <garcia.marc@gmail.com>
-Architecture: all
-Homepage: http://www.viriproject.com
+Build-Depends: debhelper (>= 8), python-support
 Standards-Version: 3.9.1.0 
+Homepage: http://www.viriproject.com
+
+Package: viri
+Architecture: all
+Depends: python (>= 3.1)
+Description: Remote execution of Python scripts
 
