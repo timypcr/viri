@@ -9,15 +9,15 @@ clean:
 
 install:
 	mkdir -p $(BINDIR)
-	cp viric.py $(BINDIR)/viric
+	cp bin/viric $(BINDIR)/
 	mkdir -p $(SBINDIR)
-	cp virid.py $(SBINDIR)/virid
+	cp bin/virid $(SBINDIR)/
 	mkdir -p $(LIBDIR)
 	cp viri/*.py $(LIBDIR)/
 	mkdir -p $(ETCDIR)
-	cp virid.conf $(ETCDIR)/
+	cp conf/virid.conf $(ETCDIR)/
 	mkdir -p $(INITDIR)
-	cp virid $(INITDIR)/
+	cp init-script/virid $(INITDIR)/
 
 uninstall:
 	rm -f $(BINDIR)/viric
@@ -26,7 +26,10 @@ uninstall:
 	rm -rf $(ETCDIR)
 	rm -f $(INITDIR)/virid
 
-postinst-clean:
+rpm:
+	python setup.py bdist_rpm
+
+install-clean:
 	rm -f build-stamp
 	rm -f configure-stamp
 	rm -f debian/files
