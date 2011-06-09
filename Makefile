@@ -1,8 +1,9 @@
 BINDIR = $(DESTDIR)/usr/local/bin
 SBINDIR = $(DESTDIR)/usr/local/sbin
-LIBDIR = $(DESTDIR)/usr/share/pyshared/viri
+LIBDIR = $(DESTDIR)`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`/viri
 ETCDIR = $(DESTDIR)/etc/viri
 INITDIR = $(DESTDIR)/etc/init.d
+RPMSOURCES = ~/rpmbuild/BUILD
 
 clean:
 	rm -f *.py[co] */*.py[co]
@@ -27,9 +28,11 @@ uninstall:
 	rm -f $(INITDIR)/virid
 
 rpm:
-	python setup.py bdist_rpm
+	mkdir -p $(RPMSOURCES)
+	cp -r * $(RPMSOURCES)
+	rpmbuild -bb redhat/viri.spec
 
-install-clean:
+custom-clean:
 	rm -f build-stamp
 	rm -f configure-stamp
 	rm -f debian/files
@@ -38,4 +41,7 @@ install-clean:
 	rm -f debian/viri.prerm.debhelper
 	rm -f debian/viri.substvars
 	rm -rf debian/viri/
+	rm -rf build/
+	rm -rf dist/
+	rm -rf viri.egg-info/
 
