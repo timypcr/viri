@@ -26,3 +26,13 @@ uninstall:
 	rm -rf $(ETCDIR)
 	rm -f $(INITDIR)/virid
 
+postinst-clean:
+	rm -f build-stamp
+	rm -f configure-stamp
+	rm -f debian/files
+	rm -f debian/viri.debhelper.log
+	rm -f debian/viri.postinst.debhelper
+	rm -f debian/viri.prerm.debhelper
+	rm -f debian/viri.substvars
+	rm -rf debian/viri/
+
