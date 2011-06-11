@@ -218,7 +218,8 @@ class RPCServer:
             else:
                 return (ERROR, 'File does not exist')
         else:
-            return (ERROR, 'No paths allowed on file names')
+            return (ERROR, 'File not found.'
+                ' File names cannot include directories')
 
     @public
     def history(self):
@@ -247,7 +248,7 @@ class RPCServer:
             else:
                 return (ERROR, 'File does not exist')
         else:
-            return (ERROR, 'No paths allowed on file names')
+            return (ERROR, 'File names cannot include directories')
 
     @public
     def rm(self, filename):
@@ -256,5 +257,5 @@ class RPCServer:
             os.remove(path)
             return (SUCCESS, 'File %s successfully removed' % filename)
         else:
-            return (ERROR, 'No paths allowed on file names')
+            return (ERROR, 'FIle names cannot include directories')
 

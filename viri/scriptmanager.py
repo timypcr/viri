@@ -36,10 +36,13 @@ class ScriptManager:
     def id_by_name(self, script_name):
         """Returns the id of the last version of a script given its name"""
         info_filename = os.path.join(self.info_dir, '%s.info' % script_name)
-        with open(info_filename, 'r') as f:
-            # there are more efficient ways to get the last line, but we
-            # expect very small files, so it's worthless to implement them
-            return f.readlines()[-1].split(' ')[0]
+        if os.path.isfile(info_filename):
+            with open(info_filename, 'r') as f:
+                # there are more efficient ways to get the last line, but we
+                # expect very small files, so it's worthless to implement them
+                return f.readlines()[-1].split(' ')[0]
+        else:
+            return None
 
     def name_by_id(self, script_id):
         """Returns the name of a script given its id"""
@@ -47,8 +50,12 @@ class ScriptManager:
 
     def filename_by_id(self, script_id):
         """Returns the absolute path of a script given its id"""
-        ext = os.path.splitext(self.name_by_id(script_id))[-1]
-        return os.path.join(self.script_dir, '%s.%s' % (script_id, ext))
+        script_name = self.name_by_id(script_id)
+        if script_name:
+            ext = os.path.splitext(script_name)[-1]
+            return os.path.join(self.script_dir, '%s.%s' % (script_id, ext))
+        else:
+            return None
 
     def save_script(self, filename, content):
         """Saves the script in the scripts directory, adds its id to the
