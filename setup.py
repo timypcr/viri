@@ -1,17 +1,29 @@
+import sys
 from setuptools import setup
+from setuptools.command.install import install
+
+class xinstall(install):
+    def run(self):
+        install.run(self)
+        sys.stdout.write('Host code: ')
+        hostcode = input()
+        with open('/etc/viri/virid.conf', 'a') as f:
+            f.write('\nHostCode: %s\n\n' % hostcode)
 
 setup(name='viri',
+    cmdclass={'install': xinstall},
     version='0.1',
     description='Remote execution of Python scripts',
     author='Marc Garcia',
     author_email='garcia.marc@gmail.com',
     url='http://www.viriproject.com',
-    data_files=(
-        ('/etc/viri', ('etc/viri/virid.conf',)),
-        ('/etc/init.d', ('etc/init.d/virid',)),
-    ),
-    scripts=('bin/virid', 'bin/viric'),
     packages=('viri',),
+    data_files=(
+        ('/usr/local/bin', ('bin/viric',)),
+        ('/usr/local/sbin', ('bin/virid',)),
+        ('/etc/viri', ('conf/virid.conf',)),
+        ('/etc/init.d', ('init-script/virid',)),
+    ),
     classifiers=(
         'Development Status :: 4 - Beta',
         'Environment :: No Input/Output (Daemon)',

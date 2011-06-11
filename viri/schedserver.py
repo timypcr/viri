@@ -3,7 +3,7 @@ import datetime
 import logging
 import time
 import threading
-from viri.viritask import TaskExecutor
+from viri.scriptmanager import ScriptManager
 
 SLEEP_TIME = 5 # seconds
 JOBS_FILE = '__crontab__' # in data dir
@@ -18,14 +18,14 @@ class Job:
     """Represents a scheduled execution of a script"""
     # TODO improve the way the job is defined. We actually don't know
     # if the job is valid until we check if it has to run
-    def __init__(self, cron_def, context):
+    def __init__(self, cron_def, script_manager):
         """
         """
         COMMENT_CHAR = '#'
         DIVISION_CHAR = ' '
         to_int = lambda x: x if x == '*' else int(x)
 
-        self.context = context
+        self.script_manager = script_manager
 
         self.is_valid_job = False
 
@@ -35,7 +35,7 @@ class Job:
 
         if cron_def:
             cron_def = cron_def.split(DIVISION_CHAR)
-            self.task_id = cron_def.pop()
+            self.script_id = cron_def.pop()
             try:
                 (self.minute, self.hour, self.day, self.month, self.weekday
                     ) = map(to_int, cron_def)
@@ -55,8 +55,7 @@ class Job:
         """
         # FIXME capture any exception and log, this should never raise an
         # exception
-        task = TaskExecutor(self.context)
-        task.execute(self.task_id)
+        self.script_manager.execute(self.script_id)
 
     def has_to_run(self, now):
         """Returns a boolean representing if the job has to run in the
@@ -86,11 +85,16 @@ class SchedServer:
     """Daemon which simulates the cron application, but instead of executing
     shell commands, it executes viri tasks. 
     """
-    def __init__(self, data_dir, context):
+    def __init__(self, data_dir, script_manager):
         """Initializes the SchedServer, by setting the path of the jobs file
+
+        Arguments:
+        data_dir -- directory where data files are stored
+        script_manager -- ScriptManager instance used to handle script
+            operations
         """
         self.data_dir = data_dir
-        self.context = context
+        self.script_manager = script_manager
         self.job_file = os.path.join(data_dir, JOBS_FILE)
 
     def _run_job(self, job_def, now):
@@ -98,15 +102,15 @@ class SchedServer:
         specified time.
         """
         try:
-            job = Job(job_def, self.context)
+            job = Job(job_def, self.script_manager)
         except InvalidCronSyntax:
             logging.warn('Invalid job definition: %s' % job_def)
         else:
             if job:
                 logging.debug('Job definition found: %s' % job_def)
                 if job.has_to_run(now):
-                    # TODO logging the task name (script file name)
-                    # would be more descriptive
+                    # TODO logging the script file name would be more
+                    # descriptive
                     logging.info(
                         'Running scheduled task %s' % job.task_id)
                     threading.Thread(target=job).start()

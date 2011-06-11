@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import os
 import socket
@@ -7,11 +7,61 @@ import http.client
 import xmlrpc.client
 from optparse import OptionParser
 
-APP_DESC = 'Sends scripts to be executed in virid instances'
+APP_DESC = 'Performs operations on remote hosts using Viri'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
 
+OPT_DATA = (('-d', '--data'), dict(dest='data',
+    help='specifies that the operation is performed for data files',
+    action='store_true', default=False))
+OPT_OVERWRITE = (('-o', '--overwrite'), dict(dest='overwrite',
+    help='overwrite the file if it exists on the remote host',
+    action='store_true', default=False))
+OPT_USE_ID = (('-i', '--use-id'), dict(dest='use_id',
+    help='use script id instead of script file name',
+    action='store_true', default=False))
+OPT_VERBOSE = (('-v', '--verbose'), dict(dest='verbose',
+    help='displays extended information',
+    action='store_true', default=False))
+
+CMD_DEF = {
+    'execute': dict(
+        desc='Executes a script in the remote host',
+        args=(
+            ('file_or_id', True),),
+        options=(OPT_USE_ID,)),
+    'put': dict(
+        desc='Uploads a script or file to the remote host',
+        args=(
+            ('file', True),),
+        options=(OPT_DATA,)),
+    'ls': dict(
+        desc='Lists remote scripts or files',
+        args=[],
+        options=(OPT_DATA, OPT_VERBOSE)),
+    'get': dict(
+        desc='Downloads a remote script or file',
+        args=(
+            ('filename_or_id', False),),
+        options=(OPT_DATA, OPT_USE_ID),
+        result=lambda x: x.data),
+    'history': dict(
+        desc='Displays script execution history',
+        args=[],
+        options=[]),
+    'mv': dict(
+        desc='Renames a file in the remote host',
+        args=(
+            ('source', False),
+            ('destination', False)),
+        options=(OPT_OVERWRITE,)),
+    'rm': dict(
+        desc='Removes a file in the remote host',
+        args=(
+            ('filename', False),),
+        options=[]),
+}
 
 class HTTPConnectionTLS(http.client.HTTPSConnection):
     """Extending http.client.HTTPSConnection class, so we can specify which
@@ -54,7 +104,7 @@ class TransportTLS(xmlrpc.client.Transport):
         connection.request('POST', handler, request_body, headers)
         return connection
 
-def main(command, *args, **kwargs):
+def main(cmd, kwargs):
     """Handles the connection to the remote virid server, and the execution of
     remote methods. All logic is implemented on the server, so if a invalid
     command is specified, the connection will be established. This makes this
@@ -72,17 +122,61 @@ def main(command, *args, **kwargs):
     del kwargs['keyfile']
     del kwargs['certfile']
 
-    if kwargs['filename']:
-        with open(kwargs['filename'], 'rb') as f:
-            kwargs['content'] = xmlrpc.client.Binary(f.read())
-            kwargs['filename'] = os.path.split(kwargs['filename'])[1]
-    else:
-        del kwargs['filename']
-    if not kwargs['overwrite']:
-        del kwargs['overwrite']
-    res = getattr(server, command)(*args, **kwargs)
-    return res.split(' ', 1)
+    for (arg, is_file) in CMD_DEF[cmd]['args']:
+        if is_file:
+            kwargs['%s_name' % arg] = os.path.basename(kwargs[arg])
+            with open(kwargs[arg], 'rb') as f:
+                kwargs['%s_content' % arg] = xmlrpc.client.Binary(f.read())
+            del kwargs[arg]
 
+    return getattr(server, cmd)(kwargs)
+
+def print_error(msg, cmd=None):
+    program = sys.argv[0]
+    sys.stderr.write('%s: %s\n' % (program, msg % dict(cmd=cmd)))
+    sys.stderr.write('Try `%s help\' for more information.\n' % program)
+    sys.exit(1)
+
+def print_help(program):
+    opts = 'Options:\n'
+    for opt in parser.option_list:
+        if len(opt._short_opts) > 0:
+            short = ' (%s)' % opt._short_opts[0]
+        else:
+            short = ''
+        if not isinstance(opt.default, tuple):
+            default = ' (Default: %s)' % opt.default
+        else:
+            default = ''
+        opts += '\t%s%s%s\n' % (
+            ('%s%s' % (opt._long_opts[0], short)).ljust(20),
+            opt.help, default)
+
+    if len(sys.argv) > 2 and CMD_DEF.get(sys.argv[2]):
+        help_cmd = CMD_DEF.get(sys.argv[2])
+        sys.stdout.write(
+            'Usage: %s %s %s [OPTIONS]\n\n' % (
+                program, sys.argv[2],
+                ' '.join([a[0] for a in help_cmd['args']])))
+        sys.stdout.write('%s\n\n' % help_cmd['desc'])
+        sys.stdout.write('%s\n' % opts)
+        if help_cmd['options']:
+            sys.stdout.write('Command options:\n')
+            for cmd_opt in help_cmd['options']:
+                sys.stdout.write('\t%s%s\n' % (
+                ('%s (%s)' % (cmd_opt[0][1], cmd_opt[0][0])).ljust(20),
+                cmd_opt[1]['help']))
+    else:
+        sys.stdout.write('Usage: %s COMMAND [OPTIONS]\n\n' % program)
+        sys.stdout.write('Available commands:\n%s\n' %
+            ''.join(['\t%s%s\n' % (key.ljust(12), val['desc'])
+                for key, val in CMD_DEF.items()]))
+        sys.stdout.write('%s\n' % opts)
+            
+        sys.stdout.write('See \'%s help COMMAND\' for more information '
+            'on a specific command.\n' % program)
+
+    sys.exit(0)
 
 if __name__ == '__main__':
     parser = OptionParser(
@@ -97,26 +191,42 @@ if __name__ == '__main__':
         help='TLS key')
     parser.add_option('-c', '--certfile', dest='certfile',
         help='TLS certificate', default='keys/viric.pem')
-    parser.add_option('-f', '--filename', dest='filename',
-        help='path to the file name')
-    parser.add_option('-o', '--overwrite', dest='overwrite',
-        help='overwrite the file if it exists on the remote host',
-        action='store_true', default=False)
+
+    if len(sys.argv) < 2:
+        print_error('command argument is required')
+
+    (program, cmd) = sys.argv[:2]
+    program = os.path.basename(program)
+    if cmd == 'help':
+        print_help(program)
+
+    if not CMD_DEF.get(cmd): 
+        print_error('invalid command %(cmd)s', cmd)
+
+    for opt in CMD_DEF[cmd]['options']:
+        parser.add_option(*opt[0], **opt[1])
     (options, args) = parser.parse_args()
 
-    if len(args) < 1:
-        parser.error('Command argument is required')
+    if len(args) - 1 != len(CMD_DEF[cmd]['args']):
+        print_error('invalid number of parameters for command %(cmd)s', cmd)
 
+    params = dict(zip([arg[0] for arg in CMD_DEF[cmd]['args']], args[1:]))
+    params.update(vars(options))
     try:
-        code, msg = main(*args, **vars(options))
+        (code, msg) = main(cmd, params)
     except Exception as exc:
+        raise
         sys.stderr.write('%s\n' % str(exc))
         sys.exit(1)
     else:
+        result_callback = CMD_DEF[cmd].get('result_callback')
+        if result_callback:
+            msg = result_callback(msg)
         sys.stdout.write('%s\n' % msg)
         try:
             code_int = int(code)
         except ValueError:
-            sys.stderr.write('Invalid response from the server: %s %s' % (code, msg))
+            sys.stderr.write(
+                'Invalid response from the server: %s %s' % (code, msg))
             sys.exit(1)
 
