@@ -35,14 +35,20 @@ class ScriptManager:
 
     def id_by_name(self, script_name):
         """Returns the id of the last version of a script given its name"""
-        with open(os.path.join(self.info_dir), 'r') as f:
+        info_filename = os.path.join(self.info_dir, '%s.info' % script_name)
+        with open(info_filename, 'r') as f:
             # there are more efficient ways to get the last line, but we
             # expect very small files, so it's worthless to implement them
             return f.readlines()[-1].split(' ')[0]
 
     def name_by_id(self, script_id):
         """Returns the name of a script given its id"""
-        return self._get_name_map.get(script_id)
+        return self._get_name_map().get(script_id)
+
+    def filename_by_id(self, script_id):
+        """Returns the absolute path of a script given its id"""
+        ext = os.path.splitext(self.name_by_id(script_id))[-1]
+        return os.path.join(self.script_dir, '%s.%s' % (script_id, ext))
 
     def save_script(self, filename, content):
         """Saves the script in the scripts directory, adds its id to the
@@ -53,11 +59,11 @@ class ScriptManager:
         filename -- original script file name
         content -- script content (code)
         """
-        file_type = filename.rsplit('.')[-1]
+        ext = os.path.splitext(filename)[-1]
         script_id = sha1(content).hexdigest()
 
         script_path = os.path.join(self.script_dir,
-            '%s.%s' % (script_id, file_type))
+            '%s.%s' % (script_id, ext))
         with open(script_path, 'wb') as script_file:
             script_file.write(content)
 

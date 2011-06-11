@@ -57,7 +57,7 @@ b'filaname1 content modified\n'
 >>> rpcs.put({'file_name': 'script1.py',
 ...     'file_content': xmlrpc.client.Binary(b'print("hello world!")\n')})
 (0, '5db8eb03071c8c231a8f51b3d2a98bd1eb589634')
->>> rpcs.get({'filename_or_id': 'script1.py',})
+>>> rpcs.get({'filename_or_id': 'script1.py',})[1].data
 b'print("hello world!")\n'
 >>> rpcs.put({'file_name': 'script1.py',
 ...     'file_content': xmlrpc.client.Binary(b'print("hello viri!")\n')})

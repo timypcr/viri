@@ -2,7 +2,6 @@ import sys
 import os
 import logging
 import traceback
-import glob
 import socket
 import socketserver
 import ssl
@@ -205,9 +204,11 @@ class RPCServer:
     def get(self, filename_or_id, use_id=False, data=False):
         """Returns the content of a file"""
         if not data:
-            # FIXME implement
-            pass
-            filename = ''
+            if use_id:
+                script_id = filename_or_id
+            else:
+                script_id = self.script_manager.id_by_name(filename_or_id)
+            filename = self.script_manager.filename_by_id(script_id)
         else:
             filename = protect(self.data_dir, filename_or_id)
         if filename:
