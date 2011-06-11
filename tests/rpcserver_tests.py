@@ -4,8 +4,8 @@ r"""
 >>> import shutil
 >>> import tempfile
 >>> import xmlrpc.client
->>> import scriptmanager
->>> import rpcserver
+>>> from viri import scriptmanager
+>>> from viri import rpcserver
 
 # Dummy initialization of the server because we are going to access the
 # methods directly, and not using the XML-RPC server. We are only

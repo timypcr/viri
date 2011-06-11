@@ -3,7 +3,6 @@ import datetime
 import logging
 import time
 import threading
-from viri.scriptmanager import ScriptManager
 
 SLEEP_TIME = 5 # seconds
 JOBS_FILE = '__crontab__' # in data dir
