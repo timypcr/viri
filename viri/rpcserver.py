@@ -63,10 +63,22 @@ def public(func):
     works with positional arguments, so the client always sends only one
     parameter with a dictionary. This decorator executes the method
     passing the items in the dictionary as keyword arguments.
+    It also captures any error non-controlled error, logs it, and sends
+    it to the client as text.
     """
     def inner(self, kwargs):
-        return func(self, **kwargs)
+        try:
+            res = func(self, **kwargs)
+        except:
+            (exc_type, exc_val, exc_tb) = sys.exc_info()
+            tb = '\n'.join(traceback.format_tb(exc_tb))
+            res = '%s\n%s' % (tb, str(exc_val))
+            logging.error(res)
+            return (ERROR, res)
+        else:
+            return res
     return inner
+
 
 def protect(directory, filename):
     """Returns the absolute path to the file in the directory, only if the
@@ -120,33 +132,34 @@ class RPCServer:
             server.register_function(getattr(self, method), method)
         server.serve_forever()
 
-    def _get_error(self):
-        """Captures the error and the traceback, and formats them to be sent
-        to the client.
-        """
-        (exc_type, exc_val, exc_tb) = sys.exc_info()
-        tb = '\n'.join(traceback.format_tb(exc_tb))
-        return (ERROR, '%s\n%s' % (tb, str(exc_val)))
-
     @public
-    def execute(self, file_or_id=None, file_name=None, file_content=None,
+    def execute(self, script_id=None, file_name=None, file_content=None,
         use_id=False):
-        """Executes a script"""
+        """Executes a script and returns the script id and the execution
+        result, which can be the return of the script in case of success
+        or the traceback and error message in case of failure.
+        It is possible to execute a script already sent, given its id, or
+        to send the script to execute, using the original script file name
+        and the script (file) content.
+
+        Arguments:
+        script_id -- the script sha1 hash, used as script identifier
+        file_name -- the original script file name
+        file_content -- the script content (code)
+        use_id -- specifies if the script id, or both the file name and
+            content are sent to request the script execution
+        """
+        if not use_id:
+            script_id = self.script_manager.save_script(
+                file_name, file_content)
+
         try:
-            result = ''
-            if use_id:
-                script_id = file_or_id
-            else:
-                script_id = self.script_manager.save_script(
-                    file_name, file_content)
-                result += '%s ' % script_id
-            result += self.script_manager.execute(script_id, self.context)
-            logging.info('Script %s succesfully executed' % script_id)
-            return (SUCCESS, result)
-        except Exception as exc:
-            logging.warning('Script %s execution failed: %s' % (
-                script_id, str(exc)))
-            return self._get_error()
+            result = self.script_manager.execute(script_id)
+        except self.script_manager.ExecutionError as exc:
+            return (ERROR, '%s %s' % (script_id, exc))
+
+        else:
+            return (SUCCESS, '%s %s' % (script_id, result))
 
     @public
     def put(self, file_name, file_content, data=False, overwrite=False):
@@ -164,37 +177,31 @@ class RPCServer:
         overwrite -- specifies if file should be overwritten in case a file
             with same name exists
         """
-        try:
-            if not data:
-                script_id = self.script_manager.save_script(
-                    file_name, file_content.data)
+        if not data:
+            script_id = self.script_manager.save_script(
+                file_name, file_content.data)
 
-                return (SUCCESS, script_id)
-            else:
-                filename = os.path.join(self.data_dir, file_name)
-                exists = os.path.isfile(filename)
-                if not exists or overwrite:
-                    with open(filename, 'wb') as f:
-                        f.write(file_content.data)
-                    if exists:
-                        msg = 'Data file %s overwrote' % file_name
-                    else:
-                        msg = 'Data file %s saved' % file_name
-                    logging.info(msg)
-                    return (SUCCESS, msg)
+            return (SUCCESS, script_id)
+        else:
+            filename = os.path.join(self.data_dir, file_name)
+            exists = os.path.isfile(filename)
+            if not exists or overwrite:
+                with open(filename, 'wb') as f:
+                    f.write(file_content.data)
+                if exists:
+                    msg = 'Data file %s overwrote' % file_name
                 else:
-                    msg = 'Not overwriting file %s' % file_name
-                    logging.debug(msg)
-                    return (SUCCESS, msg)
-        except Exception as exc:
-            logging.error('Error saving file %s: %s' % (
-                file_name,
-                str(exc)))
-            return self._get_error()
+                    msg = 'Data file %s saved' % file_name
+                logging.info(msg)
+                return (SUCCESS, msg)
+            else:
+                msg = 'Not overwriting file %s' % file_name
+                logging.debug(msg)
+                return (SUCCESS, msg)
 
     @public
     def ls(self, data=False, verbose=False):
-        """List the files in the data directory"""
+        """List scripts or files in the data directory"""
         if not data:
             return (SUCCESS, '\n'.join(self.script_manager.list(verbose)))
         else:
@@ -223,8 +230,7 @@ class RPCServer:
 
     @public
     def history(self):
-        # FIXME implement
-        return (ERROR, 'Not implemented')
+        return (SUCCESS, self.script_manager.history())
 
     @public
     def mv(self, source, destination, overwrite=False):
@@ -241,21 +247,22 @@ class RPCServer:
                         source, destination))
                 elif overwrite == True:
                     return (SUCCESS, 'Existing file %s replaced'
-                    ' by renamed %s' % (destination, source))
+                    ' by renaming %s' % (destination, source))
                 else:
                     return (ERROR, 'Rename aborted because destination file'
-                        ' already exists. Use --overwrite to force it.')
+                        ' already exists. Use --overwrite to force it')
             else:
-                return (ERROR, 'File does not exist')
+                return (ERROR, 'File %s not found' % source)
         else:
             return (ERROR, 'File names cannot include directories')
 
     @public
     def rm(self, filename):
         path = protect(self.data_dir, filename)
-        if path:
+        if path and os.path.isfile(path):
             os.remove(path)
             return (SUCCESS, 'File %s successfully removed' % filename)
         else:
-            return (ERROR, 'FIle names cannot include directories')
+            return (ERROR, 'File not found.'
+                ' File names cannot include directories')
 

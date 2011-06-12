@@ -1,6 +1,8 @@
+import sys
 import os
 import datetime
 import logging
+import traceback
 import glob
 import json
 from hashlib import sha1
@@ -9,7 +11,12 @@ BASE_SCRIPT = '__base__'
 HISTORY_FILE = 'history'
 NAMES_FILE = 'names.json'
 
+
 class ScriptManager:
+    class ExecutionError(Exception):
+        """Represents any error during script execution"""
+        pass
+
     def __init__(self, script_dir, info_dir, context):
         """Sets class attributes
 
@@ -106,17 +113,56 @@ class ScriptManager:
         context -- extra information that will be made available on attributes
             of the ViriScript on the script
         """
-        parent_classes = (__import__(script_id).ViriScript,)
         try:
-            parent_classes += (__import__(BASE_SCRIPT).ViriScript,)
+            script_mod = __import__(script_id)
+        except ImportError as exc:
+            raise self.ExecutionError('Cannot import script %s: %s' % (
+                script_id, exc))
+
+        if not hasattr(script_mod, 'ViriScript'):
+            raise self.ExecutionError('Script %s does not implement'
+                ' a ViriScript class' % script_id)
+
+        parent_classes = (script_mod.ViriScript,)
+
+        try:
+            base_mod = __import__(BASE_SCRIPT)
         except ImportError:
             logging.debug('Base script not found for script %s' % script_id)
+        else:
+            if not hasattr(base_mod, 'ViriScript'):
+                raise self.ExecutionError('Base script does not implement'
+                    ' a ViriScript class')
+            else:
+                parent_classes += (base_mod.ViriScript,)
 
-        logging.info('Executing script %s/%s' % (self.script_name, script_id))
+        logging.info('Executing script %s' % script_id)
+
+        cls = type('ExecScript', parent_classes, self.context)
+
+        try:
+            res = cls().run()
+            success = True
+        except Exception as exc:
+            success = False
+            res = exc
+
         with open(self.history_file, 'a') as f:
-            f.write('%s %s %s\n' % (datetime.datetime.now(),
-                self.script_id, self.script_name))
-        return type('ExecScript', parent_classes, self.context)().run()
+            f.write('%s\n' % '\t'.join((
+                datetime.datetime.now(),
+                self.script_id,
+                self.script_name,
+                'SUCCESS' if success else 'ERROR',
+                res)))
+
+        if not success:
+            (exc_type, exc_val, exc_tb) = sys.exc_info()
+            tb = '\n'.join(traceback.format_tb(exc_tb))
+            res = '%s\n%s' % (tb, str(exc_val))
+            raise self.ExecutionError('Script execution failed:\n%s' %
+                res)
+
+        return res
 
     def list(self, verbose=False):
         """List all installed scripts"""
@@ -126,4 +172,11 @@ class ScriptManager:
             res.append(os.path.basename(filename).rstrip('.info'))
 
         return res
+
+    def history(self):
+        if os.path.isfile(self.history_file):
+            with open(self.history_file, 'r') as f:
+                return f.read()
+        else:
+            return ''
 

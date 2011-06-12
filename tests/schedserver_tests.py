@@ -3,6 +3,7 @@
 r"""
 >>> import datetime
 >>> import tempfile
+>>> import shutil
 >>> from viri import scriptmanager
 >>> from viri import schedserver
 
@@ -58,6 +59,14 @@ True
 ###################
 
 >>> sched_server = schedserver.SchedServer(data_dir, script_manager)
+
+################
+### clean up ###
+################
+
+>>> shutil.rmtree(script_dir)
+>>> shutil.rmtree(data_dir)
+>>> shutil.rmtree(info_dir)
 
 """
 
