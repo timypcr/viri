@@ -1,15 +1,19 @@
+%define name viri
+%define version 0.1
+%define release beta
 %define python3_sitelib %(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-#
+%define __prefix /usr
  
-Name: viri
-Version: 0.1
-Release: 0
+Name: %{name}
+Version: %{version}
+Release: %{release}
 Summary: Remote execution of Python scripts
 License: GPLv3+
 URL: http://www.viriproject.com
-Source0: http://github.com/garcia-marc/downloads/viri-0.1.tar.gz
+Source: Viri-%{version}.tar.bz2
 BuildArch: noarch
-Requires: python3
+Requires: python3.1
+Prefix: %{__prefix}
 %description
 Viri is an application to easily deploy Python scripts, tracking its
 execution results. Viri has two different components, the virid daemon,
@@ -21,21 +25,26 @@ Some examples on what Viri can be useful for include data gathering,
 synchronization of files, deployment of software; but it can be used
 for everything which can be coded in the Python language.
 
-%files
-%defattr(-,root,root,-)
-/usr/local/bin/viric
-/usr/local/sbin/virid
-/etc/init.d/virid
-/etc/viri/virid.conf
-%{python3_sitelib}/viri/__init__.py
-%{python3_sitelib}/viri/rpcserver.py
-%{python3_sitelib}/viri/schedserver.py
-%{python3_sitelib}/viri/scriptmanager.py
-%doc AUTHORS LICENSE README
+%package viric
+Summary: Remote execution of Python scripts (client)
+
+%description viric
+Viri is an application to easily deploy Python scripts, tracking its
+execution results. Viri has two different components, the virid daemon,
+which should be installed on all hosts that will be managed, and the
+viric command line utility. The client program viric can be used directly
+by system administrators, but also can be integrated with third party
+applications to automate tasks.
+Some examples on what Viri can be useful for include data gathering,
+synchronization of files, deployment of software; but it can be used
+for everything which can be coded in the Python language.
+
+%prep
+%setup -n Viri-%{version}
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+[ -d "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+make prefix=$RPM_BUILD_ROOT%{__prefix} install
 
 %post
 echo -n "Host code: "
@@ -43,8 +52,27 @@ read HOSTCODE
 echo "" >> /etc/viri/virid.conf
 echo "HostCode: $RET" >> /etc/viri/virid.conf
 echo "" >> /etc/viri/virid.conf
+chkconfig virid --add
+chkconfig virid on --level 35
+service virid start
+
+%files
+%defattr(-,root,root,-)
+%doc AUTHORS LICENSE README
+%{__prefix}/sbin/virid
+%{python3_sitelib}/viri/__init__.py
+%{python3_sitelib}/viri/rpcserver.py
+%{python3_sitelib}/viri/schedserver.py
+%{python3_sitelib}/viri/scriptmanager.py
+/etc/viri/virid.conf
+/etc/init.d/virid
+
+%files viric
+%defattr(-,root,root,-)
+%doc AUTHORS LICENSE README
+%{__prefix}/bin/viric
 
 %changelog
-* Tue May 31 2011 Marc Garcia <garcia.marc@gmail.com> 0.1-0
+* Tue May 31 2011 Marc Garcia <garcia.marc@gmail.com> %{version}-%{release}
 - Initial release
 
