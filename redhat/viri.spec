@@ -8,6 +8,7 @@ Name: %{name}
 Version: %{version}
 Release: %{release}
 Summary: Remote execution of Python scripts (daemon)
+Group: System Environment/Daemons
 License: GPLv3+
 URL: http://www.viriproject.com
 Source: Viri-%{version}.tar.bz2
@@ -27,6 +28,7 @@ for everything which can be coded in the Python language.
 
 %package client
 Summary: Remote execution of Python scripts (client)
+Group: Applications/System
 
 %description client
 Viri is an application to easily deploy Python scripts, tracking its
@@ -44,7 +46,7 @@ for everything which can be coded in the Python language.
 
 %install
 [ -d "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-make DESTDIR=$RPM_BUILD_ROOT% os=redhat install
+make DESTDIR=$RPM_BUILD_ROOT os=redhat install
 
 %post
 read -p "Host code: " HOSTCODE
