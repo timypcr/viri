@@ -1,0 +1,87 @@
+#! /bin/bash
+#
+# virid          Start/Stop the viri daemon.
+#
+# chkconfig: 2345 90 60
+# description: viri is an application for remote executing Python scripts 
+# processname: virid
+# config: /etc/viri
+# pidfile: /var/run/virid.pid
+
+# Source function library.
+. /etc/init.d/functions
+ 
+# See how we were called.
+  
+prog="virid"
+
+start() {
+    echo -n $"Starting $prog: " 
+        if [ -e /var/lock/subsys/virid ]; then
+        if [ -e /var/run/virid.pid ] && [ -e /proc/`cat /var/run/virid.pid` ]; then
+        echo -n $"cannot start virid: virid is already running.";
+        failure $"cannot start virid: virid already running.";
+        echo
+        return 1
+        fi
+    fi
+    daemon virid
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/virid;
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+        if [ ! -e /var/lock/subsys/virid ]; then
+        echo -n $"cannot stop virid: virid is not running."
+        failure $"cannot stop virid: virid is not running."
+        echo
+        return 1;
+    fi
+    killproc virid
+    RETVAL=$?
+    echo
+        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/virid;
+    return $RETVAL
+}   
+
+rhstatus() {
+    status virid
+}   
+
+restart() {
+    stop
+    start
+}   
+
+reload() {
+    echo -n $"Reloading viri daemon configuration: "
+    killproc virid -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}   
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    restart
+    ;;
+  reload)
+    reload
+    ;;
+  status)
+    rhstatus
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|status|reload|restart}"
+    exit 1
+esac
+

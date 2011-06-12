@@ -7,7 +7,7 @@
 Name: %{name}
 Version: %{version}
 Release: %{release}
-Summary: Remote execution of Python scripts
+Summary: Remote execution of Python scripts (daemon)
 License: GPLv3+
 URL: http://www.viriproject.com
 Source: Viri-%{version}.tar.bz2
@@ -25,10 +25,10 @@ Some examples on what Viri can be useful for include data gathering,
 synchronization of files, deployment of software; but it can be used
 for everything which can be coded in the Python language.
 
-%package viric
+%package client
 Summary: Remote execution of Python scripts (client)
 
-%description viric
+%description client
 Viri is an application to easily deploy Python scripts, tracking its
 execution results. Viri has two different components, the virid daemon,
 which should be installed on all hosts that will be managed, and the
@@ -44,16 +44,13 @@ for everything which can be coded in the Python language.
 
 %install
 [ -d "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-make prefix=$RPM_BUILD_ROOT%{__prefix} install
+make prefix=$RPM_BUILD_ROOT%{__prefix} os=redhat install
 
 %post
-echo -n "Host code: "
-read HOSTCODE
-echo "" >> /etc/viri/virid.conf
-echo "HostCode: $RET" >> /etc/viri/virid.conf
-echo "" >> /etc/viri/virid.conf
+read -p "Host code: " HOSTCODE
+echo -e "\nHostCode: $HOSTCODE\n\n" >> /etc/viri/virid.conf
 chkconfig virid --add
-chkconfig virid on --level 35
+chkconfig virid on --level 2345
 service virid start
 
 %files
@@ -67,7 +64,7 @@ service virid start
 /etc/viri/virid.conf
 /etc/init.d/virid
 
-%files viric
+%files client
 %defattr(-,root,root,-)
 %doc AUTHORS LICENSE README
 %{__prefix}/bin/viric
