@@ -44,7 +44,7 @@ for everything which can be coded in the Python language.
 
 %install
 [ -d "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-make prefix=$RPM_BUILD_ROOT%{__prefix} os=redhat install
+make DESTDIR=$RPM_BUILD_ROOT% os=redhat install
 
 %post
 read -p "Host code: " HOSTCODE
