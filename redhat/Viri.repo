@@ -1,0 +1,5 @@
+[viri]
+name=Viri-$releasever
+baseurl=http://www.viriproject.com/redhat/$releasever/$basearch/
+gpgcheck=0
+
