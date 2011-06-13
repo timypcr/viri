@@ -31,9 +31,13 @@ DEFAULTS = {
 }
 
 class ViriDaemon:
-    """
-    """
     def __init__(self, config_file):
+        """Initializes all required attributes, getting the values from the
+        configuration file.
+
+        Arguments:
+        config_file -- path to the configuration file
+        """
         config = RawConfigParser(DEFAULTS)
         config.read((config_file,))
 
@@ -44,6 +48,12 @@ class ViriDaemon:
         self.logfile = config.get('Logging', 'LogFile')
         self.loglevel = config.get('Logging', 'LogLevel')
         self.logformat = config.get('Logging', 'LogFormat')
+
+        if not os.path.isfile(self.ca_file):
+            raise ValueError('Known CAs file not found: %s' % self.ca_file)
+        if not os.path.isfile(self.cert_key_file):
+            raise ValueError('Certificate and key file not found: %s' %
+                self.cert_key_file)
 
         conf = None
         if config.has_section('Custom'):
@@ -133,7 +143,11 @@ if __name__ == '__main__':
         default=DEFAULT_CONFIG_FILE)
     (options, args) = parser.parse_args()
 
-    virid = ViriDaemon(**vars(options))
+    try:
+        virid = ViriDaemon(**vars(options))
+    except Exception as exc:
+        sys.stderr.write('%s\n' % exc)
+        sys.exit(1)
 
     try:
         virid.start()
