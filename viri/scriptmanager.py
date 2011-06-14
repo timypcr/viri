@@ -77,7 +77,7 @@ class ScriptManager:
         script_id = sha1(content).hexdigest()
 
         script_path = os.path.join(self.script_dir,
-            '%s.%s' % (script_id, ext))
+            '%s%s' % (script_id, ext))
         with open(script_path, 'wb') as script_file:
             script_file.write(content)
 
@@ -110,8 +110,7 @@ class ScriptManager:
         >>>         return os.path.isdir(self.data_dir)
 
         Arguments:
-        context -- extra information that will be made available on attributes
-            of the ViriScript on the script
+        script_id -- identifier (hash) of the script to execute
         """
         try:
             script_mod = __import__(script_id)
@@ -149,9 +148,8 @@ class ScriptManager:
 
         with open(self.history_file, 'a') as f:
             f.write('%s\n' % '\t'.join((
-                datetime.datetime.now(),
-                self.script_id,
-                self.script_name,
+                str(datetime.datetime.now()),
+                script_id,
                 'SUCCESS' if success else 'ERROR',
                 res)))
 
