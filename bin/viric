@@ -11,6 +11,7 @@ APP_DESC = 'Performs operations on remote hosts using Viri'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
+OPT_ID_SUFFIX = '_or_id'
 
 OPT_DATA = (('-d', '--data'), dict(dest='data',
     help='specifies that the operation is performed for data files',
@@ -29,7 +30,7 @@ CMD_DEF = {
     'execute': dict(
         desc='Executes a script in the remote host',
         args=(
-            ('file_or_id', True),),
+            ('file%s' % OPT_ID_SUFFIX, True),),
         options=(OPT_USE_ID,)),
     'put': dict(
         desc='Uploads a script or file to the remote host',
@@ -43,7 +44,7 @@ CMD_DEF = {
     'get': dict(
         desc='Downloads a remote script or file',
         args=(
-            ('filename_or_id', False),),
+            ('filename%s' % OPT_ID_SUFFIX, False),),
         options=(OPT_DATA, OPT_USE_ID),
         result=lambda x: x.data),
     'history': dict(
@@ -108,6 +109,24 @@ class TransportTLS(xmlrpc.client.Transport):
         connection.request('POST', handler, request_body, headers)
         return connection
 
+def _fix_file_params(cmd, kwargs):
+    for (arg, is_file) in CMD_DEF[cmd]['args']:
+        if is_file:
+            if kwargs.get('use_id'):
+                kwargs['script_id'] = kwargs[arg]
+            else:
+                dst_arg = arg
+                if arg.endswith(OPT_ID_SUFFIX):
+                    dst_arg = arg.rstrip(OPT_ID_SUFFIX)
+
+                kwargs['%s_name' % dst_arg] = os.path.basename(kwargs[arg])
+                with open(kwargs[arg], 'rb') as f:
+                    kwargs['%s_content' % dst_arg] = xmlrpc.client.Binary(f.read())
+
+            del kwargs[arg]
+
+    return kwargs
+
 def main(cmd, kwargs):
     """Handles the connection to the remote virid server, and the execution of
     remote methods. All logic is implemented on the server, so if a invalid
@@ -137,12 +156,7 @@ def main(cmd, kwargs):
     del kwargs['keyfile']
     del kwargs['certfile']
 
-    for (arg, is_file) in CMD_DEF[cmd]['args']:
-        if is_file:
-            kwargs['%s_name' % arg] = os.path.basename(kwargs[arg])
-            with open(kwargs[arg], 'rb') as f:
-                kwargs['%s_content' % arg] = xmlrpc.client.Binary(f.read())
-            del kwargs[arg]
+    kwargs = _fix_file_params(cmd, kwargs)
 
     return getattr(server, cmd)(kwargs)
 

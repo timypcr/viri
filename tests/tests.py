@@ -16,7 +16,7 @@ import sys
 import os
 import doctest
 
-ALL_TESTS = ('rpcserver', 'schedserver')
+ALL_TESTS = ('rpcserver', 'schedserver', 'viric')
 
 def set_path():
     sys.path.append(

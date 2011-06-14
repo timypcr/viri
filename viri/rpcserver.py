@@ -151,7 +151,7 @@ class RPCServer:
         """
         if not use_id:
             script_id = self.script_manager.save_script(
-                file_name, file_content)
+                file_name, file_content.data)
 
         try:
             result = self.script_manager.execute(script_id)
