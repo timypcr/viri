@@ -3,6 +3,7 @@ import sys
 import os
 import logging
 import multiprocessing
+import resource
 from optparse import OptionParser
 from configparser import RawConfigParser
 from viri.scriptmanager import ScriptManager
@@ -32,14 +33,67 @@ DEFAULTS = {
 
 class ViriDaemon:
     def __init__(self, config_file):
+        self.config_file = config_file
+        self._setup()
+
+    def _daemonize(self):
+        """Deatach the process from the controlling terminal and run in the
+        background as a daemon.
+
+        Based on:
+            http://code.activestate.com/recipes/
+                278731-creating-a-daemon-the-python-way/
+        """
+        # double fork
+        if os.fork() != 0:
+            os._exit(0)
+        else:
+            os.setsid()
+            if os.fork() != 0:
+                os._exit(0)
+            else:
+                os.chdir(os.path.expanduser('~'))
+                os.umask(0)
+
+        maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+        maxfd = 1024 if maxfd == resource.RLIM_INFINITY else maxfd
+        for fd in range(0, maxfd):
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+        os.open(os.devnull, os.O_RDWR)
+        os.dup2(0, 1)
+        os.dup2(0, 2)
+
+    def _prepare_dirs(self):
+        """Creates the structure for the working directory, which
+        contains directories for data, tasks, and a system directory
+        which is used to store files like the base task or the crontab
+        file. It also creates required __init__.py files.
+        """
+        create_dirs = (self.working_dir,
+            self.script_dir,
+            self.info_dir,
+            self.data_dir)
+
+        for create_dir in create_dirs:
+            if not os.path.isdir(create_dir):
+                os.mkdir(create_dir)
+
+        init_filename = os.path.join(self.script_dir, '__init__.py')
+        if not os.path.isfile(init_filename):
+            open(init_filename, 'w').close()
+
+        if self.script_dir not in sys.path:
+            sys.path.append(self.script_dir)
+
+    def _setup(self):
         """Initializes all required attributes, getting the values from the
         configuration file.
-
-        Arguments:
-        config_file -- path to the configuration file
         """
         config = RawConfigParser(DEFAULTS)
-        config.read((config_file,))
+        config.read((self.config_file,))
 
         self.port = int(config.get('General', 'Port'))
         self.ca_file = config.get('Paths', 'KnownCAs')
@@ -84,37 +138,13 @@ class ViriDaemon:
             format=self.logformat,
             level=getattr(logging, self.loglevel))
 
-    def _prepare_dirs(self):
-        """Creates the structure for the working directory, which
-        contains directories for data, tasks, and a system directory
-        which is used to store files like the base task or the crontab
-        file. It also creates required __init__.py files.
-        """
-        create_dirs = (self.working_dir,
-            self.script_dir,
-            self.info_dir,
-            self.data_dir)
-
-        for create_dir in create_dirs:
-            if not os.path.isdir(create_dir):
-                os.mkdir(create_dir)
-
-        init_filename = os.path.join(self.script_dir, '__init__.py')
-        if not os.path.isfile(init_filename):
-            open(init_filename, 'w').close()
-
-        if self.script_dir not in sys.path:
-            sys.path.append(self.script_dir)
-
     def start(self):
-        """Starts the ViriDaemon. It starts the SchedServer for task
-        scheduling, and the RPCServer to accept connections form viric
-        instances
+        """Starts the ViriDaemon. This daemonizes the process, gets required
+        settings from config file, and starts both the SchedServer for task
+        scheduling, and the RPCServer to accept connections form viric instances
         """
-        logging.info('Started %s daemon on port %s' % (
-            APP_NAME,
-            self.port)
-        )
+        logging.info('Starting daemon...')
+        self._daemonize()
         self.sched_server = SchedServer(
             self.data_dir, self.context)
         self.sched_server_proc = multiprocessing.Process(
@@ -129,10 +159,12 @@ class ViriDaemon:
             self.data_dir,
             self.script_manager)
         self.rpc_server.start()
+        logging.info('Daemon started on port %s' % self.port)
 
     def stop(self):
+        logging.info('Stopping daemon...')
         self.sched_server_proc.join()
-        logging.info('Stopped %s daemon' % APP_NAME)
+        logging.info('Daemon stopped')
 
 if __name__ == '__main__':
     parser = OptionParser(
@@ -147,6 +179,7 @@ if __name__ == '__main__':
         virid = ViriDaemon(**vars(options))
     except Exception as exc:
         sys.stderr.write('%s\n' % exc)
+        logging.critical('%s\n' % exc)
         sys.exit(1)
 
     try:
