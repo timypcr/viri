@@ -1,0 +1,132 @@
+* {
+    font-family: Verdana, sans-serif;
+}
+body { 
+	margin: 0; 
+	padding: 0;
+	background: #333; 
+	font-size: 0.75em;
+	color: #ccc;  
+	line-height: 1.4em; 
+}
+h1 {
+    font-size: 48px;
+    font-weight: bold;
+    color: #008;
+}
+h2 {
+	margin: 5px 0; 
+	padding-left: 20px; 
+    font-size: 16px;
+    font-weight: bold;
+	background: url(img/h2.png) no-repeat; 
+    color: #008;
+}
+p { 
+	padding: 0 20px 10px; 
+	color: #808080; 
+}
+a { 
+	color: #40cb25;  
+	text-decoration: none; 
+}
+a:hover { 
+	color: #339e1e;
+	text-decoration: underline; 
+}
+code {
+    display: block;
+    padding: 10px 20px;
+    white-space: pre-wrap;
+    font-family: Courier New, monospace;
+    background-color: #ddd;
+    border-color: #bbb;
+}
+#container { 
+	background: #fff;
+	color: #808080; 
+	margin: 0 auto; 
+	padding: 0; 
+	width: 960px;
+	border-left: 6px solid #000;
+	border-right: 6px solid #000;
+}
+#header { 
+    position: relative;
+    margin: 0; 
+    padding-top: 50px;
+    width: 960px; 
+    background: url(img/head.jpg) no-repeat 0 50px;  
+    height: 250px; 
+}
+#header h1 {
+    position: absolute;
+    left: 160px;
+    top: 55px;
+}
+#header h1 .beta {
+    position: relative;
+    top: -24px;
+    left: 6px;
+    font-size: 16px;
+    color: red;
+}
+#header h3 {
+    position: absolute;
+    left: 220px;
+    top: 105px;
+    font-size: 18px;
+    color: #888;
+}
+#main { 
+	background: inherit;  
+	width: 960px; 
+    padding: 20px 0 50px;
+	margin: 0 ; 
+	color: #808080; 
+}  
+#main .left { 
+	width: 735px; 
+	padding: 0 15px ; 
+	margin: 0; 
+}
+#main .left h2 { 
+	margin: 0; 
+	padding-left: 20px; 
+	background: url(img/h2.png) no-repeat; 
+}
+#main .right { 
+	float: right;
+	padding: 0px 4px 0 10px; 
+	margin: 0;
+	width: 180px; 
+}
+#main .right h2 { 
+	background: url(img/h2.png) no-repeat; 
+}
+#main .right ul { 
+    padding: 0;
+	list-style-type: square;
+    list-style-position: inside;
+	color: #40cb25;  
+}
+#main .right li a { 
+	color: #888;
+}
+#footer { 
+	clear:both;
+	height: 70px;
+	background: url(img/footer.jpg) bottom left no-repeat;
+	color: #fff; 
+	font-size: 90%; 
+	padding: 0px;
+	margin: 10px 0px 0px 0px; 
+	text-align:center; 
+}
+#footer .info { 
+	padding: 20px 0px 0px 5px; 
+}
+#footer a { 
+	color: #fff; 
+}
+
