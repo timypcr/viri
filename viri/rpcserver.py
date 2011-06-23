@@ -1,4 +1,3 @@
-import sys
 import logging
 import traceback
 import socket
@@ -70,9 +69,7 @@ def public(func):
         try:
             res = func(self, **kwargs)
         except:
-            (exc_type, exc_val, exc_tb) = sys.exc_info()
-            tb = '\n'.join(traceback.format_tb(exc_tb))
-            res = '%s\n%s: %s' % (tb, type(exc_val).__name__, exc_val)
+            res = traceback.format_exc()
             logging.error(res)
             return (ERROR, res)
         else:
@@ -139,9 +136,8 @@ class RPCServer:
         try:
             res = Script.execute(self.db, script_id)
         except:
-            (exc_type, exc_val, exc_tb) = sys.exc_info()
-            return (ERROR, 
-                '%s\n%s' % ('\n'.join(traceback.format_tb(exc_tb)), exc_val))
+            res = traceback.format_exc()
+            return (ERROR, res)
         else:
             return (SUCCESS, '%s %s' % (script_id, res))
 

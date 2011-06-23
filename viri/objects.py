@@ -1,4 +1,5 @@
 import datetime
+import traceback
 from hashlib import sha1
 from viri.orm import Model, Property
 
@@ -28,8 +29,17 @@ class Script(GenericFile):
 
     @classmethod
     def execute(cls, script_id):
-        pass
+        exec(cls.code_by_id(script_id))
+        ViriScript = locals().get('ViriScript')
+        try:
+            return ViriScript().run()
+        except:
+            return traceback.format_exc()
 
+    @classmethod
+    def code_by_id(cls, script_id):
+        cls.get(select='content',
+            where="script_id = '%s'" % script_id)
 
 class DataFile(GenericFile):
     last_version = Property('bool')
