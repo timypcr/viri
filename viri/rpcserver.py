@@ -72,7 +72,7 @@ def public(func):
         except:
             (exc_type, exc_val, exc_tb) = sys.exc_info()
             tb = '\n'.join(traceback.format_tb(exc_tb))
-            res = '%s\n%s' % (tb, str(exc_val))
+            res = '%s\n%s: %s' % (tb, type(exc_val).__name__, exc_val)
             logging.error(res)
             return (ERROR, res)
         else:

@@ -13,18 +13,18 @@ class GenericFile(Model):
     saved = Property('datetime')
 
     @classmethod
-    def create(cls, vals):
+    def create(cls, db, vals):
         vals['saved'] = datetime.datetime.now()
-        Model.create(vals)
+        Model.create(db, vals)
 
 
 class Script(GenericFile):
     script_id = Property('varchar(255)')
 
     @classmethod
-    def create(cls, vals):
+    def create(cls, db, vals):
         vals['script_id'] = sha1(vals['content']).hexdigest()
-        GenericFile.create(vals)
+        GenericFile.create(db, vals)
 
     @classmethod
     def execute(cls, script_id):
@@ -43,11 +43,11 @@ class Execution(Model):
     executed = Property('datetime')
     
     @classmethod
-    def create(cls, vals):
+    def create(cls, db, vals):
         vals['executed'] = datetime.datetime.now()
         vals['filename'] = Script.get(select='filename',
             where="script_id = '%s'" % vals['script_id'])['filename']
-        Model.create(vals)
+        Model.create(db, vals)
 
 
 class Job(Model):
@@ -61,7 +61,7 @@ class Job(Model):
     year = Property('varchar(4)')
 
     @classmethod
-    def have_to_run_now(self, db, now):
+    def have_to_run_now(cls, db, now):
         for job in Model.query(select='*', where="active = true"):
             # In cron, Sunday is 0, but in Python is 6
             if job['minute'] in ('*', now.minute) and \

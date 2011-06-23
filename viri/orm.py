@@ -36,10 +36,12 @@ class Model:
 
     @classmethod
     def fields(cls):
-        # FIXME doesn't get inherited attributes
-        for name, obj in dict(cls.__dict__).items():
+        print(type(cls))
+        print(dir(cls))
+        for attr_name in dir(cls):
+            obj = getattr(cls, attr_name)
             if isinstance(obj, Property):
-                obj.field_name = name
+                obj.field_name = attr_name
                 yield obj
 
     @classmethod
@@ -51,9 +53,9 @@ class Model:
     @classmethod
     def create(cls, db, vals):
         db.execute("INSERT INTO %s (%s) VALUES (%s);" % (
-            cls.table_name,
-            ','.join(cls.fields),
-            ','.join([vals[f] for f in cls.fields])))
+            cls.table_name(),
+            ','.join(cls.fields()),
+            ','.join([vals[f] for f in cls.fields()])))
         return vals
 
     @classmethod
