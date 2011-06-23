@@ -7,8 +7,8 @@ import ssl
 import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from dbhandler import Script, DataFile, Execution
-from scriptmanager import ScriptManager
+from viri.objects import Script, DataFile, Execution
+
 
 RPC_METHODS = ('execute', 'put', 'ls', 'get', 'history')
 PROTOCOL = ssl.PROTOCOL_TLSv1
@@ -39,8 +39,7 @@ class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
             certfile=cert_key_file,
             ca_certs=ca_file,
             cert_reqs=ssl.CERT_REQUIRED,
-            ssl_version=PROTOCOL,
-            )
+            ssl_version=PROTOCOL)
         if bind_and_activate:
             self.server_bind()
             self.server_activate()
@@ -88,7 +87,7 @@ def format_output(queryset):
 class RPCServer:
     """XML-RPC server, implementing the main functionality of the application.
     """
-    def __init__(self, port, ca_file, cert_key_file):
+    def __init__(self, port, ca_file, cert_key_file, db, context):
         """Saves arguments as class attributes and prepares
         task and data directories
         
@@ -97,10 +96,16 @@ class RPCServer:
         ca_file -- Recognized CA certificates
         cert_key_file -- File with daemon's certificate and private key,
             for TLS negotiation
+        db - viri database handler
+        context - functions and data that will be made available on viri
+            scripts. This is custom settings, Script, DataFile, Execution
+            objects and the viri db
         """
         self.port = port
         self.ca_file = ca_file
         self.cert_key_file = cert_key_file
+        self.db = db
+        self.context = context
 
     def start(self):
         """Starts the XML-RPC server, and registers all public methods."""
@@ -128,9 +133,17 @@ class RPCServer:
         file_content -- the script content (code)
         """
         if not script_id:
-            Script.create(filename=file_name, content=file_content.data)
-            script_id = ''
-        return self.script_manager.execute(script_id)
+            script_id = Script.create(self.db,
+                dict(filename=file_name, content=file_content.data)
+                )['script_id']
+        try:
+            res = Script.execute(self.db, script_id)
+        except:
+            (exc_type, exc_val, exc_tb) = sys.exc_info()
+            return (ERROR, 
+                '%s\n%s' % ('\n'.join(traceback.format_tb(exc_tb)), exc_val))
+        else:
+            return (SUCCESS, '%s %s' % (script_id, res))
 
     @public
     def put(self, file_name, file_content, data=False):
@@ -147,11 +160,13 @@ class RPCServer:
         data -- specifies that sent file is a data file and not a script
         """
         if data:
-            DataFile.create(filename=file_name, content=file_content.data)
-            return (SUCCESS, 'Data file %s saved' % file_name)
+            DataFile.create(self.db,
+                dict(filename=file_name, content=file_content.data))
+            return (SUCCESS, 'Data file %s successfully saved' % file_name)
         else:
-            Script.create(filename=file_name, content=file_content.data)
-            script_id = '' # FIXME
+            script_id = Script.create(self.db,
+                dict(filename=file_name, content=file_content.data)
+                )['script_id']
             return (SUCCESS, script_id)
 
     @public
@@ -159,11 +174,13 @@ class RPCServer:
         """List scripts or files in the data directory"""
         if data:
             return (SUCCESS, format_output(DataFile.query(
+                self.db,
                 select=('filename', 'saved'),
                 where='last_version = TRUE',
                 order_by=('filename', 'saved'))))
         else:
             return (SUCCESS, format_output(Script.query(
+                self.db,
                 select=('filename', 'script_id', 'saved'),
                 order_by=('filename', 'saved'))))
 
@@ -172,16 +189,19 @@ class RPCServer:
         """Returns the content of a file"""
         if data:
             return (SUCCESS, xmlrpc.client.Binary(DataFile.query(
+                self.db,
                 select=('content',),
                 where=("filename = '%s'" % filename))))
         else:
             return (SUCCESS, Script.query(
+                self.db,
                 select=('content',),
                 where=("filename = '%s'" % filename)))
 
     @public
     def history(self):
         return (SUCCESS, format_output(Execution.query(
+            self.db,
             select=('script_id', 'filename', 'result', 'executed'),
             order_by=('executed',))))
 

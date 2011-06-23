@@ -1,135 +1,27 @@
-import os
 import datetime
 import logging
 import time
-import threading
+#import threading
+from viri.objects import Script, Job
+
 
 SLEEP_TIME = 5 # seconds
-JOBS_FILE = '__crontab__' # in data dir
-
-
-class InvalidCronSyntax(Exception):
-    """Error when parsing a cron syntax execution schedule"""
-    pass
-
-
-class Job:
-    """Represents a scheduled execution of a script"""
-    # TODO improve the way the job is defined. We actually don't know
-    # if the job is valid until we check if it has to run
-    def __init__(self, cron_def, script_manager):
-        """
-        """
-        COMMENT_CHAR = '#'
-        DIVISION_CHAR = ' '
-        to_int = lambda x: x if x == '*' else int(x)
-
-        self.script_manager = script_manager
-
-        self.is_valid_job = False
-
-        cron_def = cron_def.strip()
-        if COMMENT_CHAR in cron_def:
-            cron_def = cron_def.split(COMMENT_CHAR)[0]
-
-        if cron_def:
-            cron_def = cron_def.split(DIVISION_CHAR)
-            self.script_id = cron_def.pop()
-            try:
-                (self.minute, self.hour, self.day, self.month, self.weekday
-                    ) = map(to_int, cron_def)
-                self.is_valid_job = True
-            except ValueError:
-                raise InvalidCronSyntax() # TODO specific error message
-
-    def __bool__(self):
-        """Specifies if the job was a real job, or a comment, a blank line
-        or raised an invalid cron syntax. True means it was a valid job.
-        """
-        return self.is_valid_job
-
-    def __call__(self):
-        """Method executed when the job has to run. It executes the task
-        specified in the cron definition
-        """
-        # FIXME capture any exception and log, this should never raise an
-        # exception
-        self.script_manager.execute(self.script_id)
-
-    def has_to_run(self, now):
-        """Returns a boolean representing if the job has to run in the
-        current time, specified by now.
-        """
-        # TODO make this method understand more syntax, not just numbers
-        # and the wildcard "*" representing all
-        #
-        # See complete syntax at http://en.wikipedia.org/wiki/Cron#Format
-
-        if self.month not in ('*', now.month):
-            return False
-        elif self.weekday not in ('*', (now.weekday() + 1) % 7):
-            # In cron, Sunday is 0, but in Python is 6
-            return False
-        elif self.day not in ('*', now.day):
-            return False
-        elif self.hour not in ('*', now.hour):
-            return False
-        elif self.minute not in ('*', now.minute):
-            return False
-        else:
-            return True
 
 
 class SchedServer:
     """Daemon which simulates the cron application, but instead of executing
     shell commands, it executes viri tasks. 
     """
-    def __init__(self, data_dir, script_manager):
+    def __init__(self, db, context):
         """Initializes the SchedServer, by setting the path of the jobs file
-
-        Arguments:
-        data_dir -- directory where data files are stored
-        script_manager -- ScriptManager instance used to handle script
-            operations
         """
-        self.data_dir = data_dir
-        self.script_manager = script_manager
-        self.job_file = os.path.join(data_dir, JOBS_FILE)
+        self.db = db
+        self.context = context
 
-    def _run_job(self, job_def, now):
-        """Runs a specific job in a new thread, if it has to run in the
-        specified time.
-        """
-        try:
-            job = Job(job_def, self.script_manager)
-        except InvalidCronSyntax:
-            logging.warn('Invalid job definition: %s' % job_def)
-        else:
-            if job:
-                logging.debug('Job definition found: %s' % job_def)
-                if job.has_to_run(now):
-                    # TODO logging the script file name would be more
-                    # descriptive
-                    logging.info(
-                        'Running scheduled task %s' % job.task_id)
-                    threading.Thread(target=job).start()
-
-    def _run_jobs(self, now):
-        """Opens the job files and calls the method _next_job for every
-        job definition found. In case an exception is raised from that
-        method, it logs the error, and goes on with the next job, as we
-        want to execute all possible jobs.
-        """
-        if os.path.isfile(self.job_file):
-            with open(self.job_file, 'r') as job_file:
-                for job_def in job_file.readlines():
-                    try:
-                        self._run_job(job_def.rstrip('\n'), now)
-                    except Exception as exc:
-                        logging.error('Unknown error executing job %s: %s' % (
-                            job_def, str(exc)))
-        else:
-            logging.debug('Jobs file "%s" not found' % self.job_file)
+    def run(self, db, now):
+        for job in Job.have_to_run_now(now):
+            # FIXME use thread?  threading.Thread(target=job).start()
+            Script.execute(job['script_id'])
 
     def start(self):
         """Starts the SchedServer. It gets the current time (date, hour and
@@ -149,7 +41,7 @@ class SchedServer:
 
         while True: # TODO allow terminating by signal
             try:
-                self._run_jobs(now)
+                self.run(self.db, now)
             except Exception as exc:
                 logging.critical('Uncaught error running jobs: %s' % str(exc))
 

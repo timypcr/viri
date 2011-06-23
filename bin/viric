@@ -22,9 +22,6 @@ OPT_OVERWRITE = (('-o', '--overwrite'), dict(dest='overwrite',
 OPT_USE_ID = (('-i', '--use-id'), dict(dest='use_id',
     help='use script id instead of script file name',
     action='store_true', default=False))
-OPT_VERBOSE = (('-v', '--verbose'), dict(dest='verbose',
-    help='displays extended information',
-    action='store_true', default=False))
 
 CMD_DEF = {
     'execute': dict(
@@ -40,7 +37,7 @@ CMD_DEF = {
     'ls': dict(
         desc='Lists remote scripts or files',
         args=[],
-        options=(OPT_DATA, OPT_VERBOSE)),
+        options=(OPT_DATA,)),
     'get': dict(
         desc='Downloads a remote script or file',
         args=(
