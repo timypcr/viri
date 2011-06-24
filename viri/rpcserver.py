@@ -77,8 +77,9 @@ def public(func):
     return inner
 
 
-def format_output(queryset):
-    return '\n'.join(['\t'.join(row) for row in queryset])
+def format_output(queryset, fields):
+    select_cols = lambda r: '\t'.join([getattr(r, f) for f in fields])
+    return '\n'.join(map(select_cols, queryset))
 
 
 class RPCServer:
@@ -132,7 +133,7 @@ class RPCServer:
         if not script_id:
             script_id = Script.create(self.db,
                 dict(filename=file_name, content=file_content.data)
-                )['script_id']
+                ).script_id
         try:
             res = Script.execute(self.db, script_id)
         except:
@@ -162,42 +163,35 @@ class RPCServer:
         else:
             script_id = Script.create(self.db,
                 dict(filename=file_name, content=file_content.data)
-                )['script_id']
+                ).script_id
             return (SUCCESS, script_id)
 
     @public
     def ls(self, data=False):
         """List scripts or files in the data directory"""
         if data:
-            return (SUCCESS, format_output(DataFile.query(
-                self.db,
-                select=('filename', 'saved'),
-                where='last_version = TRUE',
-                order_by=('filename', 'saved'))))
+            return (SUCCESS, format_output(
+                DataFile.query(self.db,
+                    where={"last_version =": True},
+                    order=('filename', 'saved')),
+                ('filename', 'saved')))
         else:
-            return (SUCCESS, format_output(Script.query(
-                self.db,
-                select=('filename', 'script_id', 'saved'),
-                order_by=('filename', 'saved'))))
+            return (SUCCESS, format_output(
+                Script.query(self.db,
+                    order=('filename', 'saved')),
+                ('filename', 'script_id', 'saved')))
 
     @public
     def get(self, filename, data=False):
         """Returns the content of a file"""
-        if data:
-            return (SUCCESS, xmlrpc.client.Binary(DataFile.query(
-                self.db,
-                select=('content',),
-                where=("filename = '%s'" % filename))))
-        else:
-            return (SUCCESS, Script.query(
-                self.db,
-                select=('content',),
-                where=("filename = '%s'" % filename)))
+        obj = DataFile if data else Script
+        return (SUCCESS, xmlrpc.client.Binary(
+            obj.query(self.db, where=({"filename =": filename})).content))
 
     @public
     def history(self):
-        return (SUCCESS, format_output(Execution.query(
-            self.db,
-            select=('script_id', 'filename', 'result', 'executed'),
-            order_by=('executed',))))
+        return (SUCCESS, format_output(
+            Execution.query(self.db,
+                order=('executed',)),
+            ('script_id', 'filename', 'result', 'executed')))
 

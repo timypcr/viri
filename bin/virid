@@ -84,8 +84,7 @@ class ViriDaemon:
         """
         logging.info('Started %s daemon on port %s' % (
             APP_NAME,
-            self.port)
-        )
+            self.port))
         self.sched_server = SchedServer(self.db, self.context)
         self.sched_server_proc = multiprocessing.Process(
             target=self.sched_server.start)

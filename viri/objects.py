@@ -1,34 +1,30 @@
-import datetime
-import traceback
-from hashlib import sha1
-from viri.orm import Model, Property
+from viri import orm
 
 
-class GenericFile(Model):
+class GenericFile(orm.Model):
     """This model represents the base class for both scripts and data files,
     defining common fields used for any file. This model is not used directly,
     only subclasses Script and DataFile are instantiated.
     """
-    filename = Property('varchar(255)')
-    content = Property('longtext')
-    saved = Property('datetime')
-
-    @classmethod
-    def create(cls, db, vals):
-        vals['saved'] = datetime.datetime.now()
-        Model.create(db, vals)
+    filename = orm.CharProperty(size=255)
+    content = orm.TextProperty()
+    saved = orm.DatetimeProperty(auto=True)
 
 
 class Script(GenericFile):
-    script_id = Property('varchar(255)')
+    script_id = orm.CharProperty(size=255)
 
     @classmethod
     def create(cls, db, vals):
+        from hashlib import sha1
+
         vals['script_id'] = sha1(vals['content']).hexdigest()
-        GenericFile.create(db, vals)
+        super().create(db, vals)
 
     @classmethod
     def execute(cls, script_id):
+        import traceback
+
         exec(cls.code_by_id(script_id))
         ViriScript = locals().get('ViriScript')
         try:
@@ -38,41 +34,40 @@ class Script(GenericFile):
 
     @classmethod
     def code_by_id(cls, script_id):
-        cls.get(select='content',
-            where="script_id = '%s'" % script_id)
+        return cls.get(where={"script_id =": script_id}).content
+
 
 class DataFile(GenericFile):
-    last_version = Property('bool')
+    last_version = orm.BooleanProperty()
 
 
-class Execution(Model):
-    script_id = Property('varchar(255)')
-    filename = Property('varchar(255)')
-    success = Property('bool')
-    result = Property('longtext')
-    executed = Property('datetime')
+class Execution(orm.Model):
+    script_id = orm.CharProperty(size=255)
+    filename = orm.CharProperty(size=255)
+    success = orm.BooleanProperty()
+    result = orm.TextProperty()
+    executed = orm.DatetimeProperty(auto=True)
     
     @classmethod
     def create(cls, db, vals):
-        vals['executed'] = datetime.datetime.now()
-        vals['filename'] = Script.get(select='filename',
-            where="script_id = '%s'" % vals['script_id'])['filename']
-        Model.create(db, vals)
+        vals['filename'] = Script.get(
+            where={"script_id =": vals['script_id']}).filename
+        super().create(db, vals)
 
 
-class Job(Model):
-    script_id = Property('varchar(255)')
-    active = Property('bool')
-    minute = Property('varchar(2)')
-    hour = Property('varchar(2)')
-    month_day = Property('varchar(2)')
-    month = Property('varchar(2)')
-    week_day = Property('varchar(1)')
-    year = Property('varchar(4)')
+class Job(orm.Model):
+    script_id = orm.CharProperty(size=255)
+    active = orm.BooleanProperty()
+    minute = orm.CharProperty(size=2)
+    hour = orm.CharProperty(size=2)
+    month_day = orm.CharProperty(size=2)
+    month = orm.CharProperty(size=2)
+    week_day = orm.CharProperty(size=1)
+    year = orm.CharProperty(size=4)
 
     @classmethod
-    def have_to_run_now(cls, db, now):
-        for job in Model.query(select='*', where="active = true"):
+    def run_now(cls, db, now):
+        for job in orm.Model.query(where={"active =": True}):
             # In cron, Sunday is 0, but in Python is 6
             if job['minute'] in ('*', now.minute) and \
             job['hour'] in ('*', now.hour) and \
