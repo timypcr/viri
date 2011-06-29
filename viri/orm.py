@@ -1,109 +1,30 @@
-import os
-import sqlite3
-
 
 class Database:
     """Handles the connection to viri database, and creates it if necessary."""
     def __init__(self, db_filename):
+        import os
+        import sqlite3
+
         self.new_db = False
         if not os.path.isfile(db_filename):
             self.new_db = True
             
-        self.db = sqlite3.connect(db_filename)
+        self.db = sqlite3.connect(db_filename, detect_types=sqlite3.PARSE_DECLTYPES)
 
-    def execute(self, sql):
-        print(sql)
-        self.db.execute(sql)
+    def execute(self, sql, params=()):
+        self.db.execute(sql, params)
         self.db.commit()
 
-    def query(self, sql):
-        print(sql)
+    def query(self, sql, params=()):
         cur = self.db.cursor()
-        cur.execute(sql)
+        cur.execute(sql, params)
         return cur.fetchall()
-
-
-class ModelMeta(type):
-    def __new__(cls, name, bases, attrs):
-        from collections import OrderedDict
-
-        fields = OrderedDict()
-        for name, val in attrs.items():
-            if isinstance(val, Property):
-                fields[name] = val
-        attrs['_fields_'] = fields
-        return super().__new__(name, bases, attrs)
-
-
-class Model:
-    """Handler for a database table. The way it works is to only use class
-    methods. This means that instances will never be created, so usage will
-    look like this examples:
-    >>> MyModel.create(db, {'prop1': 'val1', 'prop2': 'val2'})
-    >>> MyModel.get(db, where='pk = 1')
-    {'pk': 1, 'prop1': 'val1'}
-    """
-    __metaclass__ = ModelMeta
-
-    @classmethod
-    def table_name(cls):
-        return cls.__name__.lower()
-
-    @classmethod
-    def fields(cls):
-        for attr_name in dir(cls):
-            obj = getattr(cls, attr_name)
-            if isinstance(obj, Property):
-                obj.field_name = attr_name
-                yield obj
-
-    @classmethod
-    def create_table(cls, db):
-        db.execute("CREATE TABLE {table_name} ({fields_def});" % dict(
-            table_name=cls.table_name(),
-            fields_def=','.join([' '.join(cls._fields_.items())])))
-
-    @classmethod
-    def create(cls, db, vals):
-        db.execute(
-            "INSERT INTO {table_name} ({field_names}) VALUES ({values});" % \
-            dict(
-                table_name=cls.table_name(),
-                field_names=','.join([n for n in cls._fields_.keys()]),
-                values=','.join([f.escape(vals[n]) \
-                    for n, f in cls._fields_.items()])))
-        return vals
-
-    @classmethod
-    def query(cls, db, where=None, order=None):
-        sql = "SELECT {fields} FROM {table_name}" % dict(
-            fields=','.join(cls._fields_.keys()),
-            table_name=cls.table_name())
-
-        if where:
-            sql += " WHERE"
-            for field, val in where.items:
-                sql += " {0} {1} AND" % (field,
-                    cls._fields_[field.split(' ')[0]].escape(val))
-            sql = sql[:-4]
-
-        if order:
-            sql += " ORDER BY {0}" % ','.join(order)
-
-        return db.query(sql)
-
-    @classmethod
-    def get(cls, db, where):
-        return cls.query(db, where)[0]
 
 
 class Property:
     """Handler for a database field"""
     def __init__(self, required=True):
         self.required = required
-
-    def escape(self, val):
-        return val
 
     def field_type(self):
         raise NotImplementedError('Properties must implement a field_type' \
@@ -117,46 +38,140 @@ class Property:
 
 
 class BooleanProperty(Property):
-    def escape(self, val):
-        return "TRUE" if val else "FALSE"
-
     def field_type(self):
         return "BOOL"
 
 
-class EscapedProperty(Property):
-    def escape(self, val):
-        return "'%s'" % val.replace("'", "''")
-
-
-class CharProperty(EscapedProperty):
+class CharProperty(Property):
     def __init__(self, size, required=True):
         self.size = size
         super().__init__(required)
 
     def field_type(self):
-        return "VARCHAR({0})" % self.size
+        return "VARCHAR({})".format(self.size)
 
 
-class TextProperty(EscapedProperty):
-    def escape(self, val):
-        super().escape(str(val))
-
+class TextProperty(Property):
     def field_type(self):
         return "LONGTEXT"
 
 
-class DatetimeProperty(EscapedProperty):
-    def __init__(self, auto=False, required=True):
-        self.auto = auto
-        super().__init__(required)
-
-    def escape(self, val):
-        import datetime
-        if self.auto:
-            val = datetime.datetime.now()
-        return "'{0}'" % val.strftime('%Y-%m-%d %H:%M:%S')
-
+class DatetimeProperty(Property):
     def field_type(self):
-        return "DATETIME"
+        return "TIMESTAMP"
+
+
+class Result:
+    def __init__(self, fields, row):
+        self.fields = fields
+        self.row = row
+
+    def __str__(self):
+        return '\t'.join(map(str, self.row))
+
+    def __getattr__(self, attr):
+        return self.row[self.fields.index(attr)]
+
+    def __getitem__(self, item):
+        return self.row[item]
+
+
+class ResultSet:
+    def __init__(self, fields, results):
+        self.fields = fields
+        self.results = results
+
+    def __str__(self):
+        return '\n'.join(map(str, self))
+
+    def __bool__(self):
+        return bool(self.results)
+
+    def __iter__(self):
+        for row in self.results:
+            yield Result(self.fields, row)
+
+    def __getitem__(self, item):
+        result = Result(self.fields, self.results[item])
+        return result
+
+class ModelMeta(type):
+    def __new__(cls, name, bases, attrs):
+        from collections import OrderedDict
+
+        attrs['_fields_'] = OrderedDict()
+
+        for base in reversed(bases):
+            attrs['_fields_'].update(base._fields_)
+
+        for key, val in attrs.items():
+            if isinstance(val, Property):
+                attrs['_fields_'][key] = val
+
+        res = super().__new__(cls, name, bases, attrs)
+        return res
+
+
+class Model(metaclass=ModelMeta):
+    """Handler for a database table. The way it works is to only use class
+    methods. This means that instances will never be created, so usage will
+    look like this examples:
+    >>> MyModel.create(db, {'prop1': 'val1', 'prop2': 'val2'})
+    >>> MyModel.get(db, where='pk = 1')
+    {'pk': 1, 'prop1': 'val1'}
+    """
+    @classmethod
+    def table_name(cls):
+        return cls.__name__.lower()
+
+    @classmethod
+    def field_names(cls):
+        return list(cls._fields_.keys())
+
+    @classmethod
+    def create_table(cls, db):
+        field_defs = []
+        for field in cls.field_names():
+            field_defs.append(
+                '{} {}'.format(field, cls._fields_[field].field_def))
+        db.execute("CREATE TABLE {table} ({field_defs});".format(
+            table=cls.table_name(),
+            field_defs=','.join(field_defs)))
+
+    @classmethod
+    def create(cls, db, vals):
+        fields = cls.field_names()
+        values = [vals[n] for n in fields]
+        db.execute(
+            "INSERT INTO {table} ({fields}) VALUES ({values});".format(
+                table=cls.table_name(),
+                fields=','.join(fields),
+                values=','.join(['?'] * len(fields))),
+            values)
+        return Result(fields, values)
+
+    @classmethod
+    def query(cls, db, fields=None, where=None, order=None):
+        if not fields:
+            fields = cls.field_names()
+
+        sql = "SELECT {fields} FROM {table}".format(
+            fields=','.join(fields),
+            table=cls.table_name())
+
+        if where:
+            sql += " WHERE"
+            for field, val in where.items():
+                sql += " {} ? AND".format(field)
+            sql = sql[:-4]
+
+        if order:
+            sql += " ORDER BY {}".format(','.join(order))
+
+        return ResultSet(fields, db.query(sql, tuple(where.values())))
+
+    @classmethod
+    def get(cls, db, fields=None, where=None):
+        result = cls.query(db, fields, where)
+        return result[0] if result else None
 

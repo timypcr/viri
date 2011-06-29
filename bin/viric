@@ -11,28 +11,27 @@ APP_DESC = 'Performs operations on remote hosts using Viri'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
-OPT_ID_SUFFIX = '_or_id'
 
+REGULAR_ARG = False
+SEND_FILE_ARG = True
+OPT_ID_SUFFIX = '_or_id'
 OPT_DATA = (('-d', '--data'), dict(dest='data',
     help='specifies that the operation is performed for data files',
     action='store_true', default=False))
 OPT_OVERWRITE = (('-o', '--overwrite'), dict(dest='overwrite',
     help='overwrite the file if it exists on the remote host',
     action='store_true', default=False))
-OPT_USE_ID = (('-i', '--use-id'), dict(dest='use_id',
-    help='use script id instead of script file name',
-    action='store_true', default=False))
 
 CMD_DEF = {
     'execute': dict(
         desc='Executes a script in the remote host',
         args=(
-            ('file%s' % OPT_ID_SUFFIX, True),),
-        options=(OPT_USE_ID,)),
+            ('filename{}'.format(OPT_ID_SUFFIX), REGULAR_ARG),),
+        options=()),
     'put': dict(
         desc='Uploads a script or file to the remote host',
         args=(
-            ('file', True),),
+            ('file', SEND_FILE_ARG),),
         options=(OPT_DATA,)),
     'ls': dict(
         desc='Lists remote scripts or files',
@@ -41,24 +40,23 @@ CMD_DEF = {
     'get': dict(
         desc='Downloads a remote script or file',
         args=(
-            ('filename%s' % OPT_ID_SUFFIX, False),),
-        options=(OPT_DATA, OPT_USE_ID),
-        result=lambda x: x.data),
+            ('filename{}'.format(OPT_ID_SUFFIX), REGULAR_ARG),),
+        options=(OPT_DATA,)),
     'history': dict(
         desc='Displays script execution history',
         args=[],
-        options=[]),
+        options=()),
     'mv': dict(
         desc='Renames a file in the remote host',
         args=(
-            ('source', False),
-            ('destination', False)),
+            ('source', REGULAR_ARG),
+            ('destination', REGULAR_ARG)),
         options=(OPT_OVERWRITE,)),
     'rm': dict(
         desc='Removes a file in the remote host',
         args=(
-            ('filename', False),),
-        options=[]),
+            ('filename', REGULAR_ARG),),
+        options=()),
 }
 
 class ConfError(Exception):
@@ -107,8 +105,8 @@ class TransportTLS(xmlrpc.client.Transport):
         return connection
 
 def _fix_file_params(cmd, kwargs):
-    for (arg, is_file) in CMD_DEF[cmd]['args']:
-        if is_file:
+    for (arg, send_file) in CMD_DEF[cmd]['args']:
+        if send_file:
             if kwargs.get('use_id'):
                 kwargs['script_id'] = kwargs[arg]
             else:
@@ -159,8 +157,8 @@ def main(cmd, kwargs):
 
 def print_error(msg, cmd=None):
     program = sys.argv[0]
-    sys.stderr.write('%s: %s\n' % (program, msg % dict(cmd=cmd)))
-    sys.stderr.write('Try `%s help\' for more information.\n' % program)
+    sys.stderr.write('{}: {}\n'.format(program, msg.format(cmd=cmd)))
+    sys.stderr.write('Try `{} help\' for more information.\n'.format(program))
     sys.exit(1)
 
 def print_help(program):
@@ -199,8 +197,8 @@ def print_help(program):
                 for key, val in CMD_DEF.items()]))
         sys.stdout.write('%s\n' % opts)
             
-        sys.stdout.write('See \'%s help COMMAND\' for more information '
-            'on a specific command.\n' % program)
+        sys.stdout.write('See \'{} help COMMAND\' for more information '
+            'on a specific command.\n'.format(program))
 
     sys.exit(0)
 
@@ -227,14 +225,14 @@ if __name__ == '__main__':
         print_help(program)
 
     if not CMD_DEF.get(cmd): 
-        print_error('invalid command %(cmd)s', cmd)
+        print_error('invalid command {cmd}', cmd)
 
     for opt in CMD_DEF[cmd]['options']:
         parser.add_option(*opt[0], **opt[1])
     (options, args) = parser.parse_args()
 
     if len(args) - 1 != len(CMD_DEF[cmd]['args']):
-        print_error('invalid number of parameters for command %(cmd)s', cmd)
+        print_error('invalid number of parameters for command {cmd}', cmd)
 
     params = dict(zip([arg[0] for arg in CMD_DEF[cmd]['args']], args[1:]))
     params.update(vars(options))
@@ -244,10 +242,9 @@ if __name__ == '__main__':
         sys.stderr.write('%s\n' % str(exc))
         sys.exit(1)
     else:
-        result_callback = CMD_DEF[cmd].get('result_callback')
-        if result_callback:
-            msg = result_callback(msg)
-        sys.stdout.write('%s\n' % msg)
+        if isinstance(msg, xmlrpc.client.Binary):
+            msg = str(msg.data, 'utf-8')
+        sys.stdout.write('{}\n'.format(msg))
         try:
             code_int = int(code)
         except ValueError:

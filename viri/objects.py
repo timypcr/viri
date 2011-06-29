@@ -8,7 +8,14 @@ class GenericFile(orm.Model):
     """
     filename = orm.CharProperty(size=255)
     content = orm.TextProperty()
-    saved = orm.DatetimeProperty(auto=True)
+    saved = orm.DatetimeProperty()
+
+    @classmethod
+    def create(cls, db, vals):
+        import datetime
+
+        vals['saved'] = datetime.datetime.now()
+        return super().create(db, vals)
 
 
 class Script(GenericFile):
@@ -19,26 +26,40 @@ class Script(GenericFile):
         from hashlib import sha1
 
         vals['script_id'] = sha1(vals['content']).hexdigest()
-        super().create(db, vals)
+        return super().create(db, vals)
 
     @classmethod
-    def execute(cls, script_id):
+    def execute(cls, db, filename_or_id):
         import traceback
 
-        exec(cls.code_by_id(script_id))
+        script = cls.get_content(db, filename_or_id)
+        exec(script.content)
         ViriScript = locals().get('ViriScript')
+        # FIXME capture if the script does not implement
+        # a ViriScript class, or it does not have a run method
         try:
             return ViriScript().run()
         except:
             return traceback.format_exc()
 
     @classmethod
-    def code_by_id(cls, script_id):
-        return cls.get(where={"script_id =": script_id}).content
+    def get_content(cls, db, filename_or_id):
+        res = None
+        for field in ('filename', 'script_id'):
+            res = Script.get(db,
+                where=({"{} =".format(field): filename_or_id}))
+            if res: break
+
+        return res
 
 
 class DataFile(GenericFile):
-    last_version = orm.BooleanProperty()
+    @classmethod
+    def get_content(cls, db, filename):
+        where = {'filename =': filename}
+        last_file = cls.get(db, ('MAX(saved)',), where=where)
+        where.update({'saved =': last_file[0]})
+        return cls.get(db, ('content',), where=where)
 
 
 class Execution(orm.Model):
@@ -46,13 +67,16 @@ class Execution(orm.Model):
     filename = orm.CharProperty(size=255)
     success = orm.BooleanProperty()
     result = orm.TextProperty()
-    executed = orm.DatetimeProperty(auto=True)
+    executed = orm.DatetimeProperty()
     
     @classmethod
     def create(cls, db, vals):
+        import datetime
+
+        vals['executed'] = datetime.datetime.now()
         vals['filename'] = Script.get(
             where={"script_id =": vals['script_id']}).filename
-        super().create(db, vals)
+        return super().create(db, vals)
 
 
 class Job(orm.Model):

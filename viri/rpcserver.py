@@ -77,11 +77,6 @@ def public(func):
     return inner
 
 
-def format_output(queryset, fields):
-    select_cols = lambda r: '\t'.join([getattr(r, f) for f in fields])
-    return '\n'.join(map(select_cols, queryset))
-
-
 class RPCServer:
     """XML-RPC server, implementing the main functionality of the application.
     """
@@ -117,30 +112,21 @@ class RPCServer:
         server.serve_forever()
 
     @public
-    def execute(self, script_id=None, file_name=None, file_content=None):
+    def execute(self, filename_or_id):
         """Executes a script and returns the script id and the execution
         result, which can be the return of the script in case of success
         or the traceback and error message in case of failure.
         It is possible to execute a script already sent, given its id, or
         to send the script to execute, using the original script file name
         and the script (file) content.
-
-        Arguments:
-        script_id -- the script sha1 hash, used as script identifier
-        file_name -- the original script file name
-        file_content -- the script content (code)
         """
-        if not script_id:
-            script_id = Script.create(self.db,
-                dict(filename=file_name, content=file_content.data)
-                ).script_id
         try:
-            res = Script.execute(self.db, script_id)
+            res = Script.execute(self.db, filename_or_id)
         except:
             res = traceback.format_exc()
             return (ERROR, res)
         else:
-            return (SUCCESS, '%s %s' % (script_id, res))
+            return (SUCCESS, res)
 
     @public
     def put(self, file_name, file_content, data=False):
@@ -170,28 +156,32 @@ class RPCServer:
     def ls(self, data=False):
         """List scripts or files in the data directory"""
         if data:
-            return (SUCCESS, format_output(
+            return (SUCCESS, str(
                 DataFile.query(self.db,
+                    fields=('filename', 'saved'),
                     where={"last_version =": True},
-                    order=('filename', 'saved')),
-                ('filename', 'saved')))
+                    order=('filename', 'saved'))))
         else:
-            return (SUCCESS, format_output(
+            return (SUCCESS, str(
                 Script.query(self.db,
-                    order=('filename', 'saved')),
-                ('filename', 'script_id', 'saved')))
+                    fields=('filename', 'script_id', 'saved'),
+                    order=('filename', 'saved'))))
 
     @public
-    def get(self, filename, data=False):
+    def get(self, filename_or_id, data=False):
         """Returns the content of a file"""
-        obj = DataFile if data else Script
-        return (SUCCESS, xmlrpc.client.Binary(
-            obj.query(self.db, where=({"filename =": filename})).content))
+        res = (DataFile if data else Script).get_content(
+            self.db, filename_or_id)
+
+        if res:
+            return (SUCCESS, xmlrpc.client.Binary(res.content))
+        else:
+            return (ERROR, 'File {} not found'.format(filename_or_id))
 
     @public
     def history(self):
-        return (SUCCESS, format_output(
+        return (SUCCESS, str(
             Execution.query(self.db,
-                order=('executed',)),
-            ('script_id', 'filename', 'result', 'executed')))
+                fields=('script_id', 'filename', 'result', 'executed'),
+                order=('executed',))))
 
