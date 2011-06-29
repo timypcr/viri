@@ -1,82 +1,101 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-    <head>
-        <title>Viri &raquo; Distribution and remote execution of Python scripts</title>
-        <meta name="author" content="garcia.marc@gmail.com"/>
-        <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
-        <meta http-equiv="content-style-type" content="text/css"/>
-        <meta http-equiv="content-script-type" content="text/javascript"/>
-        <link rel="shortcut icon" href="/favicon.ico"/>
-        <style type="text/css">
-            body {
-                background-color: #80c0ff;
-            }
-            #container {
-                width: 960px;
-                margin: 2px auto;
-            }
-            #content {
-                margin-top: 5px;
-                padding: 10px 40px;
-                border-top: 2px solid #fff;
-                border-left: 2px solid #fff;
-                border-right: 2px solid #b0b0b0;
-                border-bottom: 2px solid #808080;
-                background-color: #f0f0f0;
-            }
-            h2 {
-                font-size: 18px;
-                color: #202020;
-            }
-            h3 {
-                font-size: 16px;
-                color: #202020;
-            }
-            p, li, a {
-                font-size: 12px;
-                color: #606060;
-            }
-        </style>
-    </head>
-    <body>
-        <div id="container">
-            <div id="header">
-                <img id="logo" alt="VIRI" src="logo.png"/>
-            </div>
-            <div id="content">
-                <h2>Distribution and remote execution of Python scripts</h2>
-                <p>Viri provides an easy way to deploy and execute Python scripts in a set of hosts.</p>
-                <p>With Viri, system administrators can save lots of hours on performing the same task on hundreds of computers. Code your task in Python, send the order locally, and your script will be deployed and executed automatically.</p>
-                <h3>Getting started</h3>
-                <p>To use Viri, you just need to perform these simple steps:</p>
-                <ol>
-                    <li>Install the Viri daemon in all the hosts you want to administrate with Viri.</li>
-                    <li>Install the command line utility in your workstation.</li>
-                    <li>Program a task performing the actions you want to execute in the target hosts.</li>
-                    <li>Send the order to execute the task remotely.</li>
-                </ol>
-                <h3>Download</h3>
-                <p><a href="https://github.com/garcia-marc/viri/tarball/master">Click here</a> to download the latest version.</p>
-                <p>Browse or clone the <a href="https://github.com/garcia-marc/viri/">source code</a></p>
-                <h3>Documentation</h3>
-                <p>Check the <a href="http://docs.viriproject.com/">online documentation</a>.</p>
-                <h3>Community</h3>
-                <p>Submit a <a href="https://github.com/garcia-marc/viri/issues/">bug report</a>.</p>
-                <p>Join the <a href="http://groups.google.com/group/viri-users/">mailing list</a>.</p>
-                <p>Participate on the #viri channel on irc.freenode.net.</p>
-            </div>
-        </div>
-        <script type="text/javascript">
-            var _gaq = _gaq || [];
-            _gaq.push(['_setAccount', 'UA-1635939-22']);
-            _gaq.push(['_trackPageview']);
-            (function() {
-                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-            })();
-        </script>
-    </body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <title>Viri :: Remote execution of Python scripts</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link href="style.css" rel="stylesheet" type="text/css" media="screen" />
+</head>
+<body>
+	<div id="container">
+		<div id="header">
+            <h1>Viri<span class="beta">BETA</span></h1>
+            <h3>Remote execution of Python scripts</h3>
+		</div>
+		<div id="main">
+			<div class="right">
+				<h2>Sections</h2>
+                <ul>
+                    <li><a href="#what-is-viri">What is Viri?</a></li>
+                    <li><a href="#usage-example">Usage example</a></li>
+                    <li><a href="#installation">Installation</a></li>
+                    <li><a href="#getting-help">Getting help</a></li>
+                </ul>
+				<h2>Resources</h2>
+                <ul>
+                    <li><a href="http://github.com/garcia-marc/">Development (GitHub)</a></li>
+                    <li><a href="http://docs.viriproject.com">Documentation</a></li>
+                </ul>
+			</div>
+			<div class="left">
+				<h2 id="what-is-viri">What is Viri?</h2>
+				<p>The aim of the Viri project is to provide an efficient and organized way to run Python scripts in remote hosts. This is specially useful to perform system administration tasks in data centers.</p>
+                <p>Imagine you are the administrator of 1000 hosts (physical or virtual). With Viri, you can automate tasks to all those hosts almost like if you had to perform them in one. Some examples of tasks you would like to run include:</p>
+                <ul>
+                    <li>Change configuration files.</li>
+                    <li>Run backups.</li>
+                    <li>Gather host information to a central location.</li>
+                    <li>Control user access to the host.</li>
+                    <li>Install software.</li>
+                    <li>And everything you are able to code in Python.</li>
+                </ul>
+                <p>While providing a set of scripts, the idea behind Viri is to let system administrators to write their own scripts. Viri is just a framework for remotely executing any Python script.</p>
+                <p>Viri's core is the virid daemon, which needs to be installed in every host of the infrastructure. Then, the command line utility, or a custom application can be used to manage scripts and data.</p>
+
+				<h2 id="usage-example">Usage example</h2>
+                <p>Consider Viri a framework, so it does not provide specific functionality, but just a system where you implement whatever you want your hosts to do.</p>
+                <p>So, first thing you need to do (after installation) is to code a script that does what we want. In our example we'll implement a script that simply gets system architecture (i386, x86_64, etc)..</p>
+                <p><i>get_arch.py</i></p>
+                <p><code>
+import os
+
+class ViriScript:
+    def run(self):
+        return 'System architecture is: %s' % os.uname()[-1]
+                </code></p>
+                <p>Now, we'll make Viri execute a script in a remote host. You need to have the viri client installed in your workstation, and the viri daemon on the remote host.</p>
+                <p><code>
+# viric execute get_arch.py --host=10.0.0.9
+99154c826fca745be859c6481a5f87631e4b2b78 System architecture is: x86_64
+                </code></p>
+                <p>The IP address 10.0.0.9 is the IP of the remote host we want to execute the script on. The hash value returned by the command (always before the first space) is the script id. This is useful in case we want to execute the same script more than once. After the id, it simply comes the return of our script.</p>
+
+				<h2 id="installation">Installation</h2>
+                <p>Viri is still in BETA version and is available only for few systems. We're working to make it available to more systems, but so far you can install it on RHEL/CentOS 5 and Debian 6.</p>
+                <p><b>Installation on RHEL/CentOS 5</b></p>
+                <p><code>
+# cd /etc/yum.repos.d/
+# wget http://www.viriproject.com/redhat/Viri.repo
+# yum install viri
+                </code></p>
+                <p><b>Installation on Debian 6</b></p>
+                <p><code>
+# echo "deb http://www.viriproject.com/debian squeeze main" &gt;&gt; /etc/apt/sources.list
+# apt-get update
+# apt-get install viri
+                </code></p>
+                <p><b>Installation by code</b></p>
+                <p>To install in any other system, you can do it by source code.</p>
+                <p>First install <a href="http://www.python.org/download/releases/3.1.4/">Python 3.1</a> or later.</p>
+                <p>Then, download latest version of Viri from <a href="https://github.com/garcia-marc/viri">GitHub</a>. Unpack it, and install by executing:</p>
+                <p><code>
+# python3 setup.py install
+                </code></p>
+
+				<h2 id="getting-help">Getting help</h2>
+                <p>If you need help with Viri, you can:</p>
+                <ul>
+                    <li>Submit a <a href="https://github.com/garcia-marc/viri/issues/">bug report</a>.</li> 
+                    <li>Join the <a href="http://groups.google.com/group/viri-users/">mailing list</a>.</li> 
+                </ul>
+			</div>
+		</div>
+		<div id="footer">
+			<div class="info">
+				&copy; 2011 <a href="http://vaig.be">Marc Garcia</a>
+			</div>
+		</div>
+	</div>
+</body>
 </html>
+
