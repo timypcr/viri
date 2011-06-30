@@ -128,22 +128,23 @@ def main(cmd, kwargs):
     command is specified, the connection will be established. This makes this
     client generic, and changes to it are rarely required.
     """
-    if not os.path.isfile(kwargs['certfile']):
+    certfile = os.path.expanduser(kwargs['certfile'])
+    if not os.path.isfile(certfile):
         raise ConfError('TLS certificate file not found: %s' %
             kwargs['certfile'])
     if kwargs['keyfile'] and not os.path.isfile(kwargs['keyfile']):
         raise ConfError('TLS key file not found: %s' % kwargs['keyfile'])
     if not kwargs['keyfile']:
-        with open(kwargs['certfile'], 'r') as f:
+        with open(certfile, 'r') as f:
             if 'PRIVATE KEY' not in f.read():
                 raise ConfError('No key file specified, and key not found in'
-                    ' certificate file: %s' % kwargs['certfile'])
+                    ' certificate file: {}'.format(certfile))
 
     server = xmlrpc.client.ServerProxy(
         'https://%s:%s/' % (kwargs['host'], kwargs['port']),
         transport=TransportTLS(
             kwargs['keyfile'],
-            kwargs['certfile'],
+            certfile,
             use_datetime=False))
 
     del kwargs['host']
@@ -214,7 +215,7 @@ if __name__ == '__main__':
     parser.add_option('-k', '--keyfile', dest='keyfile',
         help='TLS key (only if it is not included on the TLS certificate)')
     parser.add_option('-c', '--certfile', dest='certfile',
-        help='TLS certificate', default='/etc/viri/viric.pem')
+        help='TLS certificate', default='~/.viri/viric.pem')
 
     if len(sys.argv) < 2:
         print_error('command argument is required')
