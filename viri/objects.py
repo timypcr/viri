@@ -33,8 +33,10 @@ class Script(GenericFile):
         import traceback
 
         script = cls.get_content(db, filename_or_id)
-        exec(script.content)
-        ViriScript = locals().get('ViriScript')
+        script_locals = {}
+        script_globals = {}
+        exec(script.content, script_locals, script_globals)
+        ViriScript = script_globals.get('ViriScript')
         # FIXME capture if the script does not implement
         # a ViriScript class, or it does not have a run method
         try:
