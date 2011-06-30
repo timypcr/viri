@@ -2,7 +2,7 @@
 can know that both the server and virid are running
 """
 
-class ViriTask:
+class ViriScript:
     def run(self):
         import urllib.parse
         import urllib.request
