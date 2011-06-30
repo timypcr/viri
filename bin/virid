@@ -35,8 +35,9 @@ DEFAULTS = {
 
 
 class ViriDaemon:
-    def __init__(self, config_file):
+    def __init__(self, config_file, as_daemon):
         self.config_file = config_file
+        self.as_daemon = as_daemon
         self._setup()
 
     def _daemonize(self):
@@ -68,28 +69,6 @@ class ViriDaemon:
         os.open(os.devnull, os.O_RDWR)
         os.dup2(0, 1)
         os.dup2(0, 2)
-
-    def _prepare_dirs(self):
-        """Creates the structure for the working directory, which
-        contains directories for data, tasks, and a system directory
-        which is used to store files like the base task or the crontab
-        file. It also creates required __init__.py files.
-        """
-        create_dirs = (self.working_dir,
-            self.script_dir,
-            self.info_dir,
-            self.data_dir)
-
-        for create_dir in create_dirs:
-            if not os.path.isdir(create_dir):
-                os.mkdir(create_dir)
-
-        init_filename = os.path.join(self.script_dir, '__init__.py')
-        if not os.path.isfile(init_filename):
-            open(init_filename, 'w').close()
-
-        if self.script_dir not in sys.path:
-            sys.path.append(self.script_dir)
 
     def _setup(self):
         """Initializes all required attributes, getting the values from the
@@ -137,9 +116,9 @@ class ViriDaemon:
         scheduling, and the RPCServer to accept connections form viric instances
         """
         logging.info('Starting daemon...')
-        self._daemonize()
-        self.sched_server = SchedServer(
-            self.data_dir, self.context)
+        if self.as_daemon:
+            self._daemonize()
+        self.sched_server = SchedServer(self.db, self.context)
         self.sched_server_proc = multiprocessing.Process(
             target=self.sched_server.start)
         self.sched_server_proc.start()
@@ -165,6 +144,8 @@ if __name__ == '__main__':
     parser.add_option('-c', '--config', dest='config_file',
         help='configuration file with settings to be used by virid',
         default=DEFAULT_CONFIG_FILE)
+    parser.add_option('-d', '--no-daemon', action='store_false',
+        dest='as_daemon', help='start as a regular program', default=True)
     (options, args) = parser.parse_args()
 
     try:
