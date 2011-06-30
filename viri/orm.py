@@ -151,7 +151,7 @@ class Model(metaclass=ModelMeta):
         return Result(fields, values)
 
     @classmethod
-    def query(cls, db, fields=None, where=None, order=None):
+    def query(cls, db, fields=None, where={}, order=()):
         if not fields:
             fields = cls.field_names()
 

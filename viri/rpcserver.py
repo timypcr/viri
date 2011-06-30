@@ -159,7 +159,6 @@ class RPCServer:
             return (SUCCESS, str(
                 DataFile.query(self.db,
                     fields=('filename', 'saved'),
-                    where={"last_version =": True},
                     order=('filename', 'saved'))))
         else:
             return (SUCCESS, str(
