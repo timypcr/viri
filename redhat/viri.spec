@@ -1,6 +1,6 @@
 %define name viri
 %define version 0.1
-%define release beta
+%define release rc1
 %define python3_sitelib %(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 %define __prefix /usr
  
@@ -11,7 +11,7 @@ Summary: Remote execution of Python scripts (daemon)
 Group: System Environment/Daemons
 License: GPLv3+
 URL: http://www.viriproject.com
-Source: Viri-%{version}.tar.bz2
+Source: Viri-%{version}%{release}.zip
 BuildArch: noarch
 Requires: python3.1
 Prefix: %{__prefix}
@@ -42,7 +42,7 @@ synchronization of files, deployment of software; but it can be used
 for everything which can be coded in the Python language.
 
 %prep
-%setup -n Viri-%{version}
+%setup -n Viri-%{version}%{release}
 
 %install
 [ -d "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -72,6 +72,8 @@ service virid start
 %{__prefix}/bin/viric
 
 %changelog
-* Tue May 31 2011 Marc Garcia <garcia.marc@gmail.com> %{version}-%{release}
+* Tue May 31 2011 Marc Garcia <garcia.marc@gmail.com> 0.1beta
 - Initial release
+* Thu Jun 30 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1
+- Changes to filenames and versions to make build easy with github packages
 
