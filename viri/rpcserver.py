@@ -181,6 +181,6 @@ class RPCServer:
     def history(self):
         return (SUCCESS, str(
             Execution.query(self.db,
-                fields=('script_id', 'filename', 'result', 'executed'),
+                fields=('executed', 'filename', 'script_id', 'success'),
                 order=('executed',))))
 

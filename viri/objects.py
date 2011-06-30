@@ -30,19 +30,34 @@ class Script(GenericFile):
 
     @classmethod
     def execute(cls, db, filename_or_id):
+        import datetime
         import traceback
 
+        success = False
         script = cls.get_content(db, filename_or_id)
         script_locals = {}
         script_globals = {}
         exec(script.content, script_locals, script_globals)
         ViriScript = script_globals.get('ViriScript')
-        # FIXME capture if the script does not implement
-        # a ViriScript class, or it does not have a run method
-        try:
-            return ViriScript().run()
-        except:
-            return traceback.format_exc()
+        if ViriScript and hasattr(ViriScript, 'run') and \
+            hasattr(ViriScript.run, '__call__'):
+            try:
+                result = ViriScript().run()
+                success = True
+            except:
+                result = traceback.format_exc()
+        else:
+            result = ('script file does not contain a ViriScript class '
+                'or it does not have a run method')
+
+        Execution.create(db, dict(
+                script_id=script.script_id,
+                filename=script.filename,
+                success=success,
+                result=result,
+                executed=datetime.datetime.now()))
+
+        return result
 
     @classmethod
     def get_content(cls, db, filename_or_id):
@@ -70,15 +85,6 @@ class Execution(orm.Model):
     success = orm.BooleanProperty()
     result = orm.TextProperty()
     executed = orm.DatetimeProperty()
-    
-    @classmethod
-    def create(cls, db, vals):
-        import datetime
-
-        vals['executed'] = datetime.datetime.now()
-        vals['filename'] = Script.get(
-            where={"script_id =": vals['script_id']}).filename
-        return super().create(db, vals)
 
 
 class Job(orm.Model):

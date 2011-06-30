@@ -130,10 +130,10 @@ def main(cmd, kwargs):
     """
     certfile = os.path.expanduser(kwargs['certfile'])
     if not os.path.isfile(certfile):
-        raise ConfError('TLS certificate file not found: %s' %
-            kwargs['certfile'])
+        raise ConfError('TLS certificate file not found: {}'.format(
+            kwargs['certfile']))
     if kwargs['keyfile'] and not os.path.isfile(kwargs['keyfile']):
-        raise ConfError('TLS key file not found: %s' % kwargs['keyfile'])
+        raise ConfError('TLS key file not found: {}'.format(kwargs['keyfile']))
     if not kwargs['keyfile']:
         with open(certfile, 'r') as f:
             if 'PRIVATE KEY' not in f.read():
@@ -166,11 +166,11 @@ def print_help(program):
     opts = 'Options:\n'
     for opt in parser.option_list:
         if len(opt._short_opts) > 0:
-            short = ' (%s)' % opt._short_opts[0]
+            short = ' ({})'.format(opt._short_opts[0])
         else:
             short = ''
         if not isinstance(opt.default, tuple):
-            default = ' (Default: %s)' % opt.default
+            default = ' (Default: {})'.format(opt.default)
         else:
             default = ''
         opts += '\t%s%s%s\n' % (
@@ -180,7 +180,7 @@ def print_help(program):
     if len(sys.argv) > 2 and CMD_DEF.get(sys.argv[2]):
         help_cmd = CMD_DEF.get(sys.argv[2])
         sys.stdout.write(
-            'Usage: %s %s %s [OPTIONS]\n\n' % (
+            'Usage: {} {} {} [OPTIONS]\n\n'.format(
                 program, sys.argv[2],
                 ' '.join([a[0] for a in help_cmd['args']])))
         sys.stdout.write('%s\n\n' % help_cmd['desc'])
@@ -250,6 +250,6 @@ if __name__ == '__main__':
             code_int = int(code)
         except ValueError:
             sys.stderr.write(
-                'Invalid response from the server: %s %s' % (code, msg))
+                'Invalid response from the server: {} {}'.format(code, msg))
             sys.exit(1)
 
