@@ -86,10 +86,11 @@ class ViriDaemon:
         self.logformat = config.get('Logging', 'LogFormat')
 
         if not os.path.isfile(self.ca_file):
-            raise ValueError('Known CAs file not found: %s' % self.ca_file)
+            raise ValueError('Known CAs file not found: {}'.format(
+                self.ca_file))
         if not os.path.isfile(self.cert_key_file):
-            raise ValueError('Certificate and key file not found: %s' %
-                self.cert_key_file)
+            raise ValueError('Certificate and key file not found: {}'.format(
+                self.cert_key_file))
 
         self.db = Database(self.db_file)
         if self.db.new_db:
