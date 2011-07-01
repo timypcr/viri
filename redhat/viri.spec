@@ -3,6 +3,10 @@
 %define release rc1
 %define python3_sitelib %(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 %define __prefix /usr
+%define __hostcode $VIRI_HOSTCODE
+%define __knownca $VIRI_KNOWNCA
+%define __extraconf $VIRI_EXTRACONF
+
  
 Name: %{name}
 Version: %{version}
@@ -49,13 +53,27 @@ for everything which can be coded in the Python language.
 make DESTDIR=$RPM_BUILD_ROOT os=redhat install
 
 %post
-read -p "Host code: " HOSTCODE
-echo -e "\nHostCode: $HOSTCODE\n\n" >> /etc/viri/virid.conf
-read -p "Known CAs URL: " KNOWNCA
-wget -O /etc/viri/ca.cert "$KNOWNCA"
+mkdir /var/viri
+if [ %{__hostcode} ]
+then
+    echo -e "\nHostCode: %{__hostcode}\n\n" >> /etc/viri/virid.conf
+fi
+if [ %{__knownca} ]
+then
+    wget -O /etc/viri/ca.cert "%{__knownca}"
+fi
+if [ %{__extraconf} ]
+then
+    wget -O /tmp/viri_extraconf "%{__extraconf}"
+    cat /tmp/viri_extraconf >> /etc/viri/virid.conf
+    rm -f /tmp/viri_extraconf
+fi
 chkconfig virid --add
 chkconfig virid on --level 2345
-service virid start
+if [ %{__knownca} ]
+then
+    service virid start
+fi
 
 %files
 %defattr(-,root,root,-)
@@ -75,6 +93,9 @@ service virid start
 %{__prefix}/bin/viric
 
 %changelog
+* Thu Jul 1 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1
+- Using environment variables instead of read to allow user input for installation
+- Creating database directory
 * Thu Jun 30 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1
 - Changes to filenames and versions to make build easy with github packages
 - Updated library files, and requesting known CAs url
