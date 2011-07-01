@@ -11,7 +11,7 @@ Summary: Remote execution of Python scripts (daemon)
 Group: System Environment/Daemons
 License: GPLv3+
 URL: http://www.viriproject.com
-Source: Viri-%{version}%{release}.zip
+Source: Viri-%{version}%{release}.tar.bz2
 BuildArch: noarch
 Requires: python3.1
 Prefix: %{__prefix}
@@ -51,6 +51,8 @@ make DESTDIR=$RPM_BUILD_ROOT os=redhat install
 %post
 read -p "Host code: " HOSTCODE
 echo -e "\nHostCode: $HOSTCODE\n\n" >> /etc/viri/virid.conf
+read -p "Known CAs URL: " KNOWNCA
+wget -O /etc/viri/ca.cert "$KNOWNCA"
 chkconfig virid --add
 chkconfig virid on --level 2345
 service virid start
@@ -62,7 +64,8 @@ service virid start
 %{python3_sitelib}/viri/__init__.py
 %{python3_sitelib}/viri/rpcserver.py
 %{python3_sitelib}/viri/schedserver.py
-%{python3_sitelib}/viri/scriptmanager.py
+%{python3_sitelib}/viri/objects.py
+%{python3_sitelib}/viri/orm.py
 /etc/viri/virid.conf
 /etc/init.d/virid
 
@@ -72,8 +75,9 @@ service virid start
 %{__prefix}/bin/viric
 
 %changelog
-* Tue May 31 2011 Marc Garcia <garcia.marc@gmail.com> 0.1beta
-- Initial release
 * Thu Jun 30 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1
 - Changes to filenames and versions to make build easy with github packages
+- Updated library files, and requesting known CAs url
+* Tue May 31 2011 Marc Garcia <garcia.marc@gmail.com> 0.1beta
+- Initial release
 
