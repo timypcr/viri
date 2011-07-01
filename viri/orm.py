@@ -3,22 +3,27 @@ class Database:
     """Handles the connection to viri database, and creates it if necessary."""
     def __init__(self, db_filename):
         import os
-        import sqlite3
+        self.db_filename = db_filename
+        self.new_db = not os.path.isfile(db_filename)
 
-        self.new_db = False
-        if not os.path.isfile(db_filename):
-            self.new_db = True
-            
-        self.db = sqlite3.connect(db_filename, detect_types=sqlite3.PARSE_DECLTYPES)
+    def _connect():
+        import sqlite3
+        return sqlite3.connect(
+            self.db_filename, detect_types=sqlite3.PARSE_DECLTYPES)
 
     def execute(self, sql, params=()):
-        self.db.execute(sql, params)
-        self.db.commit()
+        conn = self._connect()
+        conn.execute(sql, params)
+        conn.commit()
+        conn.close()
 
     def query(self, sql, params=()):
-        cur = self.db.cursor()
+        conn = self._connect()
+        cur = conn.cursor()
         cur.execute(sql, params)
-        return cur.fetchall()
+        result = cur.fetchall()
+        conn.close()
+        return result
 
 
 class Property:
