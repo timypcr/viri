@@ -6,7 +6,7 @@ class Database:
         self.db_filename = db_filename
         self.new_db = not os.path.isfile(db_filename)
 
-    def _connect():
+    def _connect(self):
         import sqlite3
         return sqlite3.connect(
             self.db_filename, detect_types=sqlite3.PARSE_DECLTYPES)
