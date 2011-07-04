@@ -6,10 +6,10 @@ import ssl
 import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from viri.objects import Script, DataFile, Execution
+from viri.objects import Script, DataFile, Job, Execution
 
 
-RPC_METHODS = ('execute', 'put', 'ls', 'get', 'history')
+RPC_METHODS = ('execute', 'put', 'sched', 'ls', 'get', 'history')
 PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
 ERROR = 1
@@ -140,12 +140,13 @@ class RPCServer:
         file_name -- original file name
         file_content -- content of the file processed using
             xmlrpc.client.Binary.encode()
-        data -- specifies that sent file is a data file and not a script
+        data -- add a data file instead of a script
         """
         if data:
             DataFile.create(self.db,
                 dict(filename=file_name, content=file_content.data))
-            return (SUCCESS, 'Data file %s successfully saved' % file_name)
+            return (SUCCESS, 'Data file {} successfully saved'.format(
+                file_name))
         else:
             script_id = Script.create(self.db,
                 dict(filename=file_name, content=file_content.data)
@@ -153,13 +154,35 @@ class RPCServer:
             return (SUCCESS, script_id)
 
     @public
-    def ls(self, data=False):
+    def sched(self, filename_or_id, cron_def):
+        """Schedules the execution of a script"""
+        CRON_FIELDS = [
+            'minute', 'hour', 'month_day', 'month', 'week_day', 'year']
+
+        if Script.get_content(self.db, filename_or_id):
+            vals = dict(filename_or_id=filename_or_id)
+            vals.update(dict(zip(CRON_FIELDS, cron_def.split(' '))))
+            Job.create(self.db, vals)
+            return (SUCCESS, 'Scheduled job for {} successfully saved'.format(
+                filename_or_id))
+        else:
+            return (ERROR, '{} is not a valid script'.format(filename_or_id))
+
+
+    @public
+    def ls(self, data=False, sched=False):
         """List scripts or files in the data directory"""
         if data:
             return (SUCCESS, str(
                 DataFile.query(self.db,
                     fields=('filename', 'saved'),
                     order=('filename', 'saved'))))
+        elif sched:
+            return (SUCCESS, str(
+                Job.query(self.db,
+                    fields=('filename_or_id', 'minute', 'hour', 'month_day',
+                        'month', 'week_day', 'year'),
+                    order=('filename_or_id',))))
         else:
             return (SUCCESS, str(
                 Script.query(self.db,

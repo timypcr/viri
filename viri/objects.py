@@ -89,8 +89,7 @@ class Execution(orm.Model):
 
 
 class Job(orm.Model):
-    script_id = orm.CharProperty(size=255)
-    active = orm.BooleanProperty()
+    filename_or_id = orm.CharProperty(size=255)
     minute = orm.CharProperty(size=2)
     hour = orm.CharProperty(size=2)
     month_day = orm.CharProperty(size=2)
