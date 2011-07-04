@@ -46,17 +46,6 @@ CMD_DEF = {
         desc='Displays script execution history',
         args=[],
         options=()),
-    'mv': dict(
-        desc='Renames a file in the remote host',
-        args=(
-            ('source', REGULAR_ARG),
-            ('destination', REGULAR_ARG)),
-        options=(OPT_OVERWRITE,)),
-    'rm': dict(
-        desc='Removes a file in the remote host',
-        args=(
-            ('filename', REGULAR_ARG),),
-        options=()),
 }
 
 class ConfError(Exception):
