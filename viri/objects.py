@@ -62,21 +62,24 @@ class Script(GenericFile):
 
     @classmethod
     def get_content(cls, db, filename_or_id):
-        res = None
-        for field in ('filename', 'script_id'):
-            res = Script.get(db,
-                where=({"{} =".format(field): filename_or_id}))
-            if res: break
+        script = cls.get(db,
+            where=({"script_id =": filename_or_id}))
 
-        return res
+        if not script:
+            where = {'filename =': filename_or_id}
+            last_date = cls.get(db, ('MAX(saved)',), where=where)[0]
+            where.update({'saved =': last_date})
+            script = cls.get(db, where=where)
+
+        return script
 
 
 class DataFile(GenericFile):
     @classmethod
     def get_content(cls, db, filename):
         where = {'filename =': filename}
-        last_file = cls.get(db, ('MAX(saved)',), where=where)
-        where.update({'saved =': last_file[0]})
+        last_date = cls.get(db, ('MAX(saved)',), where=where)[0]
+        where.update({'saved =': last_date})
         return cls.get(db, ('content',), where=where)
 
 
