@@ -102,7 +102,7 @@ class Job(orm.Model):
 
     @classmethod
     def run_now(cls, db, now):
-        for job in orm.Model.query(where={"active =": True}):
+        for job in orm.Model.query():
             # In cron, Sunday is 0, but in Python is 6
             if job['minute'] in ('*', now.minute) and \
             job['hour'] in ('*', now.hour) and \
