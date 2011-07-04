@@ -21,7 +21,7 @@ class SchedServer:
     def run(self, db, now):
         for job in Job.have_to_run_now(now):
             # FIXME use thread?  threading.Thread(target=job).start()
-            Script.execute(job['script_id'])
+            Script.execute(job['script_id'], self.context)
 
     def start(self):
         """Starts the SchedServer. It gets the current time (date, hour and

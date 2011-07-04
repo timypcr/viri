@@ -121,7 +121,7 @@ class RPCServer:
         and the script (file) content.
         """
         try:
-            res = Script.execute(self.db, filename_or_id)
+            res = Script.execute(self.db, filename_or_id, self.context)
         except:
             res = traceback.format_exc()
             return (ERROR, res)
