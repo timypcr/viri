@@ -29,7 +29,7 @@ class Script(GenericFile):
         return super().create(db, vals)
 
     @classmethod
-    def execute(cls, db, filename_or_id, context):
+    def execute(cls, db, filename_or_id, args, context):
         import datetime
         import traceback
 
@@ -43,7 +43,7 @@ class Script(GenericFile):
             hasattr(ViriScript.run, '__call__'):
             exec_cls = type('ViriScript', (ViriScript,), dict(env=context))
             try:
-                result = exec_cls().run()
+                result = exec_cls().run(*args)
                 success = True
             except:
                 result = traceback.format_exc()

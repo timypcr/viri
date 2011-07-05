@@ -231,14 +231,22 @@ if __name__ == '__main__':
         parser.add_option(*opt[0], **opt[1])
     (options, args) = parser.parse_args()
 
-    if len(args) - 1 != len(CMD_DEF[cmd]['args']):
-        print_error('invalid number of parameters for command {cmd}', cmd)
+    if cmd == 'execute':
+        if len(args) - 1 < len(CMD_DEF[cmd]['args']):
+            print_error('invalid number of parameters for command {cmd}', cmd)
+        params = {CMD_DEF[cmd]['args'][0][0]: args[1],
+            'args': args[2:]}
+        params.update(vars(options))
+    else:
+        if len(args) - 1 != len(CMD_DEF[cmd]['args']):
+            print_error('invalid number of parameters for command {cmd}', cmd)
+        params = dict(zip([arg[0] for arg in CMD_DEF[cmd]['args']], args[1:]))
+        params.update(vars(options))
 
-    params = dict(zip([arg[0] for arg in CMD_DEF[cmd]['args']], args[1:]))
-    params.update(vars(options))
     try:
         (code, msg) = main(cmd, params)
     except Exception as exc:
+        raise
         sys.stderr.write('%s\n' % str(exc))
         sys.exit(1)
     else:

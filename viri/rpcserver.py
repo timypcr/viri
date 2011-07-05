@@ -112,7 +112,7 @@ class RPCServer:
         server.serve_forever()
 
     @public
-    def execute(self, filename_or_id):
+    def execute(self, filename_or_id, args):
         """Executes a script and returns the script id and the execution
         result, which can be the return of the script in case of success
         or the traceback and error message in case of failure.
@@ -121,7 +121,7 @@ class RPCServer:
         and the script (file) content.
         """
         try:
-            res = Script.execute(self.db, filename_or_id, self.context)
+            res = Script.execute(self.db, filename_or_id, args, self.context)
         except:
             res = traceback.format_exc()
             return (ERROR, res)
