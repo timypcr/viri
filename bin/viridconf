@@ -1,0 +1,45 @@
+#!/bin/bash
+
+DEFAULT_CONF_FILE="/etc/viri/virid.conf"
+
+function request_conf_file {
+    read -p "Viri configuration file [${DEFAULT_CONF_FILE}]: " CONF_FILE
+}
+
+function get_conf_file {
+    request_conf_file
+    [ ! ${CONF_FILE} ] && CONF_FILE=${DEFAULT_CONF_FILE}
+    until [ -f ${CONF_FILE} ]; do
+        request_conf_file
+    done
+}
+
+function save_host_code {
+    read -p "Host code: " HOST_CODE
+    [ ${HOST_CODE} ] && echo -e "\nHostCode: ${HOST_CODE}\n" >> ${CONF_FILE}
+}
+
+function get_known_ca_file {
+    read -p "Known CAs URL: " KNOWN_CA_URL
+    [ ${KNOWN_CA_URL} ] && wget -O /etc/viri/ca.cert ${KNOWN_CA_URL}
+}
+
+function get_extra_conf {
+    read -p "Additional configuration URL: " EXTRA_CONF_URL
+    if [ ${EXTRA_CONF_URL} ] ; then
+        wget -O /tmp/viri_extraconf ${EXTRA_CONF_URL}
+        cat /tmp/viri_extraconf >> /etc/viri/virid.conf
+        rm -f /tmp/viri_extraconf
+    fi
+}
+
+function generate_certificate {
+    openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/viri/virid.pem -out /etc/viri/virid.pem
+}
+
+get_conf_file
+save_host_code
+get_known_ca_file
+get_extra_conf
+generate_certificate
+
