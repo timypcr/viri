@@ -21,7 +21,11 @@ class SchedServer:
     def run(self, now):
         for job in Job.run_now(self.db, now):
             # FIXME use thread?  threading.Thread(target=job).start()
-            Script.execute(self.db, job.filename_or_id, (), self.context)
+            try:
+                Script.execute(self.db, job.filename_or_id, (), self.context)
+            except Exception as exc:
+                logging.critical('Error running scheduled task {}: {}'.format(
+                    job.filename_or_id, exc))
 
     def start(self):
         """Starts the SchedServer. It gets the current time (date, hour and
