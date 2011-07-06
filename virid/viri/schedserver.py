@@ -18,10 +18,10 @@ class SchedServer:
         self.db = db
         self.context = context
 
-    def run(self, db, now):
-        for job in Job.run_now(now):
+    def run(self, now):
+        for job in Job.run_now(self.db, now):
             # FIXME use thread?  threading.Thread(target=job).start()
-            Script.execute(job['script_id'], self.context)
+            Script.execute(self.db, job.filename_or_id, (), self.context)
 
     def start(self):
         """Starts the SchedServer. It gets the current time (date, hour and
@@ -41,7 +41,7 @@ class SchedServer:
 
         while True: # TODO allow terminating by signal
             try:
-                self.run(self.db, now)
+                self.run(now)
             except Exception as exc:
                 logging.critical('Uncaught error running jobs: %s' % str(exc))
 

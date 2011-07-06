@@ -102,14 +102,14 @@ class Job(orm.Model):
 
     @classmethod
     def run_now(cls, db, now):
-        for job in orm.Model.query():
+        for job in cls.query(db):
             # In cron, Sunday is 0, but in Python is 6
-            if job['minute'] in ('*', now.minute) and \
-            job['hour'] in ('*', now.hour) and \
-            job['month_day'] in ('*', now.day) and \
-            job['month'] in ('*', now.month) and \
-            job('week_day') in ('*', (now.weekday() + 1) % 7) and \
-            job['year'] in ('*', now.year):
+            if job.minute in ('*', now.minute) and \
+            job.hour in ('*', now.hour) and \
+            job.month_day in ('*', now.day) and \
+            job.month in ('*', now.month) and \
+            job.week_day in ('*', (now.weekday() + 1) % 7) and \
+            job.year in ('*', now.year):
                 yield job
 
 

@@ -9,7 +9,8 @@ class Database:
     def _connect(self):
         import sqlite3
         return sqlite3.connect(
-            self.db_filename, detect_types=sqlite3.PARSE_DECLTYPES)
+            self.db_filename,
+            detect_types=sqlite3.PARSE_DECLTYPES + sqlite3.PARSE_COLNAMES)
 
     def execute(self, sql, params=()):
         conn = self._connect()
