@@ -16,9 +16,6 @@ APP_NAME = 'virid'
 APP_VERSION = '0.1'
 APP_DESC = 'Receives and executes scripts from viric instances'
 LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
-SCRIPT_DIR = 'script'
-INFO_DIR = 'info'
-DATA_DIR = 'data'
 DEFAULT_CONFIG_FILE = '/etc/viri/virid.conf'
 DEFAULTS = {
     'general': {
