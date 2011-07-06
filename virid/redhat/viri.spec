@@ -9,28 +9,13 @@ Version: %{version}
 Release: %{release}
 Summary: Remote execution of Python scripts (daemon)
 Group: System Environment/Daemons
-License: GPLv3+
+License: GPLv3
 URL: http://www.viriproject.com
 Source: Viri-%{version}%{release}.tar.bz2
 BuildArch: noarch
-Requires: python3.1
+Requires: python3.1 openssl
 Prefix: %{__prefix}
 %description
-Viri is an application to easily deploy Python scripts, tracking its
-execution results. Viri has two different components, the virid daemon,
-which should be installed on all hosts that will be managed, and the
-viric command line utility. The client program viric can be used directly
-by system administrators, but also can be integrated with third party
-applications to automate tasks.
-Some examples on what Viri can be useful for include data gathering,
-synchronization of files, deployment of software; but it can be used
-for everything which can be coded in the Python language.
-
-%package client
-Summary: Remote execution of Python scripts (client)
-Group: Applications/System
-
-%description client
 Viri is an application to easily deploy Python scripts, tracking its
 execution results. Viri has two different components, the virid daemon,
 which should be installed on all hosts that will be managed, and the
@@ -56,7 +41,7 @@ chkconfig virid on --level 2345
 %defattr(-,root,root,-)
 %doc AUTHORS LICENSE README
 %{__prefix}/sbin/virid
-%{__prefix}/sbin/viridconf
+%{__prefix}/sbin/virid-conf
 %{python3_sitelib}/viri/__init__.py
 %{python3_sitelib}/viri/rpcserver.py
 %{python3_sitelib}/viri/schedserver.py
@@ -65,12 +50,12 @@ chkconfig virid on --level 2345
 /etc/viri/virid.conf
 /etc/init.d/virid
 
-%files client
-%defattr(-,root,root,-)
-%doc AUTHORS LICENSE README
-%{__prefix}/bin/viric
-
 %changelog
+* Wed Jul 6 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1
+- Removing client package, now is in a different spec file
+- virid-conf script renamed
+- Package depends on openssl
+- Fixed license (Viri is GPLv3 not GPLv3+)
 * Tue Jul 5 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1
 - Removing most %post set up, that now is performed by viridconf
 * Thu Jul 1 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1
