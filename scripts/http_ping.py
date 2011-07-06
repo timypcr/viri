@@ -8,8 +8,11 @@ class ViriScript:
         import urllib.request
 
         res = urllib.request.urlopen(
-            urllib.parse.urljoin(self.env.conf.serverurl, self.env.conf.pingurl),
-            urllib.parse.urlencode(dict(host_code=self.env.conf.hostcode)))
+            urllib.parse.urljoin(
+                self.conf['server_url'],
+                self.conf['ping_url']),
+            urllib.parse.urlencode(
+                dict(host_code=self.conf['host_code'])))
 
         return res.read()
 

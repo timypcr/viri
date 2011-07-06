@@ -97,14 +97,13 @@ class ViriDaemon:
             for obj in objects.objects:
                 obj.create_table(self.db)
 
-        custom_settings = dict(config.items('Custom'))
+        conf = dict(config.items('Custom'))
         for key in DEFAULTS.keys():
-            del custom_settings[key.lower()]
-        conf = type('Conf', tuple(), custom_settings)
+            del conf[key.lower()]
 
-        self.context = type('Context', tuple(), dict(conf=conf, db=self.db))
+        self.context = dict(conf=conf, db=self.db)
         for obj in objects.objects:
-            setattr(self.context, obj.__name__, obj)
+            self.context[obj.__name__] = obj
 
         logging.basicConfig(
             filename=self.logfile,

@@ -41,7 +41,7 @@ class Script(GenericFile):
         ViriScript = script_globals.get('ViriScript')
         if ViriScript and hasattr(ViriScript, 'run') and \
             hasattr(ViriScript.run, '__call__'):
-            exec_cls = type('ViriScript', (ViriScript,), dict(env=context))
+            exec_cls = type('ViriScript', (ViriScript,), context)
             try:
                 result = exec_cls().run(*args)
                 success = True
