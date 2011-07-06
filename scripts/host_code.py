@@ -2,5 +2,5 @@
 
 class ViriScript:
     def run(self):
-        return self.conf['host_code']
+        return self.conf['custom']['host_code']
 

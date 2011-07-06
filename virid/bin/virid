@@ -21,16 +21,16 @@ INFO_DIR = 'info'
 DATA_DIR = 'data'
 DEFAULT_CONFIG_FILE = '/etc/viri/virid.conf'
 DEFAULTS = {
-    'General': {
-        'Port': '6806'},
-    'Paths': {
-        'KnownCAs': '/etc/viri/ca.cert',
-        'CertKeyFile': '/etc/viri/virid.pem',
-        'DatabaseFile': '/var/viri/viri.db'},
-    'Logging': {
-        'LogFile': '/var/log/virid.log',
-        'LogLevel': 'WARNING',
-        'LogFormat': '%(levelname)s::%(asctime)s::%(message)s'},
+    'general': {
+        'port': '6806'},
+    'paths': {
+        'known_ca': '/etc/viri/ca.cert',
+        'certKey_file': '/etc/viri/virid.pem',
+        'database_file': '/var/viri/viri.db'},
+    'logging': {
+        'log_file': '/var/log/virid.log',
+        'log_level': 'WARNING',
+        'log_format': '%(levelname)s::%(asctime)s::%(message)s'},
 }
 
 
@@ -77,13 +77,13 @@ class ViriDaemon:
         config = RawConfigParser(DEFAULTS)
         config.read((self.config_file,))
 
-        self.port = int(config.get('General', 'Port'))
-        self.ca_file = config.get('Paths', 'KnownCAs')
-        self.cert_key_file = config.get('Paths', 'CertKeyFile')
-        self.db_file = config.get('Paths', 'DatabaseFile')
-        self.logfile = config.get('Logging', 'LogFile')
-        self.loglevel = config.get('Logging', 'LogLevel')
-        self.logformat = config.get('Logging', 'LogFormat')
+        self.port = int(config.get('general', 'port'))
+        self.ca_file = config.get('paths', 'known_ca')
+        self.cert_key_file = config.get('paths', 'cert_key_file')
+        self.db_file = config.get('paths', 'database_file')
+        self.logfile = config.get('logging', 'log_file')
+        self.loglevel = config.get('logging', 'log_level')
+        self.logformat = config.get('logging', 'log_format')
 
         if not os.path.isfile(self.ca_file):
             raise ValueError('Known CAs file not found: {}'.format(
@@ -97,9 +97,7 @@ class ViriDaemon:
             for obj in objects.objects:
                 obj.create_table(self.db)
 
-        conf = dict(config.items('Custom'))
-        for key in DEFAULTS.keys():
-            del conf[key.lower()]
+        conf = dict([(sc, dict(config.items(sc))) for sc in config.sections()])
 
         self.context = dict(conf=conf, db=self.db)
         for obj in objects.objects:

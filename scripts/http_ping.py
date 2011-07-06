@@ -9,10 +9,10 @@ class ViriScript:
 
         res = urllib.request.urlopen(
             urllib.parse.urljoin(
-                self.conf['server_url'],
-                self.conf['ping_url']),
+                self.conf['custom']['server_url'],
+                self.conf['custom']['ping_url']),
             urllib.parse.urlencode(
-                dict(host_code=self.conf['host_code'])))
+                dict(host_code=self.conf['custom']['host_code'])))
 
         return res.read()
 
