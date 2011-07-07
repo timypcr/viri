@@ -102,14 +102,17 @@ class RPCServer:
 
     def start(self):
         """Starts the XML-RPC server, and registers all public methods."""
-        server = SimpleXMLRPCServerTLS(
+        self.server = SimpleXMLRPCServerTLS(
             ('', self.port),
             ca_file=self.ca_file,
             cert_key_file=self.cert_key_file,
             logRequests=False)
         for method in RPC_METHODS:
-            server.register_function(getattr(self, method), method)
-        server.serve_forever()
+            self.server.register_function(getattr(self, method), method)
+        self.server.serve_forever()
+
+    def stop(self):
+        self.server.shutdown()
 
     @public
     def execute(self, filename_or_id, args):

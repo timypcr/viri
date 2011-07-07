@@ -7,7 +7,6 @@ import resource
 from optparse import OptionParser
 from configparser import RawConfigParser
 from viri.rpcserver import RPCServer
-from viri.schedserver import SchedServer
 from viri.orm import Database
 from viri import objects
 
@@ -110,13 +109,21 @@ class ViriDaemon:
         settings from config file, and starts both the SchedServer for task
         scheduling, and the RPCServer to accept connections form viric instances
         """
+        import signal
+        import threading
+        from viri.schedserver import sched_server
+
         logging.info('Starting daemon...')
+        signal.signal(signal.SIGTERM, self.stop)
         if self.as_daemon:
             self._daemonize()
-        self.sched_server = SchedServer(self.db, self.context)
-        self.sched_server_proc = multiprocessing.Process(
-            target=self.sched_server.start)
-        self.sched_server_proc.start()
+        self.sched_quit = multiprocessing.Queue()
+        self.sched_proc = multiprocessing.Process(
+            target=sched_server, args=(
+                self.db,
+                self.context,
+                self.sched_quit))
+        self.sched_proc.start()
 
         self.rpc_server = RPCServer(
             self.port,
@@ -124,13 +131,19 @@ class ViriDaemon:
             self.cert_key_file,
             self.db,
             self.context)
-        self.rpc_server.start()
+        t = threading.Thread(target=self.rpc_server.start)
+        t.daemon = True
+        t.start()
         logging.info('Daemon started on port %s' % self.port)
 
-    def stop(self):
+    def stop(self, signum, frame):
         logging.info('Stopping daemon...')
-        self.sched_server_proc.join()
+        self.sched_quit.put(True)
+        self.sched_proc.join()
+        logging.debug('Sched server stopped')
+        self.rpc_server.stop()
         logging.info('Daemon stopped')
+        sys.exit(0)
 
 if __name__ == '__main__':
     parser = OptionParser(
