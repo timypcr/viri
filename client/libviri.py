@@ -2,14 +2,12 @@ import sys
 import socket
 import ssl
 
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    from http import client as http_client
-    from xmlrpc import client as xmlrpc_client
-else:
+if sys.version_info[0] == 2:
     import httplib as http_client
     import xmlrpclib as xmlrpc_client
+else:
+    from http import client as http_client
+    from xmlrpc import client as xmlrpc_client
 
 PROTOCOL = ssl.PROTOCOL_TLSv1
 
@@ -35,30 +33,8 @@ class TransportTLS(xmlrpc_client.Transport, object):
         self.cert_file = cert_file
         super(TransportTLS, self).__init__(*args, **kwargs)
 
-    def request_py2(self, host, handler, request_body, extra_headers, x509):
-        http_conn = http_client.HTTPS(host, None, **(x509 or {}))
-        http_conn.putrequest("POST", handler)
-        self.send_host(http_conn, host)
-        self.send_user_agent(http_conn)
-        self.send_content(http_conn, request_body)
-
-        errcode, errmsg, headers = http_conn.getreply()
-
-        if errcode != 200:
-            raise xmlrpc_client.ProtocolError(
-                host + handler,
-                errcode, errmsg,
-                headers
-                )
-
-        try:
-            sock = http_conn._conn.sock
-        except AttributeError:
-            sock = None
-
-        return self._parse_response(http_conn.getfile(), sock)
-
-    def request_py3(self, host, handler, request_body, extra_headers, x509):
+    def request(self, host, handler, request_body, verbose=False):
+        host, extra_headers, x509 = self.get_host_info(host)
         http_conn = HTTPConnectionTLS(
             host,
             None,
@@ -81,17 +57,8 @@ class TransportTLS(xmlrpc_client.Transport, object):
                 dict(resp.getheaders())
                 )
 
-        return self.parse_response(resp)
-
-    def request(self, host, handler, request_body, verbose=False):
-        host, extra_headers, x509 = self.get_host_info(host)
         self.verbose = verbose
-        if True:
-            return self.request_py3(
-                host, handler, request_body, extra_headers, x509)
-        else:
-            return self.request_py2(
-                host, handler, request_body, extra_headers, x509)
+        return self.parse_response(resp)
 
 
 class Viric:
