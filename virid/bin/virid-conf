@@ -16,7 +16,7 @@ function get_conf_file {
 
 function save_host_code {
     read -p "Host code: " HOST_CODE
-    [ ${HOST_CODE} ] && echo -e "\nHostCode: ${HOST_CODE}\n" >> ${CONF_FILE}
+    [ ${HOST_CODE} ] && echo -e "\nhost_code: ${HOST_CODE}\n" >> ${CONF_FILE}
 }
 
 function get_known_ca_file {
