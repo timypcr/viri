@@ -15,7 +15,7 @@ start() {
 }
 
 stop() {
-    echo -n "Stopping $`basename $0`"
+    echo -n "Stopping `basename $0`"
     start-stop-daemon --stop --quiet --pidfile $PIDFILE
     echo "."
 }
