@@ -2,23 +2,25 @@
 # Launcher for the virid daemon
 
 PIDFILE=/var/run/virid.pid
-EXEC=/usr/local/sbin/virid
+EXEC=/usr/sbin/virid
 
-test -f ${EXEC} || exit 0
+test -f $EXEC || exit 0
 
 set -e
 
 start() {
-    echo -n "Starting ${0}: "
-    start-stop-daemon --start --quiet --pidfile ${PIDFILE} --exec ${EXEC}
+    echo -n "Starting `basename $0`"
+    start-stop-daemon --start --quiet --exec $EXEC -- -p $PIDFILE
+    echo "."
 }
 
 stop() {
-    echo -n "Stopping ${0}: "
-    start-stop-daemon --stop --quiet --pidfile ${PIDFILE} --exec ${EXEC}
+    echo -n "Stopping $`basename $0`"
+    start-stop-daemon --stop --quiet --pidfile $PIDFILE
+    echo "."
 }
 
-case "${1}" in
+case "$1" in
   start)
     start
     ;;
@@ -31,7 +33,7 @@ case "${1}" in
     start
     ;;
   *)
-    echo "Usage: ${0} {start|stop|restart|force-reload}" >&2
+    echo "Usage: $0 {start|stop|restart|force-reload}" >&2
     exit 1
     ;;
 esac
