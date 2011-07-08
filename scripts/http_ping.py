@@ -14,5 +14,5 @@ class ViriScript:
             urllib.parse.urlencode(
                 dict(host_code=self.conf['custom']['host_code'])))
 
-        return res.read()
+        return res.read().decode('utf-8')
 
