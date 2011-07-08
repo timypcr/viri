@@ -13,37 +13,37 @@
  
 # See how we were called.
   
-prog="virid"
+PROG="virid"
+LOCKFILE="/var/lock/subsys/virid"
+PIDFILE="/var/run/virid.pid"
 
 start() {
-    echo -n $"Starting $prog: " 
-        if [ -e /var/lock/subsys/virid ]; then
-        if [ -e /var/run/virid.pid ] && [ -e /proc/`cat /var/run/virid.pid` ]; then
-        echo -n $"cannot start virid: virid is already running.";
-        failure $"cannot start virid: virid already running.";
-        echo
-        return 1
+    echo -n $"Starting $PROG: " 
+    if [ -e $LOCKFILE ]; then
+        if [ -e $PIDFILE ] && [ -e /proc/`cat $PIDFILE` ]; then
+            failure $"cannot start virid: virid already running.";
+            echo
+            return 1
         fi
     fi
-    daemon virid
+    daemon $PROG -p $PIDFILE
     RETVAL=$?
     echo
-    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/virid;
+    [ $RETVAL -eq 0 ] && touch $LOCKFILE;
     return $RETVAL
 }
 
 stop() {
     echo -n $"Stopping $prog: "
-        if [ ! -e /var/lock/subsys/virid ]; then
-        echo -n $"cannot stop virid: virid is not running."
+    if [ ! -e $LOCKFILE ] || [ ! -e $PIDFILE ]; then
         failure $"cannot stop virid: virid is not running."
         echo
         return 1;
     fi
-    killproc virid
+    killproc -p $PIDFILE $PROG
     RETVAL=$?
     echo
-        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/virid;
+    [ $RETVAL -eq 0 ] && rm -f $LOCKFILE;
     return $RETVAL
 }   
 

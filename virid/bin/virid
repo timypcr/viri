@@ -31,9 +31,10 @@ DEFAULTS = {
 
 
 class ViriDaemon:
-    def __init__(self, config_file, as_daemon):
+    def __init__(self, config_file, as_daemon, pid_file):
         self.config_file = config_file
         self.as_daemon = as_daemon
+        self.pid_file = pid_file
         self._setup()
 
     def _daemonize(self):
@@ -117,6 +118,11 @@ class ViriDaemon:
         signal.signal(signal.SIGTERM, self.stop)
         if self.as_daemon:
             self._daemonize()
+
+        if self.pid_file:
+            with open(self.pid_file, 'w') as f:
+                f.write(str(os.getpid()))
+
         self.sched_quit = multiprocessing.Queue()
         self.sched_proc = multiprocessing.Process(
             target=sched_server, args=(
@@ -154,6 +160,8 @@ if __name__ == '__main__':
         default=DEFAULT_CONFIG_FILE)
     parser.add_option('-d', '--no-daemon', action='store_false',
         dest='as_daemon', help='start as a regular program', default=True)
+    parser.add_option('-p', '--pid-file', dest='pid_file',
+        help='path to the file where to save the process id', default=None)
     (options, args) = parser.parse_args()
 
     try:
