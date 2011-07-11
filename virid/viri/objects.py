@@ -14,9 +14,14 @@ class File(orm.Model):
         import datetime
         from hashlib import sha1
 
-        vals['saved'] = datetime.datetime.now()
-        vals['file_id'] = sha1(vals['content']).hexdigest()
-        return super().create(db, vals)
+        file_id = sha1(vals['content']).hexdigest()
+        file_obj = cls.get(db, where=({"file_id =": file_id}))
+        if file_obj:
+            return file_obj
+        else:
+            vals['saved'] = datetime.datetime.now()
+            vals['file_id'] = file_id
+            return super().create(db, vals)
 
     @classmethod
     def execute(cls, db, file_name_or_id, args, context):
