@@ -6,7 +6,7 @@ import ssl
 import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from viri.objects import Script, DataFile, Job, Execution
+from viri.objects import File, Job, Execution
 
 
 RPC_METHODS = ('execute', 'put', 'sched', 'ls', 'get', 'history')
@@ -115,7 +115,7 @@ class RPCServer:
         self.server.shutdown()
 
     @public
-    def execute(self, filename_or_id, args):
+    def execute(self, file_name_or_id, args):
         """Executes a script and returns the script id and the execution
         result, which can be the return of the script in case of success
         or the traceback and error message in case of failure.
@@ -124,7 +124,7 @@ class RPCServer:
         and the script (file) content.
         """
         try:
-            res = Script.execute(self.db, filename_or_id, args, self.context)
+            res = File.execute(self.db, file_name_or_id, args, self.context)
         except:
             res = traceback.format_exc()
             return (ERROR, res)
@@ -132,7 +132,7 @@ class RPCServer:
             return (SUCCESS, res)
 
     @public
-    def put(self, file_name, file_content, data=False):
+    def put(self, file_name, file_content, execute=False, args=()):
         """Receives a script or a data file from viric, and saves it in the
         local filesystem.
         Scripts are saved using it's id as file name, and info about them is
@@ -143,70 +143,63 @@ class RPCServer:
         file_name -- original file name
         file_content -- content of the file processed using
             xmlrpc.client.Binary.encode()
-        data -- add a data file instead of a script
         """
-        if data:
-            DataFile.create(self.db,
-                dict(filename=file_name, content=file_content.data))
-            return (SUCCESS, 'Data file {} successfully saved'.format(
-                file_name))
+        file_id = File.create(self.db,
+            dict(file_name=file_name, content=file_content.data)
+            ).file_id
+        if execute:
+            try:
+                res = File.execute(self.db, file_id, args, self.context)
+            except:
+                res = traceback.format_exc()
+                return (ERROR, '{}\n{}'.format(file_id, res))
+            else:
+                return (SUCCESS, '{}\n{}'.format(file_id, res))
+            return (SUCCESS, file_id)
         else:
-            script_id = Script.create(self.db,
-                dict(filename=file_name, content=file_content.data)
-                ).script_id
-            return (SUCCESS, script_id)
+            return (SUCCESS, file_id)
 
     @public
-    def sched(self, filename_or_id, cron_def):
+    def sched(self, file_name_or_id, cron_def):
         """Schedules the execution of a script"""
         CRON_FIELDS = [
             'minute', 'hour', 'month_day', 'month', 'week_day', 'year']
 
-        if Script.get_content(self.db, filename_or_id):
-            vals = dict(filename_or_id=filename_or_id)
+        if File.get_content(self.db, file_name_or_id):
+            vals = dict(filename_or_id=file_name_or_id)
             vals.update(dict(zip(CRON_FIELDS, cron_def.split(' '))))
             Job.create(self.db, vals)
             return (SUCCESS, 'Scheduled job for {} successfully saved'.format(
-                filename_or_id))
+                file_name_or_id))
         else:
-            return (ERROR, '{} is not a valid script'.format(filename_or_id))
+            return (ERROR, '{} is not a valid script'.format(file_name_or_id))
 
 
     @public
-    def ls(self, data=False, sched=False):
+    def ls(self, sched=False):
         """List scripts or files in the data directory"""
-        if data:
-            return (SUCCESS, str(
-                DataFile.query(self.db,
-                    fields=('filename', 'saved'),
-                    order=('filename', 'saved'))))
-        elif sched:
-            return (SUCCESS, str(
-                Job.query(self.db,
-                    fields=('filename_or_id', 'minute', 'hour', 'month_day',
-                        'month', 'week_day', 'year'),
-                    order=('filename_or_id',))))
+        if sched:
+            return (SUCCESS, str(Job.query(self.db,
+                fields=('filename_or_id', 'minute', 'hour', 'month_day',
+                    'month', 'week_day', 'year'),
+                order=('file_name_or_id',))))
         else:
-            return (SUCCESS, str(
-                Script.query(self.db,
-                    fields=('filename', 'script_id', 'saved'),
-                    order=('filename', 'saved'))))
+            return (SUCCESS, str(File.query(self.db,
+                fields=('file_name', 'file_id', 'saved'),
+                order=('file_name', 'saved'))))
 
     @public
-    def get(self, filename_or_id, data=False):
+    def get(self, file_name_or_id, data=False):
         """Returns the content of a file"""
-        res = (DataFile if data else Script).get_content(
-            self.db, filename_or_id)
-
+        res = File.get_content(self.db, file_name_or_id)
         if res:
             return (SUCCESS, xmlrpc.client.Binary(res.content))
         else:
-            return (ERROR, 'File {} not found'.format(filename_or_id))
+            return (ERROR, 'File {} not found'.format(file_name_or_id))
 
     @public
     def history(self):
-        return (SUCCESS, str(
-            Execution.query(self.db,
-                fields=('executed', 'filename', 'script_id', 'success'),
-                order=('executed',))))
+        return (SUCCESS, str(Execution.query(self.db,
+            fields=('executed', 'file_name', 'file_id', 'success'),
+            order=('executed',))))
 

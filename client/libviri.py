@@ -54,8 +54,7 @@ class TransportTLS(xmlrpc_client.Transport, object):
             raise xmlrpc_client.ProtocolError(
                 host + handler,
                 resp.status, resp.reason,
-                dict(resp.getheaders())
-                )
+                dict(resp.getheaders()))
 
         self.verbose = verbose
         return self.parse_response(resp)

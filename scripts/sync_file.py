@@ -27,13 +27,13 @@ class ViriScript:
         with open(file_path, 'rb') as f:
             file_content = f.read()
         file_hash = sha1(file_content).hexdigest()
-        self.DataFile.create(self.db, dict(
-            filename=file_hash, content=file_content))
+        self.File.create(self.db, dict(
+            file_name=file_hash, content=file_content))
 
         return file_hash
 
     def _db2fs(self, file_name, file_path):
-        file_content = self.DataFile.get_content(self.db, file_name).content
+        file_content = self.File.get_content(self.db, file_name).content
         with open(file_path, 'wb') as f:
             f.write(file_content)
 

@@ -16,11 +16,11 @@ def sched_server(db, context, quit):
     SLEEP_TIME = 5 # seconds
 
     def run(now):
-        from viri.objects import Script, Job
+        from viri.objects import File, Job
 
         for job in Job.run_now(db, now):
             try:
-                Script.execute(db, job.filename_or_id, (), context)
+                File.execute(db, job.filename_or_id, (), context)
             except Exception as exc:
                 logging.critical('Error running scheduled task {}: {}'.format(
                     job.filename_or_id, exc))
