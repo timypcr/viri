@@ -1,6 +1,37 @@
+"""Simple ORM to define Python classes that represent SQL tables and be able
+to perform basic operations in a easy and Pythonic way. The ORM has a
+Database object, used for handling the connection to the sqlite database,
+a Model object representing a table, and some Property classes, representing
+different types of fields.
+
+Usage sample:
+>>> import datetime
+>>> import orm
+>>>
+>>> db = orm.Database('/tmp/database.sqlite')
+>>>
+>>> class MyModel(orm.Model):
+>>>     text_field = orm.CharProperty(size=255)
+>>>     long_text_field = orm.TextProperty()
+>>>     boolean_field = orm.BooleanProperty()
+>>>     date_field = orm.DateTimeProperty()
+>>>
+>>> MyModel.create_table(db)
+>>> MyModel.create(dict(
+>>>     text_field='hello',
+>>>     long_text_field='world!',
+>>>     boolean_field=True,
+>>>     date_file=datetime.datetime.now()))
+>>>
+>>> MyModel.query(
+>>>     fields=('long_text_field', 'boolean_field'),
+>>>     where=dict(text_field='hello'),
+>>>     order=('date_field',))
+"""
 
 class Database:
-    """Handles the connection to viri database, and creates it if necessary."""
+    """Handles the connections to the viri (sqlite) database,
+    creating it if necessary."""
     def __init__(self, db_filename):
         import os
         self.db_filename = db_filename
@@ -13,12 +44,15 @@ class Database:
             detect_types=sqlite3.PARSE_DECLTYPES + sqlite3.PARSE_COLNAMES)
 
     def execute(self, sql, params=()):
+        """Performs an operation that modifies the content of the database."""
         conn = self._connect()
         conn.execute(sql, params)
         conn.commit()
         conn.close()
 
     def query(self, sql, params=()):
+        """Performs an operation that gets data from the database,
+        without modifying its content."""
         conn = self._connect()
         cur = conn.cursor()
         cur.execute(sql, params)
@@ -44,11 +78,13 @@ class Property:
 
 
 class BooleanProperty(Property):
+    """A handler for boolean fields."""
     def field_type(self):
         return "BOOL"
 
 
 class CharProperty(Property):
+    """A handler for text fields."""
     def __init__(self, size, required=True):
         self.size = size
         super().__init__(required)
@@ -58,16 +94,22 @@ class CharProperty(Property):
 
 
 class TextProperty(Property):
+    """A handler for long text (not indexed) fields."""
     def field_type(self):
         return "LONGTEXT"
 
 
 class DatetimeProperty(Property):
+    """A handler for datetime fields."""
     def field_type(self):
         return "TIMESTAMP"
 
 
 class Result:
+    """Represents a row from a table in the database. Accessing results
+    through this class allows accessing returned field values as dictionary
+    keys, as well as by index. Also, casting an instance of this class as a
+    string formats the result separating the values by tabs."""
     def __init__(self, fields, row):
         self.fields = fields
         self.row = row
@@ -83,12 +125,18 @@ class Result:
 
 
 class ResultSet:
+    """Represents a set of rows from a table in the database. Itering over
+    this class, or accessing the rows by index casts the results to a Result
+    instance. Also, casting a ResultSet instance to string formats the rows
+    using line breaks to to split them, and as instenaces of Result, rows
+    are splitted by tabs."""
     def __init__(self, fields, results):
         self.fields = fields
         self.results = results
 
     def __str__(self):
-        return '\n'.join(map(str, self))
+        import os
+        return os.linesep.join(map(str, self))
 
     def __bool__(self):
         return bool(self.results)
@@ -102,6 +150,9 @@ class ResultSet:
         return result
 
 class ModelMeta(type):
+    """Metaclass for the Model class, that creates an attribute _fields_
+    containing a ordered dictionary with the field names, and the instance
+    of its property."""
     def __new__(cls, name, bases, attrs):
         from collections import OrderedDict
 
@@ -119,23 +170,23 @@ class ModelMeta(type):
 
 
 class Model(metaclass=ModelMeta):
-    """Handler for a database table. The way it works is to only use class
-    methods. This means that instances will never be created, so usage will
-    look like this examples:
-    >>> MyModel.create(db, {'prop1': 'val1', 'prop2': 'val2'})
-    >>> MyModel.get(db, where='pk = 1')
-    {'pk': 1, 'prop1': 'val1'}
-    """
+    """Handler for a database table. All methods are defined as class methods,
+    so the child classes should be used directly, and not instances of them."""
     @classmethod
     def table_name(cls):
+        """Returns the SQL table name. This is the name of the class in lower
+        case."""
         return cls.__name__.lower()
 
     @classmethod
     def field_names(cls):
+        """Returns a list containing the fields of the models. This is all
+        attributes of the class which are subclasses of the Property class."""
         return list(cls._fields_.keys())
 
     @classmethod
     def create_table(cls, db):
+        """Created the table in the database."""
         field_defs = []
         for field in cls.field_names():
             field_defs.append(
@@ -146,6 +197,7 @@ class Model(metaclass=ModelMeta):
 
     @classmethod
     def create(cls, db, vals):
+        """Inserts a new row on the associated table."""
         fields = cls.field_names()
         values = [vals[n] for n in fields]
         db.execute(
@@ -158,6 +210,8 @@ class Model(metaclass=ModelMeta):
 
     @classmethod
     def query(cls, db, fields=None, where={}, order=()):
+        """Performs a query to the related table,
+        with the specified arguments."""
         from collections import OrderedDict
         where = OrderedDict(where)
         if not fields:
@@ -172,11 +226,16 @@ class Model(metaclass=ModelMeta):
 
     @classmethod
     def get(cls, db, fields=None, where={}):
+        """Performs a query to the related table, returning one or cero
+        results. This should be only used when filtering by unique fields,
+        or when returning a single random record is not a problem."""
         result = cls.query(db, fields, where)
         return result[0] if result else None
 
     @classmethod
     def delete(cls, db, where):
+        """Deletes all rows matching the specified criteria from the related
+        table."""
         from collections import OrderedDict
         where = OrderedDict(where)
         sql = "DELETE FROM {} WHERE ".format(cls.table_name())
