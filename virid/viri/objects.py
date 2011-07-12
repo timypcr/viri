@@ -9,6 +9,12 @@ class File(orm.Model):
     content = orm.TextProperty()
     saved = orm.DatetimeProperty()
 
+    class Missing(Exception):
+        pass
+
+    class InvalidScript(Exception):
+        pass
+
     @classmethod
     def create(cls, db, vals):
         import datetime
@@ -24,40 +30,83 @@ class File(orm.Model):
             return super().create(db, vals)
 
     @classmethod
+    def _run_script(cls, temp_dir, mod_name, args, context):
+        import imp
+
+        def get_internal_traceback(path):
+            import os
+            import sys
+            import traceback
+
+            PATH_PATTERN = 'File "{}", line '
+            FROM = PATH_PATTERN.format(path)
+            TO = PATH_PATTERN.format(os.path.basename(path))
+
+            etype, value, tb = sys.exc_info()
+            tb_list = traceback.format_exception(etype, value, tb)
+            tb_list.pop(1)
+            return ''.join(map(lambda x: x.replace(FROM, TO), tb_list))
+
+        try:
+            file_obj, path, desc = imp.find_module(mod_name, [temp_dir])
+        except ImportError:
+            raise cls.InvalidScript('File is not a Python script')
+
+        try:
+            mod = imp.load_module(mod_name, file_obj, path, desc)
+        except:
+            return (False, get_internal_traceback(path))
+        finally:
+            file_obj.close()
+
+        if not hasattr(mod, 'ViriScript'):
+            raise cls.InvalidScript('Script does not have a ViriScript class')
+
+        ViriScript = type('ViriScript', (mod.ViriScript,), context)
+
+        if not hasattr(ViriScript, 'run') or \
+            not hasattr(ViriScript.run, '__call__'):
+            raise cls.InvalidScript('ViriScript does not have a run method')
+
+        try:
+            result = ViriScript().run(*args)
+            return (True, result)
+        except:
+            return (False, get_internal_traceback(path))
+
+    @classmethod
     def execute(cls, db, file_name_or_id, args, context):
+        import os
         import datetime
-        import traceback
+        import shutil
+        import tempfile
 
         success = False
-        file_obj = cls.get_content(db, file_name_or_id)
-        exec_locals = {}
-        exec_globals = {}
-        # FIXME capture syntax errors
-        exec(file_obj.content, exec_locals, exec_globals)
-        ViriScript = exec_globals.get('ViriScript')
-        if ViriScript and hasattr(ViriScript, 'run') and \
-            hasattr(ViriScript.run, '__call__'):
-            exec_cls = type('ViriScript', (ViriScript,), context)
-            try:
-                result = exec_cls().run(*args)
-                success = True
-            except:
-                result = traceback.format_exc()
-        else:
-            result = ('script file does not contain a ViriScript class '
-                'or it does not have a run method')
+        temp_dir = tempfile.mkdtemp(prefix='viri_exec_')
+        script = cls.get_obj(db, file_name_or_id)
+        mod_name = os.path.splitext(script.file_name)[0]
+        cls.save_content(db, file_name_or_id,
+            os.path.join(temp_dir, script.file_name))
+
+        try:
+            success, result = cls._run_script(temp_dir, mod_name, args, context)
+        except Exception as exc:
+            success = False
+            result = str(exc)
+
+        #shutil.rmtree(temp_dir)
 
         Execution.create(db, dict(
-                file_id=file_obj.file_id,
-                file_name=file_obj.file_name,
+                file_id=script.file_id,
+                file_name=script.file_name,
                 success=success,
                 result=result,
                 executed=datetime.datetime.now()))
 
-        return result
+        return (success, result)
 
     @classmethod
-    def get_content(cls, db, file_name_or_id):
+    def get_obj(cls, db, file_name_or_id):
         file_obj = cls.get(db,
             where=({"file_id =": file_name_or_id}))
 
@@ -67,7 +116,19 @@ class File(orm.Model):
             where.update({'saved =': last_date})
             file_obj = cls.get(db, where=where)
 
+        if not file_obj:
+            raise cls.Missing()
+
         return file_obj
+
+    @classmethod
+    def get_content(cls, db, file_name_or_id):
+        return cls.get_obj(db, file_name_or_id).content
+
+    @classmethod
+    def save_content(cls, db, file_name_or_id, path):
+        with open(path, 'wb') as f:
+            f.write(cls.get_content(db, file_name_or_id))
 
 
 class Execution(orm.Model):
