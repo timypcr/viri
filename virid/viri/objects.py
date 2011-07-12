@@ -2,21 +2,27 @@ from viri import orm
 
 
 class File(orm.Model):
-    """This model represents both scripts and data files.
-    """
+    """This model represents a file, which can be a Python script, or also a
+    data file. The file has an id, which is a hash of the file content."""
     file_id = orm.CharProperty(size=40)
     file_name = orm.CharProperty(size=255)
     content = orm.TextProperty()
     saved = orm.DatetimeProperty()
 
     class Missing(Exception):
+        """An exception raised when a file is requested but is missing
+        from the database."""
         pass
 
     class InvalidScript(Exception):
+        """An exception raised when a file is executed, but it's not an
+        executable Python script."""
         pass
 
     @classmethod
     def create(cls, db, vals):
+        """Overrides the default create method, calculating the file id, and
+        the saved date and time."""
         import datetime
         from hashlib import sha1
 
@@ -76,6 +82,9 @@ class File(orm.Model):
 
     @classmethod
     def execute(cls, db, file_name_or_id, args, context):
+        """Executes a Python script saved as a File, saving it to a temporary
+        directory to import it. Exceptions are captured and returned as
+        strings. All executions are recorded in the Execution model."""
         import os
         import datetime
         import shutil
@@ -94,7 +103,7 @@ class File(orm.Model):
             success = False
             result = str(exc)
 
-        #shutil.rmtree(temp_dir)
+        shutil.rmtree(temp_dir)
 
         Execution.create(db, dict(
                 file_id=script.file_id,
@@ -107,6 +116,8 @@ class File(orm.Model):
 
     @classmethod
     def get_obj(cls, db, file_name_or_id):
+        """Returns the File with the specified file id, or the latest
+        uploaded file matching the file name."""
         file_obj = cls.get(db,
             where=({"file_id =": file_name_or_id}))
 
@@ -123,15 +134,22 @@ class File(orm.Model):
 
     @classmethod
     def get_content(cls, db, file_name_or_id):
+        """Returns the file content of the file specified by the file id,
+        or the latest uploaded file matching the file name."""
         return cls.get_obj(db, file_name_or_id).content
 
     @classmethod
     def save_content(cls, db, file_name_or_id, path):
+        """Saves a file to the disk, in the location specified by path.
+        The file has to be specified by the file id, or the latest uploaded
+        file matching the file name will be uploaded."""
         with open(path, 'wb') as f:
             f.write(cls.get_content(db, file_name_or_id))
 
 
 class Execution(orm.Model):
+    """In this model, all executions are recorded, also if the execution
+    fails or can't be performed."""
     file_id = orm.CharProperty(size=255)
     file_name = orm.CharProperty(size=255)
     success = orm.BooleanProperty()
@@ -140,6 +158,8 @@ class Execution(orm.Model):
 
 
 class Job(orm.Model):
+    """This model stores scheduled jobs, that are checked and run by the
+    schedserver process."""
     file_name_or_id = orm.CharProperty(size=255)
     minute = orm.CharProperty(size=2)
     hour = orm.CharProperty(size=2)
@@ -150,6 +170,8 @@ class Job(orm.Model):
 
     @classmethod
     def run_now(cls, db, now):
+        """Returns a list of all scheduled jobs that have to run on the date
+        and time specified by the argument now."""
         for job in cls.query(db):
             # In cron, Sunday is 0, but in Python is 6
             if job.minute in ('*', now.minute) and \
