@@ -163,27 +163,37 @@ class RPCServer:
             return (SUCCESS, file_id)
 
     @public
-    def sched(self, file_name_or_id, cron_def):
+    def sched(self, file_name_or_id, cron_def, delete=False):
         """Schedules the execution of a script"""
         CRON_FIELDS = [
             'minute', 'hour', 'month_day', 'month', 'week_day', 'year']
 
-        if File.get_content(self.db, file_name_or_id):
-            vals = dict(filename_or_id=file_name_or_id)
-            vals.update(dict(zip(CRON_FIELDS, cron_def.split(' '))))
-            Job.create(self.db, vals)
-            return (SUCCESS, 'Scheduled job for {} successfully saved'.format(
-                file_name_or_id))
+        if not delete:
+            if File.get_obj(self.db, file_name_or_id):
+                vals = dict(file_name_or_id=file_name_or_id)
+                vals.update(dict(zip(CRON_FIELDS, cron_def.split(' '))))
+                Job.create(self.db, vals)
+                return (SUCCESS, 'Scheduled job successfully saved')
+            else:
+                return (ERROR, '{} is not a valid script'.format(file_name_or_id))
         else:
-            return (ERROR, '{} is not a valid script'.format(file_name_or_id))
-
+            vals = {'file_name_or_id =': file_name_or_id}
+            vals.update(dict(zip(
+                map(lambda x: x + ' =', CRON_FIELDS),
+                cron_def.split(' '))))
+            sched = Job.query(self.db, where=vals)
+            if sched:
+                Job.delete(self.db, where=vals)
+                return (SUCCESS, 'Scheduled job successfully deleted')
+            else:
+                return (ERROR, 'Cron definition not found')
 
     @public
     def ls(self, sched=False):
         """List scripts or files in the data directory"""
         if sched:
             return (SUCCESS, str(Job.query(self.db,
-                fields=('filename_or_id', 'minute', 'hour', 'month_day',
+                fields=('file_name_or_id', 'minute', 'hour', 'month_day',
                     'month', 'week_day', 'year'),
                 order=('file_name_or_id',))))
         else:

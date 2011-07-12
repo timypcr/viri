@@ -158,26 +158,28 @@ class Model(metaclass=ModelMeta):
 
     @classmethod
     def query(cls, db, fields=None, where={}, order=()):
+        from collections import OrderedDict
+        where = OrderedDict(where)
         if not fields:
             fields = cls.field_names()
-
-        sql = "SELECT {fields} FROM {table}".format(
-            fields=','.join(fields),
-            table=cls.table_name())
-
+        sql = "SELECT {} FROM {}".format(','.join(fields), cls.table_name())
         if where:
-            sql += " WHERE"
-            for field, val in where.items():
-                sql += " {} ? AND".format(field)
-            sql = sql[:-4]
-
+            sql += " WHERE " + " AND ".join(
+                map(lambda x: x + " ?", where.keys()))
         if order:
             sql += " ORDER BY {}".format(','.join(order))
-
         return ResultSet(fields, db.query(sql, tuple(where.values())))
 
     @classmethod
-    def get(cls, db, fields=None, where=None):
+    def get(cls, db, fields=None, where={}):
         result = cls.query(db, fields, where)
         return result[0] if result else None
+
+    @classmethod
+    def delete(cls, db, where):
+        from collections import OrderedDict
+        where = OrderedDict(where)
+        sql = "DELETE FROM {} WHERE ".format(cls.table_name())
+        sql += " AND ".join(map(lambda x: x + " ?", where.keys()))
+        db.execute(sql, tuple(where.values()))
 

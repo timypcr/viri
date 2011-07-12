@@ -26,6 +26,9 @@ OPT_SCHED = (('-s', '--sched'), dict(dest='sched',
 OPT_EXEC = (('-x', '--execute'), dict(dest='execute',
     help='executes the scripts after sending it',
     action='store_true', default=False))
+OPT_DEL = (('-d', '--delete'), dict(dest='delete',
+    help='deletes the scheduled task',
+    action='store_true', default=False))
 
 CMD_DEF = {
     'execute': dict(
@@ -43,7 +46,7 @@ CMD_DEF = {
         args=[
             ('file_name{0}'.format(OPT_ID_SUFFIX), REGULAR_ARG),
             ('cron_def', REGULAR_ARG)],
-        options=[]),
+        options=[OPT_DEL]),
     'ls': dict(
         desc='Lists remote scripts or files',
         args=[],
