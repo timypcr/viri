@@ -1,23 +1,37 @@
-# rpcserver.py tests
+# Copyright 2011, Marc Garcia <garcia.marc@gmail.com>
+#
+# This file is part of Viri.
+#
+# Viri is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# Viri is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Viri.  If not, see <http://www.gnu.org/licenses/>.
 
 r"""
->>> import shutil
 >>> import tempfile
+>>> import shutil
 >>> import xmlrpc.client
->>> from viri import scriptmanager
->>> from viri import rpcserver
+>>> from viri import orm, objects, rpcserver
 
-# Dummy initialization of the server because we are going to access the
-# methods directly, and not using the XML-RPC server. We are only
-# interested on providing known values for directories
->>> script_dir = tempfile.mkdtemp(prefix='viri-tests-scripts-')
->>> data_dir = tempfile.mkdtemp(prefix='viri-tests-data-')
->>> info_dir = tempfile.mkdtemp(prefix='viri-tests-info-')
->>> context = {}
->>> script_manager = scriptmanager.ScriptManager(
-...     script_dir, info_dir, context)
->>> rpcs = rpcserver.RPCServer(6808, '', '', script_dir, data_dir,
-...     script_manager)
+>>> db_file = tempfile.NamedTemporaryFile()
+>>> db = orm.Database(db_file.name)
+>>> context = dict(conf={}, db=db)
+>>> for obj in objects.objects:
+>>> context[obj.__name__] = obj
+
+>>> rpcs = rpcserver.RPCServer(
+...     port=6808,
+...     ca_file=os.path.join('keys', 'ca.cert'),
+...     cert_key_file=os.path.join('keys', 'virid.pem'),
+...     db=db,
+...     context=context)
 
 #################################
 ### put and get of data files ###
