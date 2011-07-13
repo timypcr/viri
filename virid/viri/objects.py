@@ -189,14 +189,25 @@ class Job(orm.Model):
     def run_now(cls, db, now):
         """Returns a list of all scheduled jobs that have to run on the date
         and time specified by the argument now."""
-        for job in cls.query(db):
+        ATTRS = [
+            ('minute', 'minute', str),
+            ('hour', 'hour', str),
+            ('month_day', 'day', str),
+            ('month', 'month', str),
             # In cron, Sunday is 0, but in Python is 6
-            if job.minute in ('*', now.minute) and \
-            job.hour in ('*', now.hour) and \
-            job.month_day in ('*', now.day) and \
-            job.month in ('*', now.month) and \
-            job.week_day in ('*', (now.weekday() + 1) % 7) and \
-            job.year in ('*', now.year):
+            ('week_day', 'weekday', lambda x: str((x() + 1) % 7)),
+            ('year', 'year', str)]
+
+        for job in cls.query(db):
+            runs_now = True
+            for job_attr, now_attr, func in ATTRS:
+                job_val = getattr(job, job_attr)
+                if job_val != '0':
+                    job_val = job_val.lstrip('0')
+                now_val = func(getattr(now, now_attr))
+                runs_now = runs_now and job_val in ('*', now_val)
+                if not runs_now: break
+            if runs_now:
                 yield job
 
 

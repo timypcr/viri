@@ -17,70 +17,99 @@
 r"""
 >>> import datetime
 >>> import tempfile
->>> import shutil
->>> from viri import scriptmanager
->>> from viri import schedserver
+>>> from viri import orm
+>>> from viri.objects import File, Job, objects
 
->>> script_dir = tempfile.mkdtemp(prefix='viri-tests-scripts-')
->>> data_dir = tempfile.mkdtemp(prefix='viri-tests-data-')
->>> info_dir = tempfile.mkdtemp(prefix='viri-tests-info-')
->>> context = {}
->>> script_manager = scriptmanager.ScriptManager(
-...     script_dir, info_dir, context)
+# Initialize
+>>> db_file = tempfile.NamedTemporaryFile(prefix='viri_db_')
+>>> db = orm.Database(db_file.name)
+>>> for obj in objects:
+...     obj.create_table(db)
+>>> script = File.create(db, dict(
+...     file_name='script1',
+...     content=b'''
+... class ViriScript:
+...     def run(self):
+...         return 'Hello world!'
+... '''))
+>>> script = File.create(db, dict(
+...     file_name='script2',
+...     content=b'''
+... class ViriScript:
+...     def run(self):
+...         return 'Hello world!'
+... '''))
+>>> script = File.create(db, dict(
+...     file_name='script3',
+...     content=b'''
+... class ViriScript:
+...     def run(self):
+...         return 'Hello world!'
+... '''))
+>>> script = File.create(db, dict(
+...     file_name='script4',
+...     content=b'''
+... class ViriScript:
+...     def run(self):
+...         return 'Hello world!'
+... '''))
+>>> script = File.create(db, dict(
+...     file_name='script5',
+...     content=b'''
+... class ViriScript:
+...     def run(self):
+...         return 'Hello world!'
+... '''))
 
-###########
-### Job ###
-###########
+# Insert jobs
+>>> job = Job.create(db, dict(
+...    file_name_or_id='script1',
+...     minute='*',
+...     hour='*',
+...     month_day='*',
+...     month='*',
+...     week_day='*',
+...     year='*'))
+>>> job = Job.create(db, dict(
+...    file_name_or_id='script2',
+...     minute='23',
+...     hour='23',
+...     month_day='30',
+...     month='4',
+...     week_day='*',
+...     year='2011'))
+>>> job = Job.create(db, dict(
+...    file_name_or_id='script3',
+...     minute='23',
+...     hour='23',
+...     month_day='*',
+...     month='*',
+...     week_day='6',
+...     year='*'))
+>>> job = Job.create(db, dict(
+...    file_name_or_id='script4',
+...     minute='59',
+...     hour='23',
+...     month_day='31',
+...     month='12',
+...     week_day='*',
+...     year='*'))
+>>> job = Job.create(db, dict(
+...    file_name_or_id='script5',
+...     minute='0',
+...     hour='0',
+...     month_day='1',
+...     month='1',
+...     week_day='*',
+...     year='*'))
 
-# Execute every minute
->>> job = schedserver.Job('* * * * * hash', script_manager)
->>> job.has_to_run(datetime.datetime(2011, 4, 30, 23, 23, 12))
-True
->>> job.has_to_run(datetime.datetime(1999, 12, 31, 23, 59, 59))
-True
->>> job.has_to_run(datetime.datetime(2000, 1, 1, 0, 0, 0))
-True
-
-# Execute on specific date and time
->>> job = schedserver.Job('23 23 30 04 * hash', script_manager)
->>> job.has_to_run(datetime.datetime(2011, 4, 30, 23, 23, 12))
-True
->>> job.has_to_run(datetime.datetime(1999, 12, 31, 23, 59, 59))
-False
->>> job.has_to_run(datetime.datetime(2000, 1, 1, 0, 0, 0))
-False
-
-# Execute on last minute of the year
->>> job = schedserver.Job('59 23 31 12 * hash', script_manager)
->>> job.has_to_run(datetime.datetime(2011, 4, 30, 23, 23, 12))
-False
->>> job.has_to_run(datetime.datetime(1999, 12, 31, 23, 59, 59))
-True
->>> job.has_to_run(datetime.datetime(2000, 1, 1, 0, 0, 0))
-False
-
-# Execute on first minute of the year
->>> job = schedserver.Job('00 00 01 01 * hash', script_manager)
->>> job.has_to_run(datetime.datetime(2011, 4, 30, 23, 23, 12))
-False
->>> job.has_to_run(datetime.datetime(1999, 12, 31, 23, 59, 59))
-False
->>> job.has_to_run(datetime.datetime(2000, 1, 1, 0, 0, 0))
-True
-
-###################
-### SchedServer ###
-###################
-
->>> sched_server = schedserver.SchedServer(data_dir, script_manager)
-
-################
-### clean up ###
-################
-
->>> shutil.rmtree(script_dir)
->>> shutil.rmtree(data_dir)
->>> shutil.rmtree(info_dir)
+# Get jobs for specific dates and times
+>>> sorted(map(lambda x: x.file_name_or_id, Job.run_now(db, datetime.datetime(2011, 4, 30, 23, 23))))
+['script1', 'script2', 'script3']
+>>> sorted(map(lambda x: x.file_name_or_id, Job.run_now(db, datetime.datetime(1999, 12, 31, 23, 59))))
+['script1', 'script4']
+>>> sorted(map(lambda x: x.file_name_or_id, Job.run_now(db, datetime.datetime(2000, 1, 1, 0, 0))))
+['script1', 'script5']
 
 """
 
