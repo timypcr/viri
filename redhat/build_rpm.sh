@@ -13,7 +13,7 @@ then
 fi
 
 VERSION=$1
-PROJECT_NAME=Viri-$1
+PROJECT_NAME=Viri-$VERSION
 
 if [[ `cat /proc/version` == *Red\ Hat* ]]
 then
