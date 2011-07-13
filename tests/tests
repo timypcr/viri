@@ -38,7 +38,7 @@ ALL_TESTS = ('rpcserver', 'schedserver', 'viric')
 
 def set_path():
     from os.path import join, dirname, abspath
-    sys.path.append(join(dirname(dirname(abspath(__file__))), 'virid'))
+    sys.path.insert(0, join(dirname(dirname(abspath(__file__))), 'virid'))
 
 def exec_tests(tests):
     for test in tests:
