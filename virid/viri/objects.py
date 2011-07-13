@@ -88,7 +88,8 @@ class File(orm.Model):
 
         if not hasattr(ViriScript, 'run') or \
             not hasattr(ViriScript.run, '__call__'):
-            raise cls.InvalidScript('ViriScript does not have a run method')
+            raise cls.InvalidScript(
+                'ViriScript class does not have a run method')
 
         try:
             result = ViriScript().run(*args)
