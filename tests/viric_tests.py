@@ -22,20 +22,10 @@ r"""
 >>> shutil.copyfile(os.path.join('..', 'client', 'viric'), 'viric.py')
 >>> import viric
 
->>> viric._fix_file_params('ls', {})
+>>> viric._parse_file_args('ls', {})
 {}
->>> viric._fix_file_params('execute', {'use_id': True, 'file_or_id': '1234'}).get('script_id', 'NOT_FOUND')
-'1234'
->>> viric._fix_file_params('execute', {'use_id': True, 'file_or_id': '1234'}).get('file_or_id', 'NOT_FOUND')
-'NOT_FOUND'
->>> viric._fix_file_params('execute', {'use_id': False, 'file_or_id': '__init__.py'}).get('script_id', 'NOT_FOUND')
-'NOT_FOUND'
->>> viric._fix_file_params('execute', {'use_id': False, 'file_or_id': '__init__.py'}).get('file_name', 'NOT_FOUND')
-'__init__.py'
->>> viric._fix_file_params('execute', {'use_id': False, 'file_or_id': '__init__.py'}).get('file_or_id', 'NOT_FOUND')
-'NOT_FOUND'
-
-
+>>> sorted(viric._parse_file_args('put', {'file': 'viric.py'}).keys())
+['file_content', 'file_name']
 
 >>> os.remove('viric.py')
 

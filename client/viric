@@ -134,22 +134,13 @@ class TransportTLS(xmlrpc_client.Transport, object):
         return self.parse_response(resp)
 
 
-def _fix_file_params(cmd, kwargs):
-    for (arg, send_file) in CMD_DEF[cmd]['args']:
-        if send_file:
-            if kwargs.get('use_id'):
-                kwargs['script_id'] = kwargs[arg]
-            else:
-                dst_arg = arg
-                if arg.endswith(OPT_ID_SUFFIX):
-                    dst_arg = arg.rstrip(OPT_ID_SUFFIX)
-
-                kwargs['%s_name' % dst_arg] = os.path.basename(kwargs[arg])
-                with open(kwargs[arg], 'rb') as f:
-                    kwargs['%s_content' % dst_arg] = xmlrpc_client.Binary(f.read())
-
+def _parse_file_args(cmd, kwargs):
+    for (arg, arg_type) in CMD_DEF[cmd]['args']:
+        if arg_type == SEND_FILE_ARG:
+            kwargs[arg + '_name'] = os.path.basename(kwargs[arg])
+            with open(kwargs[arg], 'rb') as f:
+                kwargs[arg + '_content'] = xmlrpc_client.Binary(f.read())
             del kwargs[arg]
-
     return kwargs
 
 def main(cmd, kwargs):
@@ -171,7 +162,7 @@ def main(cmd, kwargs):
                     ' certificate file: {0}'.format(certfile))
 
     server = xmlrpc_client.ServerProxy(
-        'https://%s:%s/' % (kwargs['host'], kwargs['port']),
+        'https://{host}:{port}/'.format(**kwargs),
         transport=TransportTLS(
             kwargs['keyfile'],
             certfile,
@@ -182,7 +173,7 @@ def main(cmd, kwargs):
     del kwargs['keyfile']
     del kwargs['certfile']
 
-    kwargs = _fix_file_params(cmd, kwargs)
+    kwargs = _parse_file_args(cmd, kwargs)
 
     return getattr(server, cmd)(kwargs)
 
@@ -203,9 +194,9 @@ def print_help(program):
             default = ' (Default: {0})'.format(opt.default)
         else:
             default = ''
-        opts += '\t%s%s%s\n' % (
-            ('%s%s' % (opt._long_opts[0], short)).ljust(20),
-            opt.help, default)
+        opts += '\t{}\n'.format(''.join(
+            (opt._long_opts[0] + short).ljust(20),
+            opt.help, default))
 
     if len(sys.argv) > 2 and CMD_DEF.get(sys.argv[2]):
         help_cmd = CMD_DEF.get(sys.argv[2])
@@ -213,20 +204,20 @@ def print_help(program):
             'Usage: {0} {1} {2} [OPTIONS]\n\n'.format(
                 program, sys.argv[2],
                 ' '.join([a[0] for a in help_cmd['args']])))
-        sys.stdout.write('%s\n\n' % help_cmd['desc'])
-        sys.stdout.write('%s\n' % opts)
+        sys.stdout.write(help_cmd['desc'] + '\n\n')
+        sys.stdout.write(opts + '\n')
         if help_cmd['options']:
             sys.stdout.write('Command options:\n')
             for cmd_opt in help_cmd['options']:
-                sys.stdout.write('\t%s%s\n' % (
-                ('%s (%s)' % (cmd_opt[0][1], cmd_opt[0][0])).ljust(20),
-                cmd_opt[1]['help']))
+                sys.stdout.write('\t{}{}\n'.format(
+                    ('{0[1]} ({0[0]})'.format(cmd_opt)).ljust(20),
+                    cmd_opt[1]['help']))
     else:
-        sys.stdout.write('Usage: %s COMMAND [OPTIONS]\n\n' % program)
-        sys.stdout.write('Available commands:\n%s\n' %
-            ''.join(['\t%s%s\n' % (key.ljust(12), val['desc'])
-                for key, val in CMD_DEF.items()]))
-        sys.stdout.write('%s\n' % opts)
+        sys.stdout.write('Usage: {0} COMMAND [OPTIONS]\n\n'.format(program))
+        sys.stdout.write('Available commands:\n{}\n'.format(
+            ''.join(['\t{}\n' % (key.ljust(12) + val['desc'])
+                for key, val in CMD_DEF.items()])))
+        sys.stdout.write(opts + '\n')
             
         sys.stdout.write('See \'{0} help COMMAND\' for more information '
             'on a specific command.\n'.format(program))
@@ -278,7 +269,7 @@ if __name__ == '__main__':
         (code, msg) = main(cmd, params)
     except Exception as exc:
         raise
-        sys.stderr.write('%s\n' % str(exc))
+        sys.stderr.write(str(exc) + '\n')
         sys.exit(1)
     else:
         if isinstance(msg, xmlrpc_client.Binary):
