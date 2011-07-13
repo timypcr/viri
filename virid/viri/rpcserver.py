@@ -226,7 +226,7 @@ class RPCServer:
             return (ERROR, 'File not found')
         else:
             if res:
-                return (SUCCESS, xmlrpc.client.Binary(res.content))
+                return (SUCCESS, xmlrpc.client.Binary(res))
             else:
                 return (ERROR, 'File {} not found'.format(file_name_or_id))
 
