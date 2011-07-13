@@ -1,0 +1,55 @@
+Viri :: Remote execution of Python scripts
+==========================================
+
+Website: http://viriproject.com
+Development site: https://github.com/garcia-marc/
+
+Project description
+-------------------
+The aim of the Viri project is to provide an efficient and organized way to
+run Python scripts in remote hosts. This is specially useful to perform system
+administration tasks in data centers.
+
+Imagine you are the administrator of 1000 hosts (physical or virtual). With
+Viri, you can automate tasks to all those hosts almost like if you had to
+perform them in one. Some examples of tasks you would like to run include:
+ * Change configuration files.
+ * Run backups.
+ * Gather host information to a central location.
+ * Control user access to the host.
+ * Install software.
+ * And everything you are able to code in Python.
+
+While providing a set of scripts, the idea behind Viri is to let system
+administrators to write their own scripts. Viri is just a framework for
+remotely executing any Python script.
+
+Viri's core is the virid daemon, which needs to be installed in every host of
+the infrastructure. Then, the command line utility, or a custom application
+can be used to manage scripts and data.
+
+Project structure
+-----------------
+This is a short description of the directories on this project:
+ + client: Viri client, including a command line tool and a library
+ + debian: Files for building a .deb package
+ + docs: Project documentation
+ + media: The Viri website, and in the future any Viri media file
+ + redhat: Files for building a .rpm package
+ + scripts: sample Viri scripts
+ + tests: Regression tests for the Viri application
+ + virid: Source code of the Viri daemon
+
+License
+-------
+Viri is released to the community under the terms of the GPLv3 license.
+
+You can get a copy of the GPLv3 at: http://www.gnu.org/licenses/gpl-3.0.txt
+
+Authors
+-------
+Viri has been created by:
+ * Marc Garcia <garcia.marc@gmail.com>
+
+Future contributors will be added here.
+
