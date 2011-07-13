@@ -1,7 +1,7 @@
 SBINDIR = $(DESTDIR)/usr/sbin
 LIBDIR = $(DESTDIR)`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`/viri
 ETCDIR = $(DESTDIR)/etc/viri
-VARDIR = $(DESTDIR)/var/viri
+VARDIR = $(DESTDIR)/var/lib/viri
 INITDIR = $(DESTDIR)/etc/init.d
 
 # Operating system must be specified to know which init script needs to be distributed

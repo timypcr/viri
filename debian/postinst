@@ -2,18 +2,9 @@
 
 set -e
 
-# FIXME can't get debconf to work, so going the manual way for now
-#. /usr/share/debconf/confmodule
-
 case "$1" in
     configure)
         ln -s /usr/share/pyshared/viri /usr/lib/python3/dist-packages/
-
-        #db_get viri/hostcode
-        echo -n "Host code: "
-        read RET
-        echo "" >> /etc/viri/virid.conf
-        echo "HostCode: $RET" >> /etc/viri/virid.conf
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

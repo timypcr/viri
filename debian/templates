@@ -1,5 +1,0 @@
-Template: viri/hostcode
-Type: string
-Description: Host code
- Unique code of this host to be used by Viri scripts
-
