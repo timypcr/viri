@@ -14,20 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Viri.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 from setuptools import setup
-from setuptools.command.install import install
-
-class xinstall(install):
-    def run(self):
-        install.run(self)
-        sys.stdout.write('Host code: ')
-        hostcode = input()
-        with open('/etc/viri/virid.conf', 'a') as f:
-            f.write('\nHostCode: %s\n\n' % hostcode)
 
 setup(name='viri',
-    cmdclass={'install': xinstall},
     version='0.1',
     description='Remote execution of Python scripts',
     author='Marc Garcia',
