@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright 2011, Marc Garcia <garcia.marc@gmail.com>
 #
 # This file is part of Viri.
@@ -16,7 +18,7 @@
 
 from setuptools import setup
 
-setup(name='viri',
+kwargs = dict(name='viri',
     version='0.1',
     description='Remote execution of Python scripts',
     author='Marc Garcia',
@@ -43,4 +45,6 @@ setup(name='viri',
         'Topic :: System :: Systems Administration',
     )
 )
+
+setup(**kwargs)
 
