@@ -27,14 +27,15 @@ echo "00" > demoCA/serial
 echo "###################################################"
 echo "###          VIRI CLIENT                        ###"
 echo "###################################################"
-openssl genrsa 4096 > viric.pem
-openssl req -new -key viric.pem -out viric.csr
+openssl genrsa 4096 > viric.key
+openssl req -new -key viric.key -out viric.csr
 openssl ca -in viric.csr -cert ca.cert -keyfile ca.key -policy policy_anything -outdir . -out viric.pem -days 3650
+cat viric.key >> viric.pem
 
 echo "###################################################"
 echo "###          VIRI DAEMON                        ###"
 echo "###################################################"
 openssl req -new -newkey rsa:4096 -nodes -x509 -keyout virid.pem -out virid.pem -days 3650
 
-rm -rf 00.pem ca.key demoCA viric.csr
+rm -rf 00.pem ca.key demoCA viric.csr viric.key
 
