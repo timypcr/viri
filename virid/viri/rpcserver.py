@@ -148,7 +148,7 @@ class RPCServer:
             res = traceback.format_exc()
             return (ERROR, res)
         else:
-            return (SUCCESS if success else ERROR, res)
+            return (SUCCESS if success else ERROR, str(res))
 
     @public
     def put(self, file_name, file_content, execute=False, args=()):
@@ -168,12 +168,12 @@ class RPCServer:
             ).file_id
         if execute:
             try:
-                res = File.execute(self.db, file_id, args, self.context)
+                success, res = File.execute(self.db, file_id, args, self.context)
             except:
                 res = traceback.format_exc()
                 return (ERROR, '{}\n{}'.format(file_id, res))
             else:
-                return (SUCCESS, '{}\n{}'.format(file_id, res))
+                return (success, '{}\n{}'.format(file_id, res))
             return (SUCCESS, file_id)
         else:
             return (SUCCESS, file_id)
