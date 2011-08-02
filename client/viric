@@ -110,7 +110,7 @@ class Command(object):
 class Execute(Command):
     def run(self, filename_or_id, *args):
         return self.server.execute({
-            'filename_or_id': filename_or_id,
+            'file_name_or_id': filename_or_id,
             'args': args})
 
 
@@ -125,17 +125,16 @@ class Put(Command):
 
 class Get(Command):
     def format(self, success, value):
-        return value.content if success else value
+        return value.data if success else value
 
     def run(self, filename_or_id):
         return self.server.get({
-            'filename_or_id': filename_or_id})
+            'file_name_or_id': filename_or_id})
 
 
 class Ls(Command):
     def format(self, success, value):
         if success:
-            return repr(value)
             return os.linesep.join(['\t'.join(x) for x in value])
         else:
             return value
