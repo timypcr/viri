@@ -16,6 +16,7 @@
 
 from viri import orm
 
+EXECUTION_LOG_MSG = 'Script {} with id {} executed with result: {}'
 
 class File(orm.Model):
     """This model represents a file, which can be a Python script, or also a
@@ -101,10 +102,10 @@ class File(orm.Model):
     def execute(cls, db, file_name_or_id, args, context):
         """Executes a Python script saved as a File, saving it to a temporary
         directory to import it. Exceptions are captured and returned as
-        strings. All executions are recorded in the Execution model."""
+        strings. All executions are recorded in the log."""
         import os
-        import datetime
         import shutil
+        import logging
         import tempfile
 
         success = False
@@ -117,17 +118,17 @@ class File(orm.Model):
         try:
             success, result = cls._run_script(temp_dir, mod_name, args, context)
         except Exception as exc:
+            logging.warn(EXECUTION_LOG_MSG.format(
+                script.file_name, script.file_id, 'SUCCESS') +
+                '\n{}'.format(str(exc)))
             success = False
             result = str(exc)
+        else:
+            logging.info(EXECUTION_LOG_MSG.format(
+                script.file_name, script.file_id, 'SUCCESS'))
+            success = True
 
         shutil.rmtree(temp_dir)
-
-        Execution.create(db, dict(
-                file_id=script.file_id,
-                file_name=script.file_name,
-                success=success,
-                result=result,
-                executed=datetime.datetime.now()))
 
         return (success, result)
 
@@ -164,52 +165,5 @@ class File(orm.Model):
             f.write(cls.get_content(db, file_name_or_id))
 
 
-class Execution(orm.Model):
-    """In this model, all executions are recorded, also if the execution
-    fails or can't be performed."""
-    file_id = orm.CharProperty(size=255)
-    file_name = orm.CharProperty(size=255)
-    success = orm.BooleanProperty()
-    result = orm.TextProperty()
-    executed = orm.DatetimeProperty()
-
-
-class Job(orm.Model):
-    """This model stores scheduled jobs, that are checked and run by the
-    schedserver process."""
-    file_name_or_id = orm.CharProperty(size=255)
-    minute = orm.CharProperty(size=2)
-    hour = orm.CharProperty(size=2)
-    month_day = orm.CharProperty(size=2)
-    month = orm.CharProperty(size=2)
-    week_day = orm.CharProperty(size=1)
-    year = orm.CharProperty(size=4)
-
-    @classmethod
-    def run_now(cls, db, now):
-        """Returns a list of all scheduled jobs that have to run on the date
-        and time specified by the argument now."""
-        ATTRS = [
-            ('minute', 'minute', str),
-            ('hour', 'hour', str),
-            ('month_day', 'day', str),
-            ('month', 'month', str),
-            # In cron, Sunday is 0, but in Python is 6
-            ('week_day', 'weekday', lambda x: str((x() + 1) % 7)),
-            ('year', 'year', str)]
-
-        for job in cls.query(db):
-            runs_now = True
-            for job_attr, now_attr, func in ATTRS:
-                job_val = getattr(job, job_attr)
-                if job_val != '0':
-                    job_val = job_val.lstrip('0')
-                now_val = func(getattr(now, now_attr))
-                runs_now = runs_now and job_val in ('*', now_val)
-                if not runs_now: break
-            if runs_now:
-                yield job
-
-
-objects = [File, Execution, Job]
+objects = [File]
 

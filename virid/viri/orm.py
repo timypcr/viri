@@ -121,50 +121,6 @@ class DatetimeProperty(Property):
         return "TIMESTAMP"
 
 
-class Result:
-    """Represents a row from a table in the database. Accessing results
-    through this class allows accessing returned field values as dictionary
-    keys, as well as by index. Also, casting an instance of this class as a
-    string formats the result separating the values by tabs."""
-    def __init__(self, fields, row):
-        self.fields = fields
-        self.row = row
-
-    def __str__(self):
-        return '\t'.join(map(str, self.row))
-
-    def __getattr__(self, attr):
-        return self.row[self.fields.index(attr)]
-
-    def __getitem__(self, item):
-        return self.row[item]
-
-
-class ResultSet:
-    """Represents a set of rows from a table in the database. Itering over
-    this class, or accessing the rows by index casts the results to a Result
-    instance. Also, casting a ResultSet instance to string formats the rows
-    using line breaks to to split them, and as instenaces of Result, rows
-    are splitted by tabs."""
-    def __init__(self, fields, results):
-        self.fields = fields
-        self.results = results
-
-    def __str__(self):
-        import os
-        return os.linesep.join(map(str, self))
-
-    def __bool__(self):
-        return bool(self.results)
-
-    def __iter__(self):
-        for row in self.results:
-            yield Result(self.fields, row)
-
-    def __getitem__(self, item):
-        result = Result(self.fields, self.results[item])
-        return result
-
 class ModelMeta(type):
     """Metaclass for the Model class, that creates an attribute _fields_
     containing a ordered dictionary with the field names, and the instance
@@ -188,6 +144,10 @@ class ModelMeta(type):
 class Model(metaclass=ModelMeta):
     """Handler for a database table. All methods are defined as class methods,
     so the child classes should be used directly, and not instances of them."""
+    @classmethod
+    def row(cls, fields, values):
+        return dict(zip(fields, values))
+
     @classmethod
     def table_name(cls):
         """Returns the SQL table name. This is the name of the class in lower
@@ -222,7 +182,7 @@ class Model(metaclass=ModelMeta):
                 fields=','.join(fields),
                 values=','.join(['?'] * len(fields))),
             values)
-        return Result(fields, values)
+        return cls.row(fields, values)
 
     @classmethod
     def query(cls, db, fields=None, where={}, order=()):
@@ -238,7 +198,7 @@ class Model(metaclass=ModelMeta):
                 map(lambda x: x + " ?", where.keys()))
         if order:
             sql += " ORDER BY {}".format(','.join(order))
-        return ResultSet(fields, db.query(sql, tuple(where.values())))
+        return [cls.row(fields, vals) for vals in db.query(sql, tuple(where.values()))]
 
     @classmethod
     def get(cls, db, fields=None, where={}):

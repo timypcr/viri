@@ -18,8 +18,8 @@
 
 import sys
 import os
+import time
 import logging
-import multiprocessing
 from optparse import OptionParser
 from configparser import RawConfigParser
 from viri.rpcserver import RPCServer
@@ -29,7 +29,8 @@ from viri import objects
 
 APP_NAME = 'virid'
 APP_VERSION = '0.1'
-APP_DESC = 'Receives and executes scripts from viric instances'
+APP_DESC = 'Remote execution of Python scripts'
+SLEEP_TIME = 5 # seconds
 LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
 DEFAULT_CONFIG_FILE = '/etc/viri/virid.conf'
 DEFAULTS = {
@@ -89,6 +90,10 @@ class ViriDaemon:
         """Initializes all required attributes, getting the values from the
         configuration file.
         """
+        if not os.path.isfile(self.config_file):
+            raise ValueError('Configuration file not found: {}'.format(
+                self.config_file))
+        
         config = RawConfigParser(DEFAULTS)
         config.read((self.config_file,))
 
@@ -125,12 +130,11 @@ class ViriDaemon:
 
     def start(self):
         """Starts the ViriDaemon. This daemonizes the process, gets required
-        settings from config file, and starts both the SchedServer for task
-        scheduling, and the RPCServer to accept connections form viric instances
+        settings from config file, and starts both the RPC server to accept
+        connections form viric instances.
         """
         import signal
         import threading
-        from viri.schedserver import sched_server
 
         logging.info('Starting daemon...')
         signal.signal(signal.SIGTERM, self.stop)
@@ -140,14 +144,6 @@ class ViriDaemon:
         if self.pid_file:
             with open(self.pid_file, 'w') as f:
                 f.write(str(os.getpid()))
-
-        self.sched_quit = multiprocessing.Queue()
-        self.sched_proc = multiprocessing.Process(
-            target=sched_server, args=(
-                self.db,
-                self.context,
-                self.sched_quit))
-        self.sched_proc.start()
 
         self.rpc_server = RPCServer(
             self.port,
@@ -160,12 +156,14 @@ class ViriDaemon:
         t.start()
         logging.info('Daemon started on port %s' % self.port)
 
+        self.request_stop = False
+        while not self.request_stop:
+            time.sleep(SLEEP_TIME)
+
     def stop(self, signum, frame):
         logging.info('Stopping daemon...')
-        self.sched_quit.put(True)
-        self.sched_proc.join()
-        logging.debug('Sched server stopped')
         self.rpc_server.stop()
+        self.request_stop = True
         logging.info('Daemon stopped')
         sys.exit(0)
 

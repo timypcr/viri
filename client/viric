@@ -29,56 +29,12 @@ else:
     from http import client as http_client
     from xmlrpc import client as xmlrpc_client
 
-APP_DESC = 'Performs operations on remote hosts using Viri'
+APP_DESC = 'Remote execution of Python scripts'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
+DATE_FORMAT = '%Y-%m-%d %H-%M'
 
-REGULAR_ARG = False
-SEND_FILE_ARG = True
-OPT_ID_SUFFIX = '_or_id'
-OPT_SCHED = (('-s', '--sched'), dict(dest='sched',
-    help='perform an operation for a scheduled job',
-    action='store_true', default=False))
-OPT_EXEC = (('-x', '--execute'), dict(dest='execute',
-    help='executes the scripts after sending it',
-    action='store_true', default=False))
-OPT_DEL = (('-d', '--delete'), dict(dest='delete',
-    help='deletes the scheduled task',
-    action='store_true', default=False))
-
-CMD_DEF = {
-    'execute': dict(
-        desc='Executes a script in the remote host',
-        args=[
-            ('file_name{0}'.format(OPT_ID_SUFFIX), REGULAR_ARG)],
-        options=[]),
-    'put': dict(
-        desc='Uploads a script or file to the remote host',
-        args=[
-            ('file', SEND_FILE_ARG)],
-        options=[OPT_EXEC]),
-    'sched': dict(
-        desc='Schedules the execution of a script',
-        args=[
-            ('file_name{0}'.format(OPT_ID_SUFFIX), REGULAR_ARG),
-            ('cron_def', REGULAR_ARG)],
-        options=[OPT_DEL]),
-    'ls': dict(
-        desc='Lists remote scripts or files',
-        args=[],
-        args_sched=[],
-        options=[OPT_SCHED]),
-    'get': dict(
-        desc='Downloads a remote script or file',
-        args=(
-            ('file_name{0}'.format(OPT_ID_SUFFIX), REGULAR_ARG),),
-        options=[]),
-    'history': dict(
-        desc='Displays script execution history',
-        args=[],
-        options=[]),
-}
 
 class ConfError(Exception):
     """Represents a error in user provided configuration"""
@@ -134,153 +90,105 @@ class TransportTLS(xmlrpc_client.Transport, object):
         return self.parse_response(resp)
 
 
-def _parse_file_args(cmd, kwargs):
-    for (arg, arg_type) in CMD_DEF[cmd]['args']:
-        if arg_type == SEND_FILE_ARG:
-            kwargs[arg + '_name'] = os.path.basename(kwargs[arg])
-            with open(kwargs[arg], 'rb') as f:
-                kwargs[arg + '_content'] = xmlrpc_client.Binary(f.read())
-            del kwargs[arg]
-    return kwargs
+class Command(object):
+    def __init__(self, keyfile, certfile):
+        self.keyfile = keyfile
+        self.certfile = certfile
 
-def main(cmd, kwargs):
-    """Handles the connection to the remote virid server, and the execution of
-    remote methods. All logic is implemented on the server, so if a invalid
-    command is specified, the connection will be established. This makes this
-    client generic, and changes to it are rarely required.
-    """
-    certfile = os.path.expanduser(kwargs['certfile'])
-    if not os.path.isfile(certfile):
-        raise ConfError('TLS certificate file not found: {0}'.format(
-            kwargs['certfile']))
-    if kwargs['keyfile'] and not os.path.isfile(kwargs['keyfile']):
-        raise ConfError('TLS key file not found: {0}'.format(kwargs['keyfile']))
-    if not kwargs['keyfile']:
-        with open(certfile, 'r') as f:
-            if 'PRIVATE KEY' not in f.read():
-                raise ConfError('No key file specified, and key not found in'
-                    ' certificate file: {0}'.format(certfile))
+    def connect(self, host):
+        if ':' not in host: host += ':' + str(DEFAULT_PORT)
+        self.server = xmlrpc_client.ServerProxy(
+            'https://{0}/'.format(host),
+            transport=TransportTLS(
+                self.keyfile,
+                self.certfile,
+                use_datetime=True))
 
-    server = xmlrpc_client.ServerProxy(
-        'https://{host}:{port}/'.format(**kwargs),
-        transport=TransportTLS(
-            kwargs['keyfile'],
-            certfile,
-            use_datetime=False))
+    def format(self, success, value):
+        return value
 
-    del kwargs['host']
-    del kwargs['port']
-    del kwargs['keyfile']
-    del kwargs['certfile']
 
-    kwargs = _parse_file_args(cmd, kwargs)
+class Execute(Command):
+    def run(self, filename_or_id, *args):
+        return self.server.execute({
+            'file_name_or_id': filename_or_id,
+            'args': args})
 
-    return getattr(server, cmd)(kwargs)
 
-def print_error(msg, cmd=None):
-    program = sys.argv[0]
-    sys.stderr.write('{0}: {1}\n'.format(program, msg.format(cmd=cmd)))
-    sys.stderr.write('Try `{0} help\' for more information.\n'.format(program))
-    sys.exit(1)
+class Put(Command):
+    def run(self, filename):
+        with open(filename, 'rb') as f:
+            return self.server.put({
+                'file_name': os.path.basename(filename),
+                'file_content': xmlrpc_client.Binary(f.read()),
+            })
 
-def print_help(program):
-    opts = 'Options:\n'
-    for opt in parser.option_list:
-        if len(opt._short_opts) > 0:
-            short = ' ({0})'.format(opt._short_opts[0])
+
+class Get(Command):
+    def format(self, success, value):
+        return value.data if success else value
+
+    def run(self, filename_or_id):
+        return self.server.get({
+            'file_name_or_id': filename_or_id})
+
+
+class Ls(Command):
+    def format(self, success, value):
+        if success:
+            res = ''
+            for row in value:
+                res += '\t'.join([
+                    row['saved'].strftime(DATE_FORMAT),
+                    row['file_id'],
+                    row['file_name']]) + os.linesep
+            return res
         else:
-            short = ''
-        if not isinstance(opt.default, tuple):
-            default = ' (Default: {0})'.format(opt.default)
-        else:
-            default = ''
-        opts += '\t{}\n'.format(''.join(
-            (opt._long_opts[0] + short).ljust(20),
-            opt.help, default))
+            return value
 
-    if len(sys.argv) > 2 and CMD_DEF.get(sys.argv[2]):
-        help_cmd = CMD_DEF.get(sys.argv[2])
-        sys.stdout.write(
-            'Usage: {0} {1} {2} [OPTIONS]\n\n'.format(
-                program, sys.argv[2],
-                ' '.join([a[0] for a in help_cmd['args']])))
-        sys.stdout.write(help_cmd['desc'] + '\n\n')
-        sys.stdout.write(opts + '\n')
-        if help_cmd['options']:
-            sys.stdout.write('Command options:\n')
-            for cmd_opt in help_cmd['options']:
-                sys.stdout.write('\t{}{}\n'.format(
-                    ('{0[1]} ({0[0]})'.format(cmd_opt)).ljust(20),
-                    cmd_opt[1]['help']))
-    else:
-        sys.stdout.write('Usage: {0} COMMAND [OPTIONS]\n\n'.format(program))
-        sys.stdout.write('Available commands:\n{}\n'.format(
-            ''.join(['\t{}\n' % (key.ljust(12) + val['desc'])
-                for key, val in CMD_DEF.items()])))
-        sys.stdout.write(opts + '\n')
-            
-        sys.stdout.write('See \'{0} help COMMAND\' for more information '
-            'on a specific command.\n'.format(program))
+    def run(self):
+        return self.server.ls({})
 
-    sys.exit(0)
 
 if __name__ == '__main__':
+    CMD_MAP = {
+        'exec': Execute,
+        'put': Put,
+        'get': Get,
+        'ls': Ls,
+    }
     parser = OptionParser(
         'Usage: %prog command [OPTIONS]',
         description=APP_DESC,
         version=APP_VERSION)
-    parser.add_option('-H', '--host', dest='host',
-        help='destination host', default='localhost')
-    parser.add_option('-p', '--port', dest='port',
-        help='destination port', type='int', default=DEFAULT_PORT)
-    parser.add_option('-k', '--keyfile', dest='keyfile',
+    parser.add_option('-H', '--hosts', dest='hosts',
+        default='localhost', help='destination host')
+    parser.add_option('-k', '--keyfile', dest='keyfile', default=None,
         help='TLS key (only if it is not included on the TLS certificate)')
     parser.add_option('-c', '--certfile', dest='certfile',
-        help='TLS certificate', default='~/.viri/viric.pem')
+        default=os.path.expanduser('~/.viri/viric.pem'),
+        help='TLS certificate')
+    options, args = parser.parse_args()
 
-    if len(sys.argv) < 2:
-        print_error('command argument is required')
-
-    (program, cmd) = sys.argv[:2]
-    program = os.path.basename(program)
-    if cmd == 'help':
-        print_help(program)
-
-    if not CMD_DEF.get(cmd): 
-        print_error('invalid command {cmd}', cmd)
-
-    for opt in CMD_DEF[cmd]['options']:
-        parser.add_option(*opt[0], **opt[1])
-    (options, args) = parser.parse_args()
-
-    if cmd in ('execute', 'put'):
-        if len(args) - 1 < len(CMD_DEF[cmd]['args']):
-            print_error('invalid number of parameters for command {cmd}', cmd)
-        params = {CMD_DEF[cmd]['args'][0][0]: args[1],
-            'args': args[2:]}
-        params.update(vars(options))
-    else:
-        if len(args) - 1 != len(CMD_DEF[cmd]['args']):
-            print_error('invalid number of parameters for command {cmd}', cmd)
-        params = dict(zip([arg[0] for arg in CMD_DEF[cmd]['args']], args[1:]))
-        params.update(vars(options))
-
-    try:
-        (code, msg) = main(cmd, params)
-    except Exception as exc:
-        raise
-        sys.stderr.write(str(exc) + '\n')
+    if not args:
+        sys.stderr.write('viric: command argument missing\n')
         sys.exit(1)
+    elif args[0] in CMD_MAP.keys():
+        # TODO verify if certificates exist and look valid, and raise
+        # useful message to user if not
+        cmd = CMD_MAP[args[0]](options.keyfile, options.certfile)
+        hosts = options.hosts.split(',')
+        for host in hosts:
+            cmd.connect(host)
+            success, value = cmd.run(*args[1:])
+            if len(hosts) > 1:
+                print('Executed on host {0} returned {1}. Response:'.format(
+                    host.split(':')[0],
+                    'SUCCESS' if success else 'ERROR'))
+            print(cmd.format(success, value))
+            print('')
+        sys.exit(0)
     else:
-        if isinstance(msg, xmlrpc_client.Binary):
-            sys.stdout.write(msg.data)
-        else:
-            sys.stdout.write(msg)
-            sys.stdout.write(os.linesep)
-        try:
-            code_int = int(code)
-        except ValueError:
-            sys.stderr.write(
-                'Invalid response from the server: {0} {1}'.format(code, msg))
-            sys.exit(1)
+        sys.stderr.write('viric: unknown command {0}\n'.format(args[0]))
+        sys.exit(1)
 

@@ -22,13 +22,13 @@ import ssl
 import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from viri.objects import File, Job, Execution
+from viri.objects import File
 
 
-RPC_METHODS = ('execute', 'put', 'sched', 'ls', 'get', 'history')
+RPC_METHODS = ('execute', 'put', 'get', 'ls')
 PROTOCOL = ssl.PROTOCOL_TLSv1
-SUCCESS = 0
-ERROR = 1
+SUCCESS = True
+ERROR = False
 
 
 class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
@@ -107,8 +107,8 @@ class RPCServer:
             for TLS negotiation
         db - viri database handler
         context - functions and data that will be made available on viri
-            scripts. This is custom settings, Script, DataFile, Execution
-            objects and the viri db
+            scripts. This is custom settings, Script, DataFile objects and the
+            viri db
         """
         self.port = port
         self.ca_file = ca_file
@@ -151,71 +151,19 @@ class RPCServer:
             return (SUCCESS if success else ERROR, str(res))
 
     @public
-    def put(self, file_name, file_content, execute=False, args=()):
+    def put(self, file_name, file_content):
         """Receives a script or a data file from viric, and saves it in the
-        local filesystem.
-        Scripts are saved using it's id as file name, and info about them is
-        saved in an info file, which keeps the original name.
-        Data files are saved as they are keeping the name.
+        viri database. A content hash is used as id, so if the file exists,
+        it's not saved again.
 
         Arguments:
         file_name -- original file name
         file_content -- content of the file processed using
             xmlrpc.client.Binary.encode()
         """
-        file_id = File.create(self.db,
+        return (SUCCESS, File.create(self.db,
             dict(file_name=file_name, content=file_content.data)
-            ).file_id
-        if execute:
-            try:
-                success, res = File.execute(self.db, file_id, args, self.context)
-            except:
-                res = traceback.format_exc()
-                return (ERROR, '{}\n{}'.format(file_id, res))
-            else:
-                return (success, '{}\n{}'.format(file_id, res))
-            return (SUCCESS, file_id)
-        else:
-            return (SUCCESS, file_id)
-
-    @public
-    def sched(self, file_name_or_id, cron_def, delete=False):
-        """Schedules the execution of a script"""
-        CRON_FIELDS = [
-            'minute', 'hour', 'month_day', 'month', 'week_day', 'year']
-
-        if not delete:
-            if File.get_obj(self.db, file_name_or_id):
-                vals = dict(file_name_or_id=file_name_or_id)
-                vals.update(dict(zip(CRON_FIELDS, cron_def.split(' '))))
-                Job.create(self.db, vals)
-                return (SUCCESS, 'Scheduled job successfully saved')
-            else:
-                return (ERROR, '{} is not a valid script'.format(file_name_or_id))
-        else:
-            vals = {'file_name_or_id =': file_name_or_id}
-            vals.update(dict(zip(
-                map(lambda x: x + ' =', CRON_FIELDS),
-                cron_def.split(' '))))
-            sched = Job.query(self.db, where=vals)
-            if sched:
-                Job.delete(self.db, where=vals)
-                return (SUCCESS, 'Scheduled job successfully deleted')
-            else:
-                return (ERROR, 'Cron definition not found')
-
-    @public
-    def ls(self, sched=False):
-        """List scripts or files in the data directory"""
-        if sched:
-            return (SUCCESS, str(Job.query(self.db,
-                fields=('file_name_or_id', 'minute', 'hour', 'month_day',
-                    'month', 'week_day', 'year'),
-                order=('file_name_or_id',))))
-        else:
-            return (SUCCESS, str(File.query(self.db,
-                fields=('file_name', 'file_id', 'saved'),
-                order=('file_name', 'saved'))))
+            ).file_id)
 
     @public
     def get(self, file_name_or_id):
@@ -231,8 +179,9 @@ class RPCServer:
                 return (ERROR, 'File {} not found'.format(file_name_or_id))
 
     @public
-    def history(self):
-        return (SUCCESS, str(Execution.query(self.db,
-            fields=('executed', 'file_name', 'file_id', 'success'),
-            order=('executed',))))
+    def ls(self):
+        """List files on the database"""
+        return (SUCCESS, File.query(self.db,
+            fields=('file_name', 'file_id', 'saved'),
+            order=('saved',)))
 
