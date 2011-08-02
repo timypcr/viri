@@ -218,7 +218,7 @@ class RPCServer:
                 order=('file_name', 'saved'))))
 
     @public
-    def get(self, file_name_or_id, data=False):
+    def get(self, file_name_or_id):
         """Returns the content of a file"""
         try:
             res = File.get_content(self.db, file_name_or_id)
