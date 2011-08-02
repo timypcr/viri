@@ -40,9 +40,6 @@ OPT_ID_SUFFIX = '_or_id'
 OPT_SCHED = (('-s', '--sched'), dict(dest='sched',
     help='perform an operation for a scheduled job',
     action='store_true', default=False))
-OPT_EXEC = (('-x', '--execute'), dict(dest='execute',
-    help='executes the scripts after sending it',
-    action='store_true', default=False))
 OPT_DEL = (('-d', '--delete'), dict(dest='delete',
     help='deletes the scheduled task',
     action='store_true', default=False))
@@ -57,7 +54,7 @@ CMD_DEF = {
         desc='Uploads a script or file to the remote host',
         args=[
             ('file', SEND_FILE_ARG)],
-        options=[OPT_EXEC]),
+        options=[]),
     'sched': dict(
         desc='Schedules the execution of a script',
         args=[

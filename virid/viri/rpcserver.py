@@ -151,32 +151,19 @@ class RPCServer:
             return (SUCCESS if success else ERROR, str(res))
 
     @public
-    def put(self, file_name, file_content, execute=False, args=()):
+    def put(self, file_name, file_content):
         """Receives a script or a data file from viric, and saves it in the
-        local filesystem.
-        Scripts are saved using it's id as file name, and info about them is
-        saved in an info file, which keeps the original name.
-        Data files are saved as they are keeping the name.
+        viri database. A content hash is used as id, so if the file exists,
+        it's not saved again.
 
         Arguments:
         file_name -- original file name
         file_content -- content of the file processed using
             xmlrpc.client.Binary.encode()
         """
-        file_id = File.create(self.db,
+        return (SUCCESS,  File.create(self.db,
             dict(file_name=file_name, content=file_content.data)
-            ).file_id
-        if execute:
-            try:
-                success, res = File.execute(self.db, file_id, args, self.context)
-            except:
-                res = traceback.format_exc()
-                return (ERROR, '{}\n{}'.format(file_id, res))
-            else:
-                return (success, '{}\n{}'.format(file_id, res))
-            return (SUCCESS, file_id)
-        else:
-            return (SUCCESS, file_id)
+            ).file_id)
 
     @public
     def sched(self, file_name_or_id, cron_def, delete=False):
