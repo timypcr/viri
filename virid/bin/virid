@@ -89,6 +89,10 @@ class ViriDaemon:
         """Initializes all required attributes, getting the values from the
         configuration file.
         """
+        if not os.path.isfile(self.config_file):
+            raise ValueError('Configuration file not found: {}'.format(
+                self.config_file))
+        
         config = RawConfigParser(DEFAULTS)
         config.read((self.config_file,))
 
