@@ -29,7 +29,7 @@ else:
     from http import client as http_client
     from xmlrpc import client as xmlrpc_client
 
-APP_DESC = 'Performs operations on remote hosts using Viri'
+APP_DESC = 'Remote execution of Python scripts'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
@@ -37,12 +37,6 @@ PROTOCOL = ssl.PROTOCOL_TLSv1
 REGULAR_ARG = False
 SEND_FILE_ARG = True
 OPT_ID_SUFFIX = '_or_id'
-OPT_SCHED = (('-s', '--sched'), dict(dest='sched',
-    help='perform an operation for a scheduled job',
-    action='store_true', default=False))
-OPT_DEL = (('-d', '--delete'), dict(dest='delete',
-    help='deletes the scheduled task',
-    action='store_true', default=False))
 
 CMD_DEF = {
     'execute': dict(
@@ -55,17 +49,11 @@ CMD_DEF = {
         args=[
             ('file', SEND_FILE_ARG)],
         options=[]),
-    'sched': dict(
-        desc='Schedules the execution of a script',
-        args=[
-            ('file_name{0}'.format(OPT_ID_SUFFIX), REGULAR_ARG),
-            ('cron_def', REGULAR_ARG)],
-        options=[OPT_DEL]),
     'ls': dict(
         desc='Lists remote scripts or files',
         args=[],
         args_sched=[],
-        options=[OPT_SCHED]),
+        options=[]),
     'get': dict(
         desc='Downloads a remote script or file',
         args=(

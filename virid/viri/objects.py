@@ -165,42 +165,5 @@ class File(orm.Model):
             f.write(cls.get_content(db, file_name_or_id))
 
 
-class Job(orm.Model):
-    """This model stores scheduled jobs, that are checked and run by the
-    schedserver process."""
-    file_name_or_id = orm.CharProperty(size=255)
-    minute = orm.CharProperty(size=2)
-    hour = orm.CharProperty(size=2)
-    month_day = orm.CharProperty(size=2)
-    month = orm.CharProperty(size=2)
-    week_day = orm.CharProperty(size=1)
-    year = orm.CharProperty(size=4)
-
-    @classmethod
-    def run_now(cls, db, now):
-        """Returns a list of all scheduled jobs that have to run on the date
-        and time specified by the argument now."""
-        ATTRS = [
-            ('minute', 'minute', str),
-            ('hour', 'hour', str),
-            ('month_day', 'day', str),
-            ('month', 'month', str),
-            # In cron, Sunday is 0, but in Python is 6
-            ('week_day', 'weekday', lambda x: str((x() + 1) % 7)),
-            ('year', 'year', str)]
-
-        for job in cls.query(db):
-            runs_now = True
-            for job_attr, now_attr, func in ATTRS:
-                job_val = getattr(job, job_attr)
-                if job_val != '0':
-                    job_val = job_val.lstrip('0')
-                now_val = func(getattr(now, now_attr))
-                runs_now = runs_now and job_val in ('*', now_val)
-                if not runs_now: break
-            if runs_now:
-                yield job
-
-
-objects = [File, Job]
+objects = [File]
 

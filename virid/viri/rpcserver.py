@@ -22,13 +22,13 @@ import ssl
 import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from viri.objects import File, Job
+from viri.objects import File
 
 
-RPC_METHODS = ('execute', 'put', 'sched', 'ls', 'get')
+RPC_METHODS = ('execute', 'put', 'get', 'ls')
 PROTOCOL = ssl.PROTOCOL_TLSv1
-SUCCESS = 0
-ERROR = 1
+SUCCESS = True
+ERROR = False
 
 
 class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
@@ -161,48 +161,9 @@ class RPCServer:
         file_content -- content of the file processed using
             xmlrpc.client.Binary.encode()
         """
-        return (SUCCESS,  File.create(self.db,
+        return (SUCCESS, File.create(self.db,
             dict(file_name=file_name, content=file_content.data)
             ).file_id)
-
-    @public
-    def sched(self, file_name_or_id, cron_def, delete=False):
-        """Schedules the execution of a script"""
-        CRON_FIELDS = [
-            'minute', 'hour', 'month_day', 'month', 'week_day', 'year']
-
-        if not delete:
-            if File.get_obj(self.db, file_name_or_id):
-                vals = dict(file_name_or_id=file_name_or_id)
-                vals.update(dict(zip(CRON_FIELDS, cron_def.split(' '))))
-                Job.create(self.db, vals)
-                return (SUCCESS, 'Scheduled job successfully saved')
-            else:
-                return (ERROR, '{} is not a valid script'.format(file_name_or_id))
-        else:
-            vals = {'file_name_or_id =': file_name_or_id}
-            vals.update(dict(zip(
-                map(lambda x: x + ' =', CRON_FIELDS),
-                cron_def.split(' '))))
-            sched = Job.query(self.db, where=vals)
-            if sched:
-                Job.delete(self.db, where=vals)
-                return (SUCCESS, 'Scheduled job successfully deleted')
-            else:
-                return (ERROR, 'Cron definition not found')
-
-    @public
-    def ls(self, sched=False):
-        """List scripts or files in the data directory"""
-        if sched:
-            return (SUCCESS, str(Job.query(self.db,
-                fields=('file_name_or_id', 'minute', 'hour', 'month_day',
-                    'month', 'week_day', 'year'),
-                order=('file_name_or_id',))))
-        else:
-            return (SUCCESS, str(File.query(self.db,
-                fields=('file_name', 'file_id', 'saved'),
-                order=('file_name', 'saved'))))
 
     @public
     def get(self, file_name_or_id):
@@ -216,4 +177,11 @@ class RPCServer:
                 return (SUCCESS, xmlrpc.client.Binary(res))
             else:
                 return (ERROR, 'File {} not found'.format(file_name_or_id))
+
+    @public
+    def ls(self):
+        """List files on the database"""
+        return (SUCCESS, str(File.query(self.db,
+            fields=('file_name', 'file_id', 'saved'),
+            order=('file_name', 'saved'))))
 
