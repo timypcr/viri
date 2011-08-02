@@ -33,6 +33,7 @@ APP_DESC = 'Remote execution of Python scripts'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
+DATE_FORMAT = '%Y-%m-%d %H-%M'
 
 
 class ConfError(Exception):
@@ -101,7 +102,7 @@ class Command(object):
             transport=TransportTLS(
                 self.keyfile,
                 self.certfile,
-                use_datetime=False))
+                use_datetime=True))
 
     def format(self, success, value):
         return value
@@ -135,7 +136,13 @@ class Get(Command):
 class Ls(Command):
     def format(self, success, value):
         if success:
-            return os.linesep.join(['\t'.join(x) for x in value])
+            res = ''
+            for row in value:
+                res += '\t'.join([
+                    row['saved'].strftime(DATE_FORMAT),
+                    row['file_id'],
+                    row['file_name']]) + os.linesep
+            return res
         else:
             return value
 

@@ -181,7 +181,7 @@ class RPCServer:
     @public
     def ls(self):
         """List files on the database"""
-        return (SUCCESS, str(File.query(self.db,
+        return (SUCCESS, File.query(self.db,
             fields=('file_name', 'file_id', 'saved'),
-            order=('file_name', 'saved'))))
+            order=('saved',)))
 
