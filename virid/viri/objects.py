@@ -16,6 +16,7 @@
 
 from viri import orm
 
+EXECUTION_LOG_MSG = 'Script {} with id {} executed with result: {}'
 
 class File(orm.Model):
     """This model represents a file, which can be a Python script, or also a
@@ -101,10 +102,10 @@ class File(orm.Model):
     def execute(cls, db, file_name_or_id, args, context):
         """Executes a Python script saved as a File, saving it to a temporary
         directory to import it. Exceptions are captured and returned as
-        strings. All executions are recorded in the Execution model."""
+        strings. All executions are recorded in the log."""
         import os
-        import datetime
         import shutil
+        import logging
         import tempfile
 
         success = False
@@ -117,17 +118,17 @@ class File(orm.Model):
         try:
             success, result = cls._run_script(temp_dir, mod_name, args, context)
         except Exception as exc:
+            logging.warn(EXECUTION_LOG_MSG.format(
+                script.file_name, script.file_id, 'SUCCESS') +
+                '\n{}'.format(str(exc)))
             success = False
             result = str(exc)
+        else:
+            logging.info(EXECUTION_LOG_MSG.format(
+                script.file_name, script.file_id, 'SUCCESS'))
+            success = True
 
         shutil.rmtree(temp_dir)
-
-        Execution.create(db, dict(
-                file_id=script.file_id,
-                file_name=script.file_name,
-                success=success,
-                result=result,
-                executed=datetime.datetime.now()))
 
         return (success, result)
 
@@ -162,16 +163,6 @@ class File(orm.Model):
         file matching the file name will be uploaded."""
         with open(path, 'wb') as f:
             f.write(cls.get_content(db, file_name_or_id))
-
-
-class Execution(orm.Model):
-    """In this model, all executions are recorded, also if the execution
-    fails or can't be performed."""
-    file_id = orm.CharProperty(size=255)
-    file_name = orm.CharProperty(size=255)
-    success = orm.BooleanProperty()
-    result = orm.TextProperty()
-    executed = orm.DatetimeProperty()
 
 
 class Job(orm.Model):
@@ -211,5 +202,5 @@ class Job(orm.Model):
                 yield job
 
 
-objects = [File, Execution, Job]
+objects = [File, Job]
 

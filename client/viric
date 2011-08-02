@@ -74,10 +74,6 @@ CMD_DEF = {
         args=(
             ('file_name{0}'.format(OPT_ID_SUFFIX), REGULAR_ARG),),
         options=[]),
-    'history': dict(
-        desc='Displays script execution history',
-        args=[],
-        options=[]),
 }
 
 class ConfError(Exception):

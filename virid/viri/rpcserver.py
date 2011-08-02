@@ -22,10 +22,10 @@ import ssl
 import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
     SimpleXMLRPCRequestHandler
-from viri.objects import File, Job, Execution
+from viri.objects import File, Job
 
 
-RPC_METHODS = ('execute', 'put', 'sched', 'ls', 'get', 'history')
+RPC_METHODS = ('execute', 'put', 'sched', 'ls', 'get')
 PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = 0
 ERROR = 1
@@ -107,8 +107,8 @@ class RPCServer:
             for TLS negotiation
         db - viri database handler
         context - functions and data that will be made available on viri
-            scripts. This is custom settings, Script, DataFile, Execution
-            objects and the viri db
+            scripts. This is custom settings, Script, DataFile objects and the
+            viri db
         """
         self.port = port
         self.ca_file = ca_file
@@ -229,10 +229,4 @@ class RPCServer:
                 return (SUCCESS, xmlrpc.client.Binary(res))
             else:
                 return (ERROR, 'File {} not found'.format(file_name_or_id))
-
-    @public
-    def history(self):
-        return (SUCCESS, str(Execution.query(self.db,
-            fields=('executed', 'file_name', 'file_id', 'success'),
-            order=('executed',))))
 
