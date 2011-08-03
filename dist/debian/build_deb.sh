@@ -16,7 +16,7 @@ VERSION=$1
 PROJECT_NAME=Viri-$VERSION
 
 mkdir -p /tmp/$PROJECT_NAME/debian
-cp -r ../virid/* /tmp/$PROJECT_NAME/
+cp -r ./* /tmp/$PROJECT_NAME/
 cp * /tmp/$PROJECT_NAME/debian/
 cd /tmp/$PROJECT_NAME
 debuild
