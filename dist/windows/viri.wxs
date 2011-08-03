@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+  <Product Name='Viri' Id='37AEEFD3-4336-4FE7-B988-6DE28218A269' UpgradeCode='7C2A7590-04C5-471C-BD2B-9DEED348B93D'
+    Language='1033' Codepage='1252' Version='0.1.0' Manufacturer='Atlas Information Technology, SA'>
+
+    <Package Id='*' Keywords='Installer' Description="Viri Installer"
+      Comments='Viri is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY' Manufacturer='Atlas Information Technology, SA'
+      InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+
+    <Media Id='1' Cabinet='Viri.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
+    <Property Id='DiskPrompt' Value="Viri Installation [1]" />
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFilesFolder' Name='PFiles'>
+        <Directory Id='AtlasIT' Name='AtlasIT'>
+          <Directory Id='INSTALLDIR' Name='Viri'>
+		  
+			<Component Id='Hashlib' Guid='*'>
+              <File Id='_hashlib' Name='_hashlib.pyd' DiskId='1' Source='_hashlib.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Socket' Guid='*'>
+              <File Id='_socket' Name='_socket.pyd' DiskId='1' Source='_socket.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Sqlite3' Guid='*'>
+              <File Id='_sqlite3' Name='_sqlite3.pyd' DiskId='1' Source='_sqlite3.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='SSL' Guid='*'>
+              <File Id='_ssl' Name='_ssl.pyd' DiskId='1' Source='_ssl.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Bz2' Guid='*'>
+              <File Id='bz2' Name='bz2.pyd' DiskId='1' Source='bz2.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Pyexpat' Guid='*'>
+              <File Id='pyexpat' Name='pyexpat.pyd' DiskId='1' Source='pyexpat.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Select' Guid='*'>
+              <File Id='select' Name='select.pyd' DiskId='1' Source='select.pyd' KeyPath='yes' />
+            </Component>
+
+			<Component Id='Unicodedata' Guid='*'>
+              <File Id='unicodedata' Name='unicodedata.pyd' DiskId='1' Source='unicodedata.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Python32DLL' Guid='*'>
+              <File Id='python32' Name='python32.dll' DiskId='1' Source='python32.dll' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Sqlite3DLL' Guid='*'>
+              <File Id='sqlite3' Name='sqlite3.dll' DiskId='1' Source='sqlite3.dll' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='MSVCR90DLL' Guid='*'>
+              <File Id='msvcr90' Name='msvcr90.dll' DiskId='1' Source='msvcr90.dll' KeyPath='yes' />
+            </Component>
+
+			<Component Id='Viric' Guid='*'>
+              <File Id='viric' Name='viric.exe' DiskId='1' Source='viric.exe' KeyPath='yes' />
+            </Component>
+
+			<Component Id='Virid' Guid='*'>
+              <File Id='virid' Name='virid.exe' DiskId='1' Source='virid.exe' KeyPath='yes' />
+            </Component>
+
+			<Component Id='Vcredist_x86' Guid='*'>
+              <File Id='vcredist_x86' Name='vcredist_x86.exe' DiskId='1' Source='vcredist_x86.exe' KeyPath='yes' />
+            </Component>
+		  
+          </Directory>
+        </Directory>
+       </Directory>
+	 </Directory>
+
+    <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='Hashlib' />
+	  <ComponentRef Id='Socket' />
+	  <ComponentRef Id='SSL' />
+	  <ComponentRef Id='Sqlite3' />
+	  <ComponentRef Id='Bz2' />
+	  <ComponentRef Id='Pyexpat' />
+	  <ComponentRef Id='Select' />
+	  <ComponentRef Id='Unicodedata' />
+	  <ComponentRef Id='Python32DLL' />
+	  <ComponentRef Id='Sqlite3DLL' />
+	  <ComponentRef Id='MSVCR90DLL' />
+	  <ComponentRef Id='Viric' />
+	  <ComponentRef Id='Virid' />
+	  <ComponentRef Id='Vcredist_x86' />
+    </Feature>
+
+  </Product>
+</Wix>
