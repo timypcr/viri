@@ -125,15 +125,16 @@ class File(orm.Model):
         try:
             success, result = cls._run_script(temp_dir, mod_name, args, context)
         except Exception as exc:
-            logging.warn(EXECUTION_LOG_MSG.format(
-                script['file_name'], script['file_id'], 'SUCCESS') +
-                '\n{}'.format(str(exc)))
             success = False
             result = str(exc)
-        else:
+
+        if success:
             logging.info(EXECUTION_LOG_MSG.format(
                 script['file_name'], script['file_id'], 'SUCCESS'))
-            success = True
+        else:
+            logging.warn(EXECUTION_LOG_MSG.format(
+                script['file_name'], script['file_id'], 'ERROR') +
+                '\n{}'.format(result))
 
         shutil.rmtree(temp_dir)
 

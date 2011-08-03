@@ -34,7 +34,7 @@ Example usage:
 import sys
 import doctest
 
-ALL_TESTS = ('rpcserver', 'schedserver', 'viric')
+ALL_TESTS = ['rpcserver']
 
 def set_path():
     from os.path import join, dirname, abspath

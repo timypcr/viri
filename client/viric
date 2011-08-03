@@ -146,7 +146,6 @@ class PutExec(Command):
         success, exists_value = self.server.exists({'file_id': file_id})
         if success:
             if not exists_value:
-                print('sending')
                 success, put_value = self.server.put({
                     'file_name': os.path.basename(filename),
                     'file_content': xmlrpc_client.Binary(content),
