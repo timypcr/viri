@@ -170,7 +170,7 @@ class ViriDaemon:
 if __name__ == '__main__':
     parser = OptionParser(
         description=APP_DESC,
-        version=APP_VERSION)
+        version='{0} {1}'.format(APP_NAME, APP_VERSION))
     parser.add_option('-c', '--config', dest='config_file',
         help='configuration file with settings to be used by virid',
         default=DEFAULT_CONFIG_FILE)

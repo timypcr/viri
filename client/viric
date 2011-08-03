@@ -30,6 +30,7 @@ else:
     from http import client as http_client
     from xmlrpc import client as xmlrpc_client
 
+APP_NAME = 'viric'
 APP_DESC = 'Remote execution of Python scripts'
 APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
@@ -223,7 +224,7 @@ if __name__ == '__main__':
     parser = OptionParser(
         'Usage: %prog command [OPTIONS]',
         description=APP_DESC,
-        version=APP_VERSION)
+        version='{0} {1}'.format(APP_NAME, APP_VERSION))
     parser.add_option('-H', '--hosts', dest='hosts',
         default='localhost', help='destination host')
     parser.add_option('-k', '--keyfile', dest='keyfile', default=None,
