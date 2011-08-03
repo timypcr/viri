@@ -22,9 +22,9 @@ import time
 import logging
 from optparse import OptionParser
 from configparser import RawConfigParser
-from viri.rpcserver import RPCServer
-from viri.orm import Database
-from viri import objects
+from libviri.rpcserver import RPCServer
+from libviri.orm import Database
+from libviri import objects
 
 
 APP_NAME = 'virid'

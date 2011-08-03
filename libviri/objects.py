@@ -14,17 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Viri.  If not, see <http://www.gnu.org/licenses/>.
 
-from viri import orm
+from libviri import viriorm
 
 EXECUTION_LOG_MSG = 'Script {} with id {} executed with result: {}'
 
-class File(orm.Model):
+class File(viriorm.Model):
     """This model represents a file, which can be a Python script, or also a
     data file. The file has an id, which is a hash of the file content."""
-    file_id = orm.CharProperty(size=40)
-    file_name = orm.CharProperty(size=255)
-    content = orm.TextProperty()
-    saved = orm.DatetimeProperty()
+    file_id = viriorm.CharProperty(size=40)
+    file_name = viriorm.CharProperty(size=255)
+    content = viriorm.TextProperty()
+    saved = viriorm.DatetimeProperty()
 
     class Missing(Exception):
         """An exception raised when a file is requested but is missing

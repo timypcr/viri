@@ -16,61 +16,14 @@
 
 import logging
 import traceback
-import socket
-import socketserver
-import ssl
 import xmlrpc.client
-from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
-    SimpleXMLRPCRequestHandler
-from viri.objects import File
+from libviri.virirpc import XMLRPCServer
+from libviri.objects import File
 
 
-RPC_METHODS = ('execute', 'put', 'get', 'ls', 'mv', 'rm', 'exists')
-PROTOCOL = ssl.PROTOCOL_TLSv1
+RPC_METHODS = ['execute', 'put', 'get', 'ls', 'mv', 'rm', 'exists']
 SUCCESS = True
 ERROR = False
-
-
-class SimpleXMLRPCServerTLS(SimpleXMLRPCServer):
-    """Overriding standard xmlrpc.server.SimpleXMLRPCServer to run over TLS.
-    Changes inspired by
-    http://www.cs.technion.ac.il/~danken/SecureXMLRPCServer.py
-    """
-    def __init__(self, addr, ca_file, cert_key_file,
-        requestHandler=SimpleXMLRPCRequestHandler, logRequests=True,
-        allow_none=False, encoding=None, bind_and_activate=True):
-        """Overriding __init__ method of the SimpleXMLRPCServer
-
-        The method is a copy, except for the TCPServer __init__
-        call, which is rewritten using TLS, and the certfile argument
-        which is required for TLS
-        """
-        self.logRequests = logRequests
-        SimpleXMLRPCDispatcher.__init__(self, allow_none, encoding)
-        socketserver.BaseServer.__init__(self, addr, requestHandler)
-        self.socket = ssl.wrap_socket(
-            socket.socket(self.address_family, self.socket_type),
-            server_side=True,
-            certfile=cert_key_file,
-            ca_certs=ca_file,
-            cert_reqs=ssl.CERT_REQUIRED,
-            ssl_version=PROTOCOL)
-        if bind_and_activate:
-            self.server_bind()
-            self.server_activate()
-
-        # [Bug #1222790] If possible, set close-on-exec flag; if a
-        # method spawns a subprocess, the subprocess shouldn't have
-        # the listening socket open.
-        try:
-            import fcntl
-        except ImportError:
-            pass
-        else:
-            if hasattr(fcntl, 'FD_CLOEXEC'):
-                flags = fcntl.fcntl(self.fileno(), fcntl.F_GETFD)
-                flags |= fcntl.FD_CLOEXEC
-                fcntl.fcntl(self.fileno(), fcntl.F_SETFD, flags)
 
 
 def public(func):
@@ -118,7 +71,7 @@ class RPCServer:
 
     def start(self):
         """Starts the XML-RPC server, and registers all public methods."""
-        self.server = SimpleXMLRPCServerTLS(
+        self.server = XMLRPCServer(
             ('', self.port),
             ca_file=self.ca_file,
             cert_key_file=self.cert_key_file,
@@ -163,7 +116,7 @@ class RPCServer:
             xmlrpc.client.Binary.encode()
         """
         return (SUCCESS, File.create(self.db,
-            dict(file_name=file_name, content=file_content.data)
+            dict(file_name=file_name, content=file_content['data'])
             )['file_id'])
 
     @public
