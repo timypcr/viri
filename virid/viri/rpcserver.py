@@ -122,7 +122,8 @@ class RPCServer:
             ('', self.port),
             ca_file=self.ca_file,
             cert_key_file=self.cert_key_file,
-            logRequests=False)
+            logRequests=False,
+            allow_none=True)
         for method in RPC_METHODS:
             self.server.register_function(getattr(self, method), method)
         self.server.serve_forever()
@@ -139,17 +140,16 @@ class RPCServer:
         to send the script to execute, using the original script file name
         and the script (file) content.
         """
-        if File.exists(self.db, file_name_or_id):
-            try:
-                success, res = File.execute(self.db, file_name_or_id,
-                    args, self.context)
-            except:
-                res = traceback.format_exc()
-                return (ERROR, res)
-            else:
-                return (SUCCESS if success else ERROR, str(res))
-        else:
+        try:
+            success, res = File.execute(self.db, file_name_or_id,
+                args, self.context)
+        except File.Missing:
             return (ERROR, 'File not found')
+        except:
+            res = traceback.format_exc()
+            return (ERROR, res)
+        else:
+            return (SUCCESS if success else ERROR, str(res))
 
     @public
     def put(self, file_name, file_content):
@@ -164,15 +164,15 @@ class RPCServer:
         """
         return (SUCCESS, File.create(self.db,
             dict(file_name=file_name, content=file_content.data)
-            ).file_id)
+            )['file_id'])
 
     @public
     def get(self, file_name_or_id):
         """Returns the content of a file"""
-        if File.exists(self.db, file_name_or_id):
+        try:
             return (SUCCESS, xmlrpc.client.Binary(
                 File.get_content(self.db, file_name_or_id)))
-        else:
+        except File.Missing:
             return (ERROR, 'File not found')
 
     @public

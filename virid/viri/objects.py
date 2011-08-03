@@ -55,7 +55,9 @@ class File(orm.Model):
     @classmethod
     def exists(cls, db, file_id):
         """Returns True if a file with the specified id exists."""
-        return bool(cls.get(db, where=({"file_id =": file_id})))
+        res = cls.get(db, where=({"file_id =": file_id}))
+        if res: return res['file_name']
+        else: return None
 
     @classmethod
     def _run_script(cls, temp_dir, mod_name, args, context):
@@ -116,21 +118,21 @@ class File(orm.Model):
         success = False
         temp_dir = tempfile.mkdtemp(prefix='viri_exec_')
         script = cls.get_obj(db, file_name_or_id)
-        mod_name = os.path.splitext(script.file_name)[0]
+        mod_name = os.path.splitext(script['file_name'])[0]
         cls.save_content(db, file_name_or_id,
-            os.path.join(temp_dir, script.file_name))
+            os.path.join(temp_dir, script['file_name']))
 
         try:
             success, result = cls._run_script(temp_dir, mod_name, args, context)
         except Exception as exc:
             logging.warn(EXECUTION_LOG_MSG.format(
-                script.file_name, script.file_id, 'SUCCESS') +
+                script['file_name'], script['file_id'], 'SUCCESS') +
                 '\n{}'.format(str(exc)))
             success = False
             result = str(exc)
         else:
             logging.info(EXECUTION_LOG_MSG.format(
-                script.file_name, script.file_id, 'SUCCESS'))
+                script['file_name'], script['file_id'], 'SUCCESS'))
             success = True
 
         shutil.rmtree(temp_dir)
@@ -146,9 +148,10 @@ class File(orm.Model):
 
         if not file_obj:
             where = {'file_name =': file_name_or_id}
-            last_date = cls.get(db, ('MAX(saved)',), where=where)[0]
-            where.update({'saved =': last_date})
-            file_obj = cls.get(db, where=where)
+            last_date = cls.get(db, ("MAX(saved)",), where=where)
+            if last_date:
+                where.update({'saved =': last_date["MAX(saved)"]})
+                file_obj = cls.get(db, where=where)
 
         if not file_obj:
             raise cls.Missing()
@@ -159,7 +162,7 @@ class File(orm.Model):
     def get_content(cls, db, file_name_or_id):
         """Returns the file content of the file specified by the file id,
         or the latest uploaded file matching the file name."""
-        return cls.get_obj(db, file_name_or_id).content
+        return cls.get_obj(db, file_name_or_id)['content']
 
     @classmethod
     def save_content(cls, db, file_name_or_id, path):

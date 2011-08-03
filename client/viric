@@ -20,6 +20,7 @@ import sys
 import os
 import socket
 import ssl
+from hashlib import sha1
 from optparse import OptionParser
 
 if sys.version_info[0] == 2:
@@ -34,6 +35,8 @@ APP_VERSION = '0.1'
 DEFAULT_PORT = 6808
 PROTOCOL = ssl.PROTOCOL_TLSv1
 DATE_FORMAT = '%Y-%m-%d %H-%M'
+SUCCESS = True
+ERROR = False
 
 
 class ConfError(Exception):
@@ -102,7 +105,8 @@ class Command(object):
             transport=TransportTLS(
                 self.keyfile,
                 self.certfile,
-                use_datetime=True))
+                use_datetime=True),
+            allow_none=True)
 
     def format(self, success, value):
         return value
@@ -118,26 +122,43 @@ class Execute(Command):
 class Put(Command):
     def run(self, filename):
         with open(filename, 'rb') as f:
-            return self.server.put({
-                'file_name': os.path.basename(filename),
-                'file_content': xmlrpc_client.Binary(f.read()),
-            })
+            content = f.read()
+        file_id = sha1(content).hexdigest()
+        success, value = self.server.exists({'file_id': file_id})
+        if success:
+            if not value:
+                return self.server.put({
+                    'file_name': os.path.basename(filename),
+                    'file_content': xmlrpc_client.Binary(content),
+                })
+            else:
+                return (SUCCESS, 'File exists with name {0}'.format(value))
+        else:
+            return (success, value)
 
 
 class PutExec(Command):
-    def run(self, filename, args):
+    def run(self, filename, args=()):
         with open(filename, 'rb') as f:
-            success, put_value = self.server.put({
-                'file_name': os.path.basename(filename),
-                'file_content': xmlrpc_client.Binary(f.read()),
-            })
+            content = f.read()
+        file_id = sha1(content).hexdigest()
+        success, exists_value = self.server.exists({'file_id': file_id})
         if success:
-            success, exec_value = self.server.execute({
-                'file_name_or_id': put_value,
-                'args': args})
-            return (success, '\n'.join(put_value, exec_value))
+            if not exists_value:
+                print('sending')
+                success, put_value = self.server.put({
+                    'file_name': os.path.basename(filename),
+                    'file_content': xmlrpc_client.Binary(content),
+                })
+            if success:
+                success, exec_value = self.server.execute({
+                    'file_name_or_id': file_id,
+                    'args': args})
+                return (success, '\n'.join([file_id, exec_value]))
+            else:
+                return (success, put_value)
         else:
-            return (success, put_value)
+            return (success, exists_value)
 
 
 class Get(Command):
