@@ -26,8 +26,7 @@ kwargs = dict(name='viri',
     url='http://www.viriproject.com',
     packages=('viri',),
     data_files=(
-        ('/usr/local/bin', ('bin/viric',)),
-        ('/usr/local/sbin', ('bin/virid',)),
+        ('/usr/local/sbin', ('bin/virid', 'bin/virid-conf')),
         ('/etc/viri', ('conf/virid.conf',)),
         ('/etc/init.d', ('init-script/virid',)),
     ),
@@ -41,7 +40,7 @@ kwargs = dict(name='viri',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.1',
+        'Programming Language :: Python :: 3.2',
         'Topic :: System :: Systems Administration',
     )
 )
