@@ -160,7 +160,7 @@ class ViriDaemon:
         while not self.request_stop:
             time.sleep(SLEEP_TIME)
 
-    def stop(self, signum, frame):
+    def stop(self, signum=None, frame=None):
         logging.info('Stopping daemon...')
         self.rpc_server.stop()
         self.request_stop = True
