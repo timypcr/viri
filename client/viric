@@ -124,6 +124,22 @@ class Put(Command):
             })
 
 
+class PutExec(Command):
+    def run(self, filename, args):
+        with open(filename, 'rb') as f:
+            success, put_value = self.server.put({
+                'file_name': os.path.basename(filename),
+                'file_content': xmlrpc_client.Binary(f.read()),
+            })
+        if success:
+            success, exec_value = self.server.execute({
+                'file_name_or_id': put_value,
+                'args': args})
+            return (success, '\n'.join(put_value, exec_value))
+        else:
+            return (success, put_value)
+
+
 class Get(Command):
     def format(self, success, value):
         return value.data if success else value
@@ -150,12 +166,38 @@ class Ls(Command):
         return self.server.ls({})
 
 
+class Mv(Command):
+    def run(self, file_id, new_file_name):
+        return self.server.mv({
+            'file_id': file_id,
+            'new_file_name': new_file_name})
+
+
+class Rm(Command):
+    def run(self, *file_id_list):
+        cnt_ok = 0
+        cnt_err = 0
+        for file_id in file_id_list:
+            success, value = self.server.rm({
+                'file_id': file_id})
+            if success: cnt_ok += 1
+            else: cnt_err += 1
+        if not cnt_err:
+            return (True, '{0} file(s) successfully removed'.format(cnt_ok))
+        else:
+            return (False, '{0} file(s) successfully removed\n'.format(cnt_ok) +
+                '{0} files not found'.format(cnt_err))
+
+
 if __name__ == '__main__':
     CMD_MAP = {
         'exec': Execute,
         'put': Put,
+        'put-exec': PutExec,
         'get': Get,
         'ls': Ls,
+        'mv': Mv,
+        'rm': Rm,
     }
     parser = OptionParser(
         'Usage: %prog command [OPTIONS]',

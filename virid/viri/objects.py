@@ -53,6 +53,11 @@ class File(orm.Model):
             return super().create(db, vals)
 
     @classmethod
+    def exists(cls, db, file_id):
+        """Returns True if a file with the specified id exists."""
+        return bool(cls.get(db, where=({"file_id =": file_id})))
+
+    @classmethod
     def _run_script(cls, temp_dir, mod_name, args, context):
         import imp
 

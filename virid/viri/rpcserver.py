@@ -25,7 +25,7 @@ from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
 from viri.objects import File
 
 
-RPC_METHODS = ('execute', 'put', 'get', 'ls')
+RPC_METHODS = ('execute', 'put', 'get', 'ls', 'mv', 'rm', 'exists')
 PROTOCOL = ssl.PROTOCOL_TLSv1
 SUCCESS = True
 ERROR = False
@@ -139,16 +139,17 @@ class RPCServer:
         to send the script to execute, using the original script file name
         and the script (file) content.
         """
-        try:
-            success, res = File.execute(self.db, file_name_or_id,
-                args, self.context)
-        except File.Missing:
-            return (ERROR, 'File not found')
-        except:
-            res = traceback.format_exc()
-            return (ERROR, res)
+        if File.exists(self.db, file_name_or_id):
+            try:
+                success, res = File.execute(self.db, file_name_or_id,
+                    args, self.context)
+            except:
+                res = traceback.format_exc()
+                return (ERROR, res)
+            else:
+                return (SUCCESS if success else ERROR, str(res))
         else:
-            return (SUCCESS if success else ERROR, str(res))
+            return (ERROR, 'File not found')
 
     @public
     def put(self, file_name, file_content):
@@ -168,15 +169,11 @@ class RPCServer:
     @public
     def get(self, file_name_or_id):
         """Returns the content of a file"""
-        try:
-            res = File.get_content(self.db, file_name_or_id)
-        except File.Missing:
-            return (ERROR, 'File not found')
+        if File.exists(self.db, file_name_or_id):
+            return (SUCCESS, xmlrpc.client.Binary(
+                File.get_content(self.db, file_name_or_id)))
         else:
-            if res:
-                return (SUCCESS, xmlrpc.client.Binary(res))
-            else:
-                return (ERROR, 'File {} not found'.format(file_name_or_id))
+            return (ERROR, 'File not found')
 
     @public
     def ls(self):
@@ -184,4 +181,29 @@ class RPCServer:
         return (SUCCESS, File.query(self.db,
             fields=('file_name', 'file_id', 'saved'),
             order=('saved',)))
+
+    @public
+    def mv(self, file_id, new_file_name):
+        """Renames file with the given id"""
+        if File.exists(self.db, file_id):
+            File.update(self.db,
+                {'file_name': new_file_name},
+                {'file_id': file_id})
+            return (SUCCESS, 'File successfully renamed')
+        else:
+            return (ERROR, 'File not found')
+
+    @public
+    def rm(self, file_id):
+        """Removes a file given its id"""
+        if File.exists(self.db, file_id):
+            File.delete(self.db, {'file_id': file_id})
+            return (SUCCESS, 'File successfully removed')
+        else:
+            return (ERROR, 'File not found')
+
+    @public
+    def exists(self, file_id):
+        """Returns True if a file with the given id exists."""
+        return (SUCCESS, File.exists(self.db, file_id))
 

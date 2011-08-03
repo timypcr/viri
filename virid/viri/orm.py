@@ -209,12 +209,26 @@ class Model(metaclass=ModelMeta):
         return result[0] if result else None
 
     @classmethod
+    def update(cls, db, fields, where):
+        """Updates all records in the database matching where conditions
+        with the values specified in fields."""
+        from collections import OrderedDict
+        fields = OrderedDict(fields)
+        where = OrderedDict(where)
+        sql = "UPDATE {} ".format(cls.table_name())
+        sql += "SET "
+        sql += ", ".join(map(lambda x: x + " = ?", fields.keys()))
+        sql += "WHERE "
+        sql += " AND ".join(map(lambda x: x + " = ?", where.keys()))
+        db.execute(sql, tuple(fields.values()) + tuple(where.values()))
+
+    @classmethod
     def delete(cls, db, where):
         """Deletes all rows matching the specified criteria from the related
         table."""
         from collections import OrderedDict
         where = OrderedDict(where)
         sql = "DELETE FROM {} WHERE ".format(cls.table_name())
-        sql += " AND ".join(map(lambda x: x + " ?", where.keys()))
+        sql += " AND ".join(map(lambda x: x + " = ?", where.keys()))
         db.execute(sql, tuple(where.values()))
 
