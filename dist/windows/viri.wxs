@@ -15,59 +15,71 @@
         <Directory Id='AtlasIT' Name='AtlasIT'>
           <Directory Id='INSTALLDIR' Name='Viri'>
 		  
-			<Component Id='Hashlib' Guid='*'>
+	    <Component Id='Hashlib' Guid='*'>
               <File Id='_hashlib' Name='_hashlib.pyd' DiskId='1' Source='_hashlib.pyd' KeyPath='yes' />
             </Component>
 			
-			<Component Id='Socket' Guid='*'>
+	    <Component Id='Socket' Guid='*'>
               <File Id='_socket' Name='_socket.pyd' DiskId='1' Source='_socket.pyd' KeyPath='yes' />
             </Component>
 			
-			<Component Id='Sqlite3' Guid='*'>
+	    <Component Id='Sqlite3' Guid='*'>
               <File Id='_sqlite3' Name='_sqlite3.pyd' DiskId='1' Source='_sqlite3.pyd' KeyPath='yes' />
             </Component>
 			
-			<Component Id='SSL' Guid='*'>
+	    <Component Id='SSL' Guid='*'>
               <File Id='_ssl' Name='_ssl.pyd' DiskId='1' Source='_ssl.pyd' KeyPath='yes' />
             </Component>
 			
-			<Component Id='Bz2' Guid='*'>
+	    <Component Id='Bz2' Guid='*'>
               <File Id='bz2' Name='bz2.pyd' DiskId='1' Source='bz2.pyd' KeyPath='yes' />
             </Component>
 			
-			<Component Id='Pyexpat' Guid='*'>
+	    <Component Id='Pyexpat' Guid='*'>
               <File Id='pyexpat' Name='pyexpat.pyd' DiskId='1' Source='pyexpat.pyd' KeyPath='yes' />
             </Component>
 			
-			<Component Id='Select' Guid='*'>
+	    <Component Id='Select' Guid='*'>
               <File Id='select' Name='select.pyd' DiskId='1' Source='select.pyd' KeyPath='yes' />
             </Component>
 
-			<Component Id='Unicodedata' Guid='*'>
+	    <Component Id='Unicodedata' Guid='*'>
               <File Id='unicodedata' Name='unicodedata.pyd' DiskId='1' Source='unicodedata.pyd' KeyPath='yes' />
             </Component>
 			
-			<Component Id='Python32DLL' Guid='*'>
+	    <Component Id='Win32api' Guid='*'>
+              <File Id='win32api' Name='win32api.pyd' DiskId='1' Source='win32api.pyd' KeyPath='yes' />
+            </Component>
+			
+	    <Component Id='Win32pipe' Guid='*'>
+              <File Id='win32pipe' Name='win32pipe.pyd' DiskId='1' Source='win32pipe.pyd' KeyPath='yes' />
+            </Component>
+			
+	    <Component Id='Pywintypes32DLL' Guid='*'>
+              <File Id='pywintypes32' Name='pywintypes32.dll' DiskId='1' Source='pywintypes32.dll' KeyPath='yes' />
+            </Component>
+			
+	    <Component Id='Python32DLL' Guid='*'>
               <File Id='python32' Name='python32.dll' DiskId='1' Source='python32.dll' KeyPath='yes' />
             </Component>
 			
-			<Component Id='Sqlite3DLL' Guid='*'>
+	    <Component Id='Sqlite3DLL' Guid='*'>
               <File Id='sqlite3' Name='sqlite3.dll' DiskId='1' Source='sqlite3.dll' KeyPath='yes' />
             </Component>
 			
-			<Component Id='MSVCR90DLL' Guid='*'>
+	    <Component Id='MSVCR90DLL' Guid='*'>
               <File Id='msvcr90' Name='msvcr90.dll' DiskId='1' Source='msvcr90.dll' KeyPath='yes' />
             </Component>
 
-			<Component Id='Viric' Guid='*'>
+	    <Component Id='Viric' Guid='*'>
               <File Id='viric' Name='viric.exe' DiskId='1' Source='viric.exe' KeyPath='yes' />
             </Component>
 
-			<Component Id='Virid' Guid='*'>
+	    <Component Id='Virid' Guid='*'>
               <File Id='virid' Name='virid.exe' DiskId='1' Source='virid.exe' KeyPath='yes' />
             </Component>
 
-			<Component Id='Vcredist_x86' Guid='*'>
+	    <Component Id='Vcredist_x86' Guid='*'>
               <File Id='vcredist_x86' Name='vcredist_x86.exe' DiskId='1' Source='vcredist_x86.exe' KeyPath='yes' />
             </Component>
 		  
@@ -85,6 +97,9 @@
 	  <ComponentRef Id='Pyexpat' />
 	  <ComponentRef Id='Select' />
 	  <ComponentRef Id='Unicodedata' />
+	  <ComponentRef Id='Win32api' />
+	  <ComponentRef Id='Win32pipe' />
+	  <ComponentRef Id='Pywintypes32DLL' />
 	  <ComponentRef Id='Python32DLL' />
 	  <ComponentRef Id='Sqlite3DLL' />
 	  <ComponentRef Id='MSVCR90DLL' />
