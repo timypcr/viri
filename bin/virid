@@ -23,7 +23,7 @@ import logging
 from optparse import OptionParser
 from configparser import RawConfigParser
 from libviri.rpcserver import RPCServer
-from libviri.orm import Database
+from libviri.viriorm import Database
 from libviri import objects
 
 

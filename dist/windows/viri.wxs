@@ -47,6 +47,18 @@
               <File Id='unicodedata' Name='unicodedata.pyd' DiskId='1' Source='unicodedata.pyd' KeyPath='yes' />
             </Component>
 			
+			<Component Id='Win32api' Guid='*'>
+              <File Id='win32api' Name='win32api.pyd' DiskId='1' Source='win32api.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Win32pipe' Guid='*'>
+              <File Id='win32pipe' Name='win32pipe.pyd' DiskId='1' Source='win32pipe.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Pywintypes32DLL' Guid='*'>
+              <File Id='pywintypes32' Name='pywintypes32.dll' DiskId='1' Source='pywintypes32.dll' KeyPath='yes' />
+            </Component>
+			
 			<Component Id='Python32DLL' Guid='*'>
               <File Id='python32' Name='python32.dll' DiskId='1' Source='python32.dll' KeyPath='yes' />
             </Component>
@@ -55,10 +67,6 @@
               <File Id='sqlite3' Name='sqlite3.dll' DiskId='1' Source='sqlite3.dll' KeyPath='yes' />
             </Component>
 			
-			<Component Id='MSVCR90DLL' Guid='*'>
-              <File Id='msvcr90' Name='msvcr90.dll' DiskId='1' Source='msvcr90.dll' KeyPath='yes' />
-            </Component>
-
 			<Component Id='Viric' Guid='*'>
               <File Id='viric' Name='viric.exe' DiskId='1' Source='viric.exe' KeyPath='yes' />
             </Component>
@@ -67,9 +75,37 @@
               <File Id='virid' Name='virid.exe' DiskId='1' Source='virid.exe' KeyPath='yes' />
             </Component>
 
-			<Component Id='Vcredist_x86' Guid='*'>
-              <File Id='vcredist_x86' Name='vcredist_x86.exe' DiskId='1' Source='vcredist_x86.exe' KeyPath='yes' />
+			<Component Id='Readme' Guid='*'>
+              <File Id='README' Name='README' DiskId='1' Source='README' KeyPath='yes' />
             </Component>
+			
+			<Component Id='Authors' Guid='*'>
+              <File Id='AUTHORS' Name='AUTHORS' DiskId='1' Source='AUTHORS' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='License' Guid='*'>
+              <File Id='LICENSE' Name='LICENSE' DiskId='1' Source='LICENSE' KeyPath='yes' />
+            </Component>
+			
+			<Directory Id='VCRUNTIMEDIR' Name='Microsoft.VC90.CRT'>
+			
+			  <Component Id='MSVCR90DLL' Guid='*'>
+			    <File Id='msvcr90' Name='msvcr90.dll' DiskId='1' Source='msvcr90.dll' KeyPath='yes' />
+			  </Component>
+			  
+			  <Component Id='MSVCM90DLL' Guid='*'>
+			    <File Id='msvcm90' Name='msvcm90.dll' DiskId='1' Source='msvcm90.dll' KeyPath='yes' />
+			  </Component>
+			  
+			  <Component Id='MSVCP90DLL' Guid='*'>
+			    <File Id='msvcp90' Name='msvcp90.dll' DiskId='1' Source='msvcp90.dll' KeyPath='yes' />
+			  </Component>
+			  
+			  <Component Id='Microsoft.VC90.CRT' Guid='*'>
+			  	<File Id='Microsoft.VC90.CRT' Name='Microsoft.VC90.CRT.manifest' DiskId='1' Source='Microsoft.VC90.CRT.manifest' KeyPath='yes' />
+			  </Component>
+			  
+			</Directory>
 		  
           </Directory>
         </Directory>
@@ -85,12 +121,20 @@
 	  <ComponentRef Id='Pyexpat' />
 	  <ComponentRef Id='Select' />
 	  <ComponentRef Id='Unicodedata' />
+	  <ComponentRef Id='Win32api' />
+	  <ComponentRef Id='Win32pipe' />
+	  <ComponentRef Id='Pywintypes32DLL' />
 	  <ComponentRef Id='Python32DLL' />
 	  <ComponentRef Id='Sqlite3DLL' />
 	  <ComponentRef Id='MSVCR90DLL' />
+	  <ComponentRef Id='MSVCM90DLL' />
+	  <ComponentRef Id='MSVCP90DLL' />
+	  <ComponentRef Id='Microsoft.VC90.CRT' />
 	  <ComponentRef Id='Viric' />
 	  <ComponentRef Id='Virid' />
-	  <ComponentRef Id='Vcredist_x86' />
+	  <ComponentRef Id='Readme' />
+	  <ComponentRef Id='Authors' />
+	  <ComponentRef Id='License' />
     </Feature>
 
   </Product>
