@@ -82,6 +82,18 @@
 			<Component Id='Vcredist_x86' Guid='*'>
               <File Id='vcredist_x86' Name='vcredist_x86.exe' DiskId='1' Source='vcredist_x86.exe' KeyPath='yes' />
             </Component>
+
+			<Component Id='Readme' Guid='*'>
+              <File Id='README' Name='README' DiskId='1' Source='README' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Authors' Guid='*'>
+              <File Id='AUTHORS' Name='AUTHORS' DiskId='1' Source='AUTHORS' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='License' Guid='*'>
+              <File Id='LICENSE' Name='LICENSE' DiskId='1' Source='LICENSE' KeyPath='yes' />
+            </Component>
 		  
           </Directory>
         </Directory>
@@ -106,6 +118,9 @@
 	  <ComponentRef Id='Viric' />
 	  <ComponentRef Id='Virid' />
 	  <ComponentRef Id='Vcredist_x86' />
+	  <ComponentRef Id='Readme' />
+	  <ComponentRef Id='Authors' />
+	  <ComponentRef Id='License' />
     </Feature>
 
   </Product>

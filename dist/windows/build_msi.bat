@@ -17,6 +17,9 @@ set full_path_to_viri_includes=c:\dev\viri;c:\dev\viri\libviri
 set full_path_to_viric=C:\dev\viri\bin\viric
 set full_path_to_virid=c:\dev\viri\bin\virid
 set full_path_to_virid-conf=c:\dev\viri\bin\virid-conf
+set full_path_to_viri_readme=c:\dev\viri\README
+set full_path_to_viri_authors=c:\dev\viri\AUTHORS
+set full_path_to_viri_license=c:\dev\viri\LICENSE
 set full_path_to_upx_exe=c:\dev\upx307w\upx.exe
 set full_path_to_c_runtime="c:\Program Files\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\msvcr90.dll"
 set full_path_to_c_redist=c:\dev\vcredist\vcredist_x86.exe
@@ -56,6 +59,24 @@ if exist %full_path_to_virid-conf% (
 	echo * virid-conf found at: %full_path_to_virid-conf%
 ) else (
 	echo * virid-conf not found!
+	goto :eof
+)
+if exist %full_path_to_viri_readme% (
+	echo * README found at: %full_path_to_viri_readme%
+) else (
+	echo * README not found!
+	goto :eof
+)
+if exist %full_path_to_viri_authors% (
+	echo * AUTHORS found at: %full_path_to_viri_authors%
+) else (
+	echo * AUTHORS not found!
+	goto :eof
+)
+if exist %full_path_to_viri_license% (
+	echo * LICENSE found at: %full_path_to_viri_license%
+) else (
+	echo * LICENSE not found!
 	goto :eof
 )
 if exist %full_path_to_upx_exe% (
@@ -106,7 +127,6 @@ if not exist %temp_directory%\viric.exe (
 	echo * Creation of viric.exe failed!
 	goto :eof
 )
-
 echo.
 
 echo *** Step 4. Freezing virid...
@@ -121,28 +141,31 @@ echo.
 echo *** Step 5. Freezing virid-conf...
 echo.
 rem %full_path_to_python_exe% %full_path_to_cxfreeze% %full_path_to_virid_conf% --target-dir %temp_directory% -OO -c -s
-
 echo.
 
 echo *** Step 6. Compressing generated files with UPX...
 echo.
 %full_path_to_upx_exe% %temp_directory%\*
-
 echo.
 
-echo *** Step 7. Copy C runtime...
+echo *** Step 7. Copy required text files...
+echo.
+copy %full_path_to_viri_readme% %temp_directory%
+copy %full_path_to_viri_authors% %temp_directory%
+copy %full_path_to_viri_license% %temp_directory%
+echo.
+
+echo *** Step 8. Copy C runtime...
 echo.
 copy %full_path_to_c_runtime% %temp_directory%
-
 echo.
 
-echo *** Step 8. Copy C redistributables...
+echo *** Step 9. Copy C redistributables...
 echo.
 copy %full_path_to_c_redist% %temp_directory%
-
 echo.
 
-echo *** Step 9. Generate msi using WIX...
+echo *** Step 10. Generate msi using WIX...
 echo.
 %full_path_to_wix_bin%\candle.exe %full_path_to_wix_script% -out %temp_directory%\viri.wixobj
 if not exist %temp_directory%\viri.wixobj (
@@ -152,11 +175,11 @@ if not exist %temp_directory%\viri.wixobj (
 %full_path_to_wix_bin%\light.exe -b %temp_directory% %temp_directory%\viri.wixobj -out %temp_directory%\viri.msi -pdbout %temp_directory%\viri.pdbx
 echo.
 
-echo *** Step 10. Clean up...
+echo *** Step 11. Clean up...
 echo.
 if not exist %temp_directory%\viri.msi (
 	echo * Creation of viri.msi failed!
 	goto :eof
 )
 copy %temp_directory%\viri.msi
-rmdir /s /q %temp_directory% rem 2>nul
+rem rmdir /s /q %temp_directory% rem 2>nul
