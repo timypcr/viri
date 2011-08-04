@@ -22,7 +22,9 @@ set full_path_to_viri_authors=c:\dev\viri\AUTHORS
 set full_path_to_viri_license=c:\dev\viri\LICENSE
 set full_path_to_upx_exe=c:\dev\upx307w\upx.exe
 set full_path_to_c_runtime="c:\Program Files\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\msvcr90.dll"
-set full_path_to_c_redist=c:\dev\vcredist\vcredist_x86.exe
+set full_path_to_c_m_runtime="c:\Program Files\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\msvcm90.dll"
+set full_path_to_c_plus_runtime="c:\Program Files\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\msvcp90.dll"
+set full_path_to_c_runtime_manifest="c:\Program Files\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest"
 set full_path_to_wix_bin="c:\Program Files\Windows Installer XML v3.5\bin"
 set full_path_to_wix_script=c:\dev\viri\dist\windows\viri.wxs
 
@@ -91,10 +93,22 @@ if exist %full_path_to_c_runtime% (
 	echo * C runtime not found!
 	goto :eof
 )
-if exist %full_path_to_c_redist% (
-	echo * C runtime redistributables found at: %full_path_to_c_redist%
+if exist %full_path_to_c_m_runtime% (
+	echo * C multithreaded runtime found at: %full_path_to_c_m_runtime%
 ) else (
-	echo * C runtime redistributables not found!
+	echo * C multithreaded runtime not found!
+	goto :eof
+)
+if exist %full_path_to_c_plus_runtime% (
+	echo * C++ runtime found at: %full_path_to_c_plus_runtime%
+) else (
+	echo * C++ runtime not found!
+	goto :eof
+)
+if exist %full_path_to_c_runtime_manifest% (
+	echo * C runtime manifest found at: %full_path_to_c_runtime_manifest%
+) else (
+	echo * C runtime manifest not found!
 	goto :eof
 )
 if exist %full_path_to_wix_bin%\candle.exe (
@@ -155,17 +169,15 @@ copy %full_path_to_viri_authors% %temp_directory%
 copy %full_path_to_viri_license% %temp_directory%
 echo.
 
-echo *** Step 8. Copy C runtime...
+echo *** Step 8. Copy C runtime files...
 echo.
 copy %full_path_to_c_runtime% %temp_directory%
+copy %full_path_to_c_m_runtime% %temp_directory%
+copy %full_path_to_c_plus_runtime% %temp_directory%
+copy %full_path_to_c_runtime_manifest% %temp_directory%
 echo.
 
-echo *** Step 9. Copy C redistributables...
-echo.
-copy %full_path_to_c_redist% %temp_directory%
-echo.
-
-echo *** Step 10. Generate msi using WIX...
+echo *** Step 9. Generate msi using WIX...
 echo.
 %full_path_to_wix_bin%\candle.exe %full_path_to_wix_script% -out %temp_directory%\viri.wixobj
 if not exist %temp_directory%\viri.wixobj (
@@ -175,7 +187,7 @@ if not exist %temp_directory%\viri.wixobj (
 %full_path_to_wix_bin%\light.exe -b %temp_directory% %temp_directory%\viri.wixobj -out %temp_directory%\viri.msi -pdbout %temp_directory%\viri.pdbx
 echo.
 
-echo *** Step 11. Clean up...
+echo *** Step 10. Clean up...
 echo.
 if not exist %temp_directory%\viri.msi (
 	echo * Creation of viri.msi failed!

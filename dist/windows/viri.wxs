@@ -67,20 +67,12 @@
               <File Id='sqlite3' Name='sqlite3.dll' DiskId='1' Source='sqlite3.dll' KeyPath='yes' />
             </Component>
 			
-			<Component Id='MSVCR90DLL' Guid='*'>
-              <File Id='msvcr90' Name='msvcr90.dll' DiskId='1' Source='msvcr90.dll' KeyPath='yes' />
-            </Component>
-
 			<Component Id='Viric' Guid='*'>
               <File Id='viric' Name='viric.exe' DiskId='1' Source='viric.exe' KeyPath='yes' />
             </Component>
 
 			<Component Id='Virid' Guid='*'>
               <File Id='virid' Name='virid.exe' DiskId='1' Source='virid.exe' KeyPath='yes' />
-            </Component>
-
-			<Component Id='Vcredist_x86' Guid='*'>
-              <File Id='vcredist_x86' Name='vcredist_x86.exe' DiskId='1' Source='vcredist_x86.exe' KeyPath='yes' />
             </Component>
 
 			<Component Id='Readme' Guid='*'>
@@ -94,6 +86,26 @@
 			<Component Id='License' Guid='*'>
               <File Id='LICENSE' Name='LICENSE' DiskId='1' Source='LICENSE' KeyPath='yes' />
             </Component>
+			
+			<Directory Id='VCRUNTIMEDIR' Name='Microsoft.VC90.CRT'>
+			
+			  <Component Id='MSVCR90DLL' Guid='*'>
+			    <File Id='msvcr90' Name='msvcr90.dll' DiskId='1' Source='msvcr90.dll' KeyPath='yes' />
+			  </Component>
+			  
+			  <Component Id='MSVCM90DLL' Guid='*'>
+			    <File Id='msvcm90' Name='msvcm90.dll' DiskId='1' Source='msvcm90.dll' KeyPath='yes' />
+			  </Component>
+			  
+			  <Component Id='MSVCP90DLL' Guid='*'>
+			    <File Id='msvcp90' Name='msvcp90.dll' DiskId='1' Source='msvcp90.dll' KeyPath='yes' />
+			  </Component>
+			  
+			  <Component Id='Microsoft.VC90.CRT' Guid='*'>
+			  	<File Id='Microsoft.VC90.CRT' Name='Microsoft.VC90.CRT.manifest' DiskId='1' Source='Microsoft.VC90.CRT.manifest' KeyPath='yes' />
+			  </Component>
+			  
+			</Directory>
 		  
           </Directory>
         </Directory>
@@ -115,9 +127,11 @@
 	  <ComponentRef Id='Python32DLL' />
 	  <ComponentRef Id='Sqlite3DLL' />
 	  <ComponentRef Id='MSVCR90DLL' />
+	  <ComponentRef Id='MSVCM90DLL' />
+	  <ComponentRef Id='MSVCP90DLL' />
+	  <ComponentRef Id='Microsoft.VC90.CRT' />
 	  <ComponentRef Id='Viric' />
 	  <ComponentRef Id='Virid' />
-	  <ComponentRef Id='Vcredist_x86' />
 	  <ComponentRef Id='Readme' />
 	  <ComponentRef Id='Authors' />
 	  <ComponentRef Id='License' />
