@@ -1,19 +1,20 @@
 %define name python
-%define version 3.1.3
-%define binsuffix 3.1
-%define libvers 3.1
+%define version 3.2.1
+%define binsuffix 3.2
+%define libvers 3.2
 %define release viri 
 %define __prefix /usr
 %define libdirname %(( uname -m | egrep -q '_64$' && [ -d /usr/lib64 ] && echo lib64 ) || echo lib)
 
 Summary: An interpreted, interactive, object-oriented programming language.
-Name: %{name}%{binsuffix}
+Name: %{name}-viri
 Version: %{version}
 Release: %{release}
 License: PSF
 Group: Development/Languages
 Source: Python-%{version}.tar.bz2
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
+BuildPrereq: gcc
 BuildPrereq: expat-devel
 BuildPrereq: db4-devel
 BuildPrereq: gdbm-devel
@@ -37,6 +38,8 @@ brands of UNIX, on PCs under Windows, MS-DOS, and OS/2, and on the
 Mac.
 
 %changelog
+* Thu Aug 4 2011 Marc Garcia <garcia.marc@gmail.com> [3.2.1-viri]
+- Updated for Python3.2.1, package renamed to python-viri
 * Sun Jun 12 2011 Marc Garcia <garcia.marc@gmail.com> [3.1.3-viri]
 - Initial version, based on Python2.4 .spec
 
@@ -62,6 +65,9 @@ rm -f $RPM_BUILD_ROOT%{__prefix}/bin/python3-config
 rm -f $RPM_BUILD_ROOT%{__prefix}/bin/2to3
 rm -f $RPM_BUILD_ROOT%{__prefix}/bin/idle3
 rm -f $RPM_BUILD_ROOT%{__prefix}/bin/pydoc3
+rm -f $RPM_BUILD_ROOT%{__prefix}/bin/2to3-3.2
+rm -f $RPM_BUILD_ROOT%{__prefix}/bin/idle3.2
+rm -f $RPM_BUILD_ROOT%{__prefix}/bin/pydoc3.2
 rm -rf $RPM_BUILD_ROOT%{__prefix}/include
 rm -rf $RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}/config
 rm -rf $RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}/idlelib
@@ -69,31 +75,17 @@ rm -rf $RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}/lib2to3
 rm -rf $RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}/tkinter
 rm -rf $RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}/test
 
-# Fixing header which refs to /usr/local/bin/python for
-# compatibility with Solaris, but which breaks redhat
-FIXFILE=$RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}/cgi.py
-TMPFILE=/tmp/fix-python-path.$$
-echo '#!/bin/env python'"%{binsuffix}" > $TMPFILE
-tail -n +2 $FIXFILE >> $TMPFILE
-mv $TMPFILE $FIXFILE
-$RPM_BUILD_ROOT%{__prefix}/bin/python%{binsuffix} \
-$RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}/py_compile.py \
-$FIXFILE
-$RPM_BUILD_ROOT%{__prefix}/bin/python%{binsuffix} -O \
-$RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}/py_compile.py \
-$FIXFILE
-
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc Misc/README Misc/cheatsheet Misc/Porting LICENSE Misc/ACKS Misc/HISTORY Misc/NEWS
+%doc Misc/README Misc/Porting LICENSE Misc/ACKS Misc/HISTORY Misc/NEWS
 %{__prefix}/share/man/man1/python%{binsuffix}.1.gz
 %attr(755,root,root) %dir %{__prefix}/bin/python%{binsuffix}
 %attr(755,root,root) %dir %{__prefix}/bin/python3
 %{__prefix}/%{libdirname}/libpython%{libvers}.a
 %{__prefix}/%{libdirname}/python%{libvers}
-%{__prefix}/%{libdirname}/pkgconfig/python-3.1.pc
+%{__prefix}/%{libdirname}/pkgconfig/python-3.2.pc
 %{__prefix}/%{libdirname}/pkgconfig/python3.pc
 

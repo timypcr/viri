@@ -7,24 +7,23 @@
 Name: %{name}
 Version: %{version}
 Release: %{release}
-Summary: Remote execution of Python scripts (daemon)
+Summary: Remote execution of Python scripts
 Group: System Environment/Daemons
 License: GPLv3
 URL: http://www.viriproject.com
 Source: Viri-%{version}%{release}.tar.bz2
 BuildArch: noarch
-Requires: python3.1 openssl
+Requires: python-viri openssl
 Prefix: %{__prefix}
 %description
-Viri is an application to easily deploy Python scripts, tracking its
-execution results. Viri has two different components, the virid daemon,
-which should be installed on all hosts that will be managed, and the
-viric command line utility. The client program viric can be used directly
-by system administrators, but also can be integrated with third party
+Viri is a daemon which is able to execute Python scripts. Execution is
+requested using a client (a command line tool and a library are provided).
+Viri automates the process of sending the script (with necessary data files),
+executing it on the remote host, and capturing the result (or exceptions), and
+making them available on the client host.
 applications to automate tasks.
-Some examples on what Viri can be useful for include data gathering,
-synchronization of files, deployment of software; but it can be used
-for everything which can be coded in the Python language.
+Some examples on what Viri can be useful for include monitoring, deployments,
+data gathering, data synchronization, etc.
 
 %prep
 %setup -n Viri-%{version}%{release}
@@ -51,6 +50,8 @@ chkconfig virid on --level 2345
 /etc/init.d/virid
 
 %changelog
+* Thu Aug 4 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc2
+- Python package now is named python-viri. Description updated
 * Wed Jul 6 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1
 - Removing client package, now is in a different spec file
 - virid-conf script renamed
