@@ -47,6 +47,18 @@
               <File Id='unicodedata' Name='unicodedata.pyd' DiskId='1' Source='unicodedata.pyd' KeyPath='yes' />
             </Component>
 			
+			<Component Id='Win32api' Guid='*'>
+              <File Id='win32api' Name='win32api.pyd' DiskId='1' Source='win32api.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Win32pipe' Guid='*'>
+              <File Id='win32pipe' Name='win32pipe.pyd' DiskId='1' Source='win32pipe.pyd' KeyPath='yes' />
+            </Component>
+			
+			<Component Id='Pywintypes32DLL' Guid='*'>
+              <File Id='pywintypes32' Name='pywintypes32.dll' DiskId='1' Source='pywintypes32.dll' KeyPath='yes' />
+            </Component>
+			
 			<Component Id='Python32DLL' Guid='*'>
               <File Id='python32' Name='python32.dll' DiskId='1' Source='python32.dll' KeyPath='yes' />
             </Component>
@@ -85,6 +97,9 @@
 	  <ComponentRef Id='Pyexpat' />
 	  <ComponentRef Id='Select' />
 	  <ComponentRef Id='Unicodedata' />
+	  <ComponentRef Id='Win32api' />
+	  <ComponentRef Id='Win32pipe' />
+	  <ComponentRef Id='Pywintypes32DLL' />
 	  <ComponentRef Id='Python32DLL' />
 	  <ComponentRef Id='Sqlite3DLL' />
 	  <ComponentRef Id='MSVCR90DLL' />
