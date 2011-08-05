@@ -1,0 +1,17 @@
+Source: python-viri
+Section: utils
+Priority: optional
+Maintainer: Marc Garcia <garcia.marc@gmail.com>
+Build-Depends: debhelper (>= 5.0.51~), quilt, autoconf, libreadline6-dev, libncursesw5-dev (>= 5.3), zlib1g-dev, libdb4.8-dev, tk8.5-dev, blt-dev (>= 2.4z), libssl-dev, sharutils, libbz2-dev, libexpat1-dev, libbluetooth-dev [!hurd-i386 !kfreebsd-i386 !kfreebsd-amd64], locales [!armel !avr32 !hppa !ia64 !mipsel], libsqlite3-dev, libffi-dev (>= 3.0.5), mime-support, libgpm2 [!hurd-i386 !kfreebsd-i386 !kfreebsd-amd64], netbase, lsb-release, bzip2, gdb, python
+Build-Conflicts: autoconf2.13
+Standards-Version: 3.9.1.0 
+Homepage: http://www.viriproject.com
+
+Package: python-viri
+Architecture: any
+Depends: (= ${binary:Version}), mime-support, ${shlibs:Depends}, ${misc:Depends}
+Description: An interactive high-level object-oriented language (version 3.2)
+ Version 3.2 of the high-level, interactive object oriented language,
+ includes an extensive class library with lots of goodies for
+ network programming, system administration, sounds and graphics.
+
