@@ -14,11 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Viri.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-import traceback
-import xmlrpc.client
 from libviri.virirpc import XMLRPCServer
-from libviri.objects import File
 
 
 RPC_METHODS = ['execute', 'put', 'get', 'ls', 'mv', 'rm', 'exists']
@@ -34,6 +30,9 @@ def public(func):
     It also captures any error non-controlled error, logs it, and sends
     it to the client as text.
     """
+    import logging
+    import traceback
+
     def inner(self, kwargs):
         try:
             res = func(self, **kwargs)
@@ -93,6 +92,9 @@ class RPCServer:
         to send the script to execute, using the original script file name
         and the script (file) content.
         """
+        import traceback
+        from libviri.objects import File
+
         try:
             success, res = File.execute(self.db, file_name_or_id,
                 args, self.context)
@@ -115,13 +117,20 @@ class RPCServer:
         file_content -- content of the file processed using
             xmlrpc.client.Binary.encode()
         """
+        import logging
+        from libviri.objects import File
+
+        logging.info('File {} saved'.format(file_name))
         return (SUCCESS, File.create(self.db,
-            dict(file_name=file_name, content=file_content['data'])
+            dict(file_name=file_name, content=file_content.data)
             )['file_id'])
 
     @public
     def get(self, file_name_or_id):
         """Returns the content of a file"""
+        import xmlrpc.client
+        from libviri.objects import File
+
         try:
             return (SUCCESS, xmlrpc.client.Binary(
                 File.get_content(self.db, file_name_or_id)))
@@ -131,6 +140,8 @@ class RPCServer:
     @public
     def ls(self):
         """List files on the database"""
+        from libviri.objects import File
+
         return (SUCCESS, File.query(self.db,
             fields=('file_name', 'file_id', 'saved'),
             order=('saved',)))
@@ -138,7 +149,11 @@ class RPCServer:
     @public
     def mv(self, file_id, new_file_name):
         """Renames file with the given id"""
+        import logging
+        from libviri.objects import File
+
         if File.exists(self.db, file_id):
+            logging.info('File {} renamed to {}'.format(file_id, new_file_name))
             File.update(self.db,
                 {'file_name': new_file_name},
                 {'file_id': file_id})
@@ -149,7 +164,11 @@ class RPCServer:
     @public
     def rm(self, file_id):
         """Removes a file given its id"""
+        import logging
+        from libviri.objects import File
+
         if File.exists(self.db, file_id):
+            logging.info('File {} removed'.format(file_id))
             File.delete(self.db, {'file_id': file_id})
             return (SUCCESS, 'File successfully removed')
         else:
@@ -158,5 +177,7 @@ class RPCServer:
     @public
     def exists(self, file_id):
         """Returns True if a file with the given id exists."""
+        from libviri.objects import File
+
         return (SUCCESS, File.exists(self.db, file_id))
 
