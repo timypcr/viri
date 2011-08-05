@@ -37,8 +37,8 @@ import doctest
 ALL_TESTS = ['rpcserver']
 
 def set_path():
-    from os.path import join, dirname, abspath
-    sys.path.insert(0, join(dirname(dirname(abspath(__file__))), 'virid'))
+    from os.path import dirname, abspath
+    sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 def exec_tests(tests):
     for test in tests:
