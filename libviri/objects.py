@@ -54,7 +54,7 @@ class File(viriorm.Model):
 
     @classmethod
     def exists(cls, db, file_id):
-        """Returns True if a file with the specified id exists."""
+        """Returns the file name if a file with the specified id exists."""
         res = cls.get(db, where=({"file_id =": file_id}))
         if res: return res['file_name']
         else: return None

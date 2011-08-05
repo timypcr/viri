@@ -8,7 +8,7 @@ Homepage: http://www.viriproject.com
 
 Package: viri
 Architecture: all
-Depends: python3
+Depends: python-viri
 Description: Remote execution of Python scripts
  Viri is an application to easily deploy Python scripts, tracking its
  execution results. Viri has two different components, the virid daemon,

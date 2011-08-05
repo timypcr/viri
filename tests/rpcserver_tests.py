@@ -20,7 +20,7 @@ r"""
 >>> import shutil
 >>> import logging
 >>> import xmlrpc.client
->>> from viri import orm, objects, rpcserver
+>>> from libviri import viriorm, objects, rpcserver
 
 >>> logging.disable(logging.CRITICAL)
 
@@ -58,7 +58,7 @@ r"""
 ...     return '\n'.join(result)
 
 >>> db_file = tempfile.NamedTemporaryFile(prefix='viri_db_')
->>> db = orm.Database(db_file.name)
+>>> db = viriorm.Database(db_file.name)
 >>> context = dict(conf={}, db=db)
 >>> for obj in objects.objects:
 ...     obj.create_table(db)
@@ -146,6 +146,39 @@ file_name=with_arg.py,file_id=0532ddf128bb22cee16ad6ea7c933fc4106fab9b
 (True, 'Hello world!')
 >>> rpcs.execute({'file_name_or_id': 'with_arg.py', 'args': ('Foo',)})
 (True, 'Hello Foo!')
+
+# Moving files
+>>> rpcs.mv({'file_id': 'INCORRECT_ID', 'new_file_name': 'IRRELEVANT'})
+(False, 'File not found')
+>>> rpcs.mv({'file_id': '0fdeee3bf255a30a207a3c84934defb9eb00efb0', 'new_file_name': 'data_file_3.txt'})
+(True, 'File successfully renamed')
+>>> print(format_response(rpcs.ls({})[1], 'saved'))
+file_name=correct.py,file_id=6bd4e019d841ea7716ec0cd3be86b878edca47ab
+file_name=data_file_2.txt,file_id=19c32940f2e5f997bc34530cf9b544247e674168
+file_name=data_file_3.txt,file_id=0fdeee3bf255a30a207a3c84934defb9eb00efb0
+file_name=no_class.py,file_id=8d216cb3d41bca080407eebb96384f941d4da793
+file_name=no_run.py,file_id=4a1f32f97b8691985630251c9f53654483aeca61
+file_name=syntax_error.py,file_id=f8b8b3454691870fa1bbd323698802ee29155cb6
+file_name=with_arg.py,file_id=0532ddf128bb22cee16ad6ea7c933fc4106fab9b
+
+# Removing files
+>>> rpcs.rm({'file_id': 'INCORRECT_ID'})
+(False, 'File not found')
+>>> rpcs.rm({'file_id': 'f8b8b3454691870fa1bbd323698802ee29155cb6'})
+(True, 'File successfully removed')
+>>> print(format_response(rpcs.ls({})[1], 'saved'))
+file_name=correct.py,file_id=6bd4e019d841ea7716ec0cd3be86b878edca47ab
+file_name=data_file_2.txt,file_id=19c32940f2e5f997bc34530cf9b544247e674168
+file_name=data_file_3.txt,file_id=0fdeee3bf255a30a207a3c84934defb9eb00efb0
+file_name=no_class.py,file_id=8d216cb3d41bca080407eebb96384f941d4da793
+file_name=no_run.py,file_id=4a1f32f97b8691985630251c9f53654483aeca61
+file_name=with_arg.py,file_id=0532ddf128bb22cee16ad6ea7c933fc4106fab9b
+
+# Exists
+>>> rpcs.exists({'file_id': '6bd4e019d841ea7716ec0cd3be86b878edca47ab'})
+(True, 'correct.py')
+>>> rpcs.exists({'file_id': 'INCORRECT_ID'})
+(True, None)
 
 """
 

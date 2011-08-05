@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/opt/python-viri/bin/python3
 
 # Copyright 2011, Marc Garcia <garcia.marc@gmail.com>
 #
@@ -140,7 +140,7 @@ class Rm(Command):
             return (True, '{0} file(s) successfully removed'.format(cnt_ok))
         else:
             return (False, '{0} file(s) successfully removed\n'.format(cnt_ok) +
-                '{0} files not found'.format(cnt_err))
+                '{0} file(s) not found'.format(cnt_err))
 
 
 if __name__ == '__main__':
