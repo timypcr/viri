@@ -38,10 +38,12 @@ chkconfig virid --add
 chkconfig virid on --level 2345
 
 %preun
+/etc/init.d/virid stop
 chkconfig virid --del
 rm -rf /opt/python-viri/lib/python3.2/site-packages/libviri
 rm -rf /etc/viri
 rm -rf /var/lib/viri
+rm -f /var/log/virid.log
 
 %files
 %defattr(-,root,root,-)
