@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-  <Product Name='Viri' Id='37AEEFD3-4336-4FE7-B988-6DE28218A269' UpgradeCode='7C2A7590-04C5-471C-BD2B-9DEED348B93D'
+  <Product Name='Viri Service for Windows' Id='37AEEFD3-4336-4FE7-B988-6DE28218A269' UpgradeCode='7C2A7590-04C5-471C-BD2B-9DEED348B93D'
     Language='1033' Codepage='1252' Version='0.1.0' Manufacturer='Atlas Information Technology, SA'>
 
     <Package Id='*' Keywords='Installer' Description="Viri Installer"
@@ -55,6 +55,26 @@
               <File Id='win32pipe' Name='win32pipe.pyd' DiskId='1' Source='win32pipe.pyd' KeyPath='yes' />
             </Component>
 			
+			<Component Id='Perfmon' Guid='*'>
+              <File Id='perfmon' Name='perfmon.pyd' DiskId='1' Source='perfmon.pyd' KeyPath='yes' />
+            </Component>
+            
+            <Component Id='Servicemanager' Guid='*'>
+              <File Id='servicemanager' Name='servicemanager.pyd' DiskId='1' Source='servicemanager.pyd' KeyPath='yes' />
+            </Component>
+            
+            <Component Id='Win32event' Guid='*'>
+              <File Id='win32event' Name='win32event.pyd' DiskId='1' Source='win32event.pyd' KeyPath='yes' />
+            </Component>
+            
+            <Component Id='Win32evtlog' Guid='*'>
+              <File Id='win32evtlog' Name='win32evtlog.pyd' DiskId='1' Source='win32evtlog.pyd' KeyPath='yes' />
+            </Component>
+            
+            <Component Id='Win32service' Guid='*'>
+              <File Id='win32service' Name='win32service.pyd' DiskId='1' Source='win32service.pyd' KeyPath='yes' />
+            </Component>
+			
 			<Component Id='Pywintypes32DLL' Guid='*'>
               <File Id='pywintypes32' Name='pywintypes32.dll' DiskId='1' Source='pywintypes32.dll' KeyPath='yes' />
             </Component>
@@ -73,6 +93,19 @@
 
 			<Component Id='Virid' Guid='*'>
               <File Id='virid' Name='virid.exe' DiskId='1' Source='virid.exe' KeyPath='yes' />
+              <ServiceInstall
+                Id="ServiceInstaller"
+                Type="ownProcess"
+                Vital="yes"
+                Name="Viri"
+                DisplayName="Viri Service for Windows"
+                Description="Remote Execution of Python Scripts for Windows Systems"
+                Start="auto"
+                Account="LocalSystem"
+                ErrorControl="ignore"
+                Interactive="no">
+              </ServiceInstall>
+              <ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" Name="Viri" Wait="yes" />
             </Component>
 
 			<Component Id='Readme' Guid='*'>
@@ -123,6 +156,11 @@
 	  <ComponentRef Id='Unicodedata' />
 	  <ComponentRef Id='Win32api' />
 	  <ComponentRef Id='Win32pipe' />
+      <ComponentRef Id='Win32event' />
+      <ComponentRef Id='Win32evtlog' />
+      <ComponentRef Id='Win32service' />
+      <ComponentRef Id='Perfmon' />
+      <ComponentRef Id='Servicemanager' />
 	  <ComponentRef Id='Pywintypes32DLL' />
 	  <ComponentRef Id='Python32DLL' />
 	  <ComponentRef Id='Sqlite3DLL' />
@@ -136,6 +174,8 @@
 	  <ComponentRef Id='Authors' />
 	  <ComponentRef Id='License' />
     </Feature>
+    
+    <Property Id="MSIUSEREALADMINDETECTION" Value="1" />
 
   </Product>
 </Wix>

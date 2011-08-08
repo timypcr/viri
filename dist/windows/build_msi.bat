@@ -11,8 +11,8 @@ rem --              set the appropiate values for your system                --
 rem ---------------------------------------------------------------------------
 
 set temp_directory=temp
-set full_path_to_python_exe=c:\dev\Python-3.2.1\PCbuild\python.exe
-set full_path_to_cxfreeze=c:\dev\Python-3.2.1\Scripts\cxfreeze
+set full_path_to_python_exe=c:\Python32\python.exe
+set full_path_to_cxfreeze=c:\Python32\Scripts\cxfreeze
 set full_path_to_viri_includes=c:\dev\viri;c:\dev\viri\libviri
 set full_path_to_viric=C:\dev\viri\bin\viric
 set full_path_to_virid=c:\dev\viri\bin\virid
@@ -145,10 +145,10 @@ echo.
 
 echo *** Step 4. Freezing virid...
 echo.
-%full_path_to_python_exe% %full_path_to_cxfreeze% %full_path_to_virid% --target-dir %temp_directory% -OO -c -s --include-path %full_path_to_viri_includes% --include-modules objects,viriorm,rpcserver
+%full_path_to_python_exe% %full_path_to_cxfreeze% %full_path_to_virid% --target-dir %temp_directory% -OO -c -s --include-path %full_path_to_viri_includes% --include-modules win32timezone,objects,viriorm,rpcserver
 if not exist %temp_directory%\virid.exe (
-	echo * Creation of virid.exe failed!
-	goto :eof
+echo * Creation of virid.exe failed!
+goto :eof
 )
 echo.
 
@@ -159,7 +159,7 @@ echo.
 
 echo *** Step 6. Compressing generated files with UPX...
 echo.
-%full_path_to_upx_exe% %temp_directory%\*
+%full_path_to_upx_exe% %temp_directory%\viric.exe %temp_directory%\virid.exe
 echo.
 
 echo *** Step 7. Copy required text files...
