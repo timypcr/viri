@@ -33,8 +33,15 @@ data gathering, data synchronization, etc.
 make DESTDIR=$RPM_BUILD_ROOT os=redhat install
 
 %post
+mkdir -p /var/lib/viri
 chkconfig virid --add
 chkconfig virid on --level 2345
+
+%preun
+chkconfig virid --del
+rm -rf /opt/python-viri/lib/python3.2/site-packages/libviri
+rm -rf /etc/viri
+rm -rf /var/lib/viri
 
 %files
 %defattr(-,root,root,-)
@@ -42,8 +49,9 @@ chkconfig virid on --level 2345
 %{__prefix}/sbin/virid
 %{__prefix}/sbin/virid-conf
 %{python3_sitelib}/libviri/__init__.py
-%{python3_sitelib}/libviri/virirpc.py
+%{python3_sitelib}/libviri/rpcserver.py
 %{python3_sitelib}/libviri/objects.py
+%{python3_sitelib}/libviri/virirpc.py
 %{python3_sitelib}/libviri/viriorm.py
 /etc/viri/virid.conf
 /etc/init.d/virid
@@ -51,6 +59,7 @@ chkconfig virid on --level 2345
 %changelog
 * Mon Aug 8 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc2
 - Library files updated to the new names
+- Creating database directory
 * Thu Aug 4 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc2
 - Python package now is named python-viri. Description updated
 * Wed Jul 6 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc1

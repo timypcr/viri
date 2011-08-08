@@ -39,7 +39,7 @@ DEFAULTS = {
     'paths': {
         'known_ca': '/etc/viri/ca.cert',
         'certKey_file': '/etc/viri/virid.pem',
-        'database_file': '/var/viri/viri.db'},
+        'database_file': '/var/lib/viri/viri.db'},
     'logging': {
         'log_file': '/var/log/virid.log',
         'log_level': 'WARNING',
