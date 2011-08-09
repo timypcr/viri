@@ -1,0 +1,52 @@
+Brief instructions to build the RPMs
+------------------------------------
+
+1. Install rpmtools:
+
+# yum install rpmdevtools
+
+2. If you are also building Python, you need to install the build dependencies:
+
+# yum install tk-devel tcl-devel expat-devel db4-devel gdbm-devel sqlite-devel
+
+3. Setup your local RPM build tree:
+
+$ rpmdev-setuptree
+
+4. Get the the source code in tar.bz2 format and cpoy it to ~/rpmbuild/SOURCES/
+
+$ cp Viri-0.1rc2.tar.bz2 ~/rpmbuild/SOURCES/
+$ cp Python-3.2.1.tar.bz2 ~/rpmbuild/SOURCES/
+
+5. Copy the specs files to ~/rpmbuild/SPECS/
+
+$ cp python-viri-3.2.1.spec ~/rpmbuild/SPECS/
+$ cp viri.spec ~/rpmbuild/SPECS/
+
+6. Go to the SPECS directory:
+
+cd ~/rpmbuild/SPECS/
+
+You should be OK to build the RPM now, but it’ll most likely fail with minor
+rpath-check errors, which indicates that some components are using hardcoded 
+library paths. We assume that you want to sign the package, too.
+
+7. Make sure you have the right settings in ~/.rpmmacros, for example:
+
+%_topdir      %(echo $HOME)/rpmbuild
+%_smp_mflags  -j3
+%__arch_install_post   /usr/lib/rpm/check-rpaths   /usr/lib/rpm/check-buildroot
+%_signature    gpg
+%_gpg_name     Viri Project <development@atlasit.com>
+%_gpg_path     /home/jesus/.gnupg
+%distribution     Centos 6.0
+%vendor           Atlas Information Technology, SA
+%packager         Jesús Corrius jcorrius@gmail.com
+%_tmppath         /tmp
+
+8. Finally, you can build the rpms:
+
+$ QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign python-viri-3.2.1.spec
+$ QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign viri.spec
+
+
