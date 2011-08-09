@@ -1,7 +1,8 @@
 Brief instructions to build the RPMs
 ------------------------------------
 
-1. Install rpmtools:
+1. Install rpmdevtools. This is a package from Fedora EPEL, so you should 
+install this repository first.
 
 # yum install rpmdevtools
 
@@ -20,7 +21,7 @@ $ cp Python-3.2.1.tar.bz2 ~/rpmbuild/SOURCES/
 
 5. Copy the specs files to ~/rpmbuild/SPECS/
 
-$ cp python-viri-3.2.1.spec ~/rpmbuild/SPECS/
+$ cp python-3.2.1-viri.spec ~/rpmbuild/SPECS/
 $ cp viri.spec ~/rpmbuild/SPECS/
 
 6. Go to the SPECS directory:
@@ -46,7 +47,7 @@ library paths. We assume that you want to sign the package, too.
 
 8. Finally, you can build the rpms:
 
-$ QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign python-viri-3.2.1.spec
+$ QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign python-3.2.1-viri.spec
 $ QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign viri.spec
 
 
