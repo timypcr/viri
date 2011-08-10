@@ -14,25 +14,7 @@ install this repository first.
 
 $ rpmdev-setuptree
 
-4. Get the the source code in tar.bz2 format and cpoy it to ~/rpmbuild/SOURCES/
-
-$ cp Viri-0.1rc2.tar.bz2 ~/rpmbuild/SOURCES/
-$ cp Python-3.2.1.tar.bz2 ~/rpmbuild/SOURCES/
-
-5. Copy the specs files to ~/rpmbuild/SPECS/
-
-$ cp python-3.2.1-viri.spec ~/rpmbuild/SPECS/
-$ cp viri.spec ~/rpmbuild/SPECS/
-
-6. Go to the SPECS directory:
-
-cd ~/rpmbuild/SPECS/
-
-You should be OK to build the RPM now, but it’ll most likely fail with minor
-rpath-check errors, which indicates that some components are using hardcoded 
-library paths. We assume that you want to sign the package, too.
-
-7. Make sure you have the right settings in ~/.rpmmacros, for example:
+4. Make sure you have the right settings in ~/.rpmmacros, for example:
 
 %_topdir      %(echo $HOME)/rpmbuild
 %_smp_mflags  -j3
@@ -42,12 +24,10 @@ library paths. We assume that you want to sign the package, too.
 %_gpg_path     /home/jesus/.gnupg
 %distribution     Centos 6.0
 %vendor           Atlas Information Technology, SA
-%packager         Jesús Corrius jcorrius@gmail.com
+%packager         Jesús Corrius <jcorrius@gmail.com>
 %_tmppath         /tmp
 
-8. Finally, you can build the rpms:
+5. Now you can use the scripts in each subdirectory to build the packages:
 
-$ QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign python-3.2.1-viri.spec
-$ QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign viri.spec
-
-
+$ cd viri
+$ ./build_rpm.sh
