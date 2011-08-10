@@ -88,6 +88,9 @@ $FIXFILE
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
+%postun
+[ -n /opt/python-viri ] && rm -rf /opt/python-viri
+
 %files
 %defattr(-,root,root)
 %doc Misc/README Misc/Porting LICENSE Misc/ACKS Misc/HISTORY Misc/NEWS
