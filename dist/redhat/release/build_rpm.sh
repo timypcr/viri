@@ -27,6 +27,7 @@ function create_local_rpm_tree_if_necessary {
 function copy_files {
 	cp RPM-GPG-KEY-VIRI $HOME/rpmbuild/SOURCES
 	cp viri.repo $HOME/rpmbuild/SOURCES
+	cp GPL $HOME/rpmbuild/SOURCES
 }
 
 function create_rpm {
