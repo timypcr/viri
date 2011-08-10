@@ -48,9 +48,9 @@ rm -f /var/log/virid.log
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS LICENSE README
-%{__prefix}/bin/viric
-%{__prefix}/sbin/virid
-%{__prefix}/sbin/virid-conf
+%attr(755, root, root) %{__prefix}/bin/viric
+%attr(755, root, root) %{__prefix}/sbin/virid
+%attr(755, root, root) %{__prefix}/sbin/virid-conf
 %{python3_sitelib}/libviri/__init__.py
 %{python3_sitelib}/libviri/rpcserver.py
 %{python3_sitelib}/libviri/objects.py
@@ -67,8 +67,8 @@ rm -f /var/log/virid.log
 %{python3_sitelib}/libviri/viric.pyo
 %{python3_sitelib}/libviri/virirpc.pyc
 %{python3_sitelib}/libviri/virirpc.pyo
-/etc/viri/virid.conf
-/etc/init.d/virid
+%config /etc/viri/virid.conf
+%attr(755, root, root) /etc/init.d/virid
 
 %changelog
 * Mon Aug 8 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc2
