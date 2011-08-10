@@ -3,5 +3,6 @@ name=Viri-$releasever
 baseurl=http://viri.atlasit.com/redhat/$releasever/$basearch/
 enabled=1
 gpgcheck=1
-gpgkey=http://viri.atlasit.com/RPM-GPG-KEY-viri
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-VIRI
+
 
