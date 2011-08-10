@@ -30,7 +30,7 @@ function copy_files {
 }
 
 function create_rpm {
-	rpmbuild -ba --sign $PACKAGE_NAME.spec
+	rpmbuild -ba $PACKAGE_NAME.spec
 }
 
 create_local_rpm_tree_if_necessary
