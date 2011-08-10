@@ -11,7 +11,7 @@ Summary: Remote execution of Python scripts
 Group: System Environment/Daemons
 License: GPLv3
 URL: http://www.viriproject.com
-Source: Viri-%{version}%{release}.tar.bz2
+Source: viri-%{version}%{release}.tar.bz2
 BuildArch: noarch
 Requires: python-viri openssl
 Prefix: %{__prefix}
@@ -26,7 +26,7 @@ Some examples on what Viri can be useful for include monitoring, deployments,
 data gathering, data synchronization, etc.
 
 %prep
-%setup -n Viri-%{version}%{release}
+%setup -n viri-%{version}%{release}
 
 %install
 [ -d "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
