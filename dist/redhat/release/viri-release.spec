@@ -7,9 +7,9 @@ Group:          System Environment/Base
 License:        GPL
 URL:            http://www.viriproject.com
 
-Source0:        http://viri.atlasit.com/RPM-GPG-KEY-viri
+Source0:        RPM-GPG-KEY-VIRI
 Source1:        GPL	
-Source2:        Viri.repo	
+Source2:        viri.repo
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -31,7 +31,7 @@ rm -rf $RPM_BUILD_ROOT
 
 #GPG Key
 install -Dpm 644 %{SOURCE0} \
-    $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg/RPM-GPG-KEY-viri
+    $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg/RPM-GPG-KEY-VIRI
 
 # yum
 install -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/yum.repos.d
