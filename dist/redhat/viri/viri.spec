@@ -2,7 +2,6 @@
 %define version 0.1
 %define release rc3
 %define python3_sitelib %(/opt/python-viri/bin/python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-%define __prefix /usr
  
 Name: %{name}
 Version: %{version}
@@ -56,19 +55,22 @@ rm -f /var/log/virid.log
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS LICENSE README
-%attr(755, root, root) %{__prefix}/bin/viric
-%attr(755, root, root) %{__prefix}/sbin/virid
-%attr(755, root, root) %{__prefix}/sbin/virid-conf
+%attr(755, root, root) %{_bindir}/viric
+%attr(755, root, root) %{_sbindir}/virid
+%attr(755, root, root) %{_sbindir}/virid-conf
 %{python3_sitelib}/libviri/__init__.py
 %{python3_sitelib}/libviri/rpcserver.py
 %{python3_sitelib}/libviri/objects.py
 %{python3_sitelib}/libviri/virirpc.py
 %{python3_sitelib}/libviri/viriorm.py
 %{python3_sitelib}/libviri/viric.py
-%config /etc/viri/virid.conf
+%config  %{_sysconfdir}/viri/virid.conf
 %attr(755, root, root) /etc/init.d/virid
 
 %changelog
+* Thu Aug 11 2011 Jesús Corrius <jcorrius@gmail.com> 0.1rc3
+- Make viri upgradable
+- Use FHS macros
 * Mon Aug 8 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc2
 - Library files updated to the new names
 - Creating database directory
