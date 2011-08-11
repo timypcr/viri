@@ -32,6 +32,7 @@ function copy_files {
 
 function create_rpm {
 	rpmbuild -ba $PACKAGE_NAME.spec
+	setarch i386 rpmbuild -ba --target i386 --sign $PACKAGE_NAME.spec
 }
 
 create_local_rpm_tree_if_necessary
