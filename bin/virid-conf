@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/opt/python-viri/bin/python3
 
-# Copyright 2011, Marc Garcia <garcia.marc@gmail.com>
+# Copyright 2011, Jesús Corrius <jcorrius@gmail.com>
 #
 # This file is part of Viri.
 #
@@ -16,46 +16,132 @@
 # You should have received a copy of the GNU General Public License
 # along with Viri.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys, os
+from optparse import OptionParser
+from configparser import RawConfigParser
+from urllib import request
+
+APP_NAME = 'viridconf'
+APP_DESC = 'Virid Configuration Helper'
+APP_VERSION = '0.1'
+
 DEFAULT_CONF_FILE="/etc/viri/virid.conf"
+DEFAULT_ADDITIONAL_CONFIGURATION_URL="http://viri.atlasit.com/redhat/extraconf"
+DEFAULT_KNOWN_CA_URL="http://viri.atlasit.com/ca.cert"
+DEFAULT_KNOWN_CA_FILE="/etc/viri/ca.cert"
+DEFAULT_SSL_OUTPUT_FILE="/etc/viri/virid.pem"
+DEFAULT_COUNTRY_NAME="ES"
+DEFAULT_STATE_OR_PROVINCE_NAME="Catalonia"
+DEFAULT_LOCALITY_NAME="Barcelona"
+DEFAULT_ORGANIZATION_NAME="Atlas IT"
+DEFAULT_ORGANIZATION_UNIT_NAME="Engineering"
+DEFAULT_COMMON_NAME="virid"
+DEFAULT_EMAIL_ADDRESS="engineering@atlasit.com"
 
-function request_conf_file {
-    read -p "Viri configuration file [${DEFAULT_CONF_FILE}]: " CONF_FILE
-}
+CUSTOM_SECTION="custom"
 
-function get_conf_file {
-    request_conf_file
-    [ ! ${CONF_FILE} ] && CONF_FILE=${DEFAULT_CONF_FILE}
-    until [ -f ${CONF_FILE} ]; do
-        request_conf_file
-    done
-}
+OPENSSL_CONFIGURATION ="""
+ RANDFILE               = $ENV::HOME/.rnd
 
-function save_host_code {
-    read -p "Host code: " HOST_CODE
-    [ ${HOST_CODE} ] && echo -e "\nhost_code: ${HOST_CODE}\n" >> ${CONF_FILE}
-}
+ [ req ]
+ default_bits           = 1024
+ default_keyfile        = keyfile.pem
+ distinguished_name     = req_distinguished_name
+ attributes             = req_attributes
+ prompt                 = no
+ output_password        = mypass
 
-function get_known_ca_file {
-    read -p "Known CAs URL: " KNOWN_CA_URL
-    [ ${KNOWN_CA_URL} ] && wget -O /etc/viri/ca.cert ${KNOWN_CA_URL}
-}
+ [ req_distinguished_name ]
+ C                      = ES
+ ST                     = Catalonia
+ L                      = Barcelona
+ O                      = Atlas IT
+ OU                     = Engineering
+ CN                     = virid
+ emailAddress           = engineering@atlasit.com
+ 
+ [ req_attributes ]
+ challengePassword      = A challenge password
+"""
 
-function get_extra_conf {
-    read -p "Additional configuration URL: " EXTRA_CONF_URL
-    if [ ${EXTRA_CONF_URL} ] ; then
-        wget -O /tmp/viri_extraconf ${EXTRA_CONF_URL}
-        cat /tmp/viri_extraconf >> /etc/viri/virid.conf
-        rm -f /tmp/viri_extraconf
-    fi
-}
+IsWindows = sys.platform == 'nt'
 
-function generate_certificate {
-    openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/viri/virid.pem -out /etc/viri/virid.pem
-}
+def GetConfigurationFile(options):
+    if options.config_file:
+        return options.config_file
+    return DEFAULT_CONF_FILE if not IsWindows else os.path.basename(DEFAULT_CONF_FILE)
+        
+def SaveHostCode(options, config):
+    if options.host:
+        host = options.host
+    else:
+        sys.stdout.write("Host code: ")
+        sys.stdout.flush()
+        host = sys.stdin.readline()
+    
+    config.set(CUSTOM_SECTION, 'host_code', host)
+        
+def GetKnownCaFile(options):  
+    url = options.ca_url if options.ca_url else DEFAULT_KNOWN_CA_URL
+    file = DEFAULT_KNOWN_CA_FILE if not IsWindows else os.path.basename(DEFAULT_KNOWN_CA_FILE)
+    request.urlretrieve(url, file)
 
-get_conf_file
-save_host_code
-get_known_ca_file
-get_extra_conf
-generate_certificate
+def GetExtraConf(options, config):
+    url = options.add_config_url if options.add_config_url else DEFAULT_ADDITIONAL_CONFIGURATION_URL
+    extra_conf = request.urlopen(url).read().decode('utf-8')
+    for line in extra_conf.splitlines():
+        if len(line) > 0:
+            parted = line.partition(':')
+            config.set(CUSTOM_SECTION, parted[0], parted[2])
 
+def GenerateCertificate():
+    output = DEFAULT_SSL_OUTPUT_FILE if not IsWindows else os.path.basename(DEFAULT_SSL_OUTPUT_FILE)
+    from tempfile import NamedTemporaryFile
+    with NamedTemporaryFile() as tmp:
+        tmp.write(bytes(OPENSSL_CONFIGURATION, 'ascii'))
+        tmp.flush()
+        os.system("openssl req -x509 -nodes -newkey rsa:4096 -keyout {0} -out {1} -config {2}".format(
+            output, output, tmp.name))
+
+if __name__ == '__main__':
+    parser = OptionParser(
+        'Usage: %prog command [OPTIONS]',
+        description=APP_DESC,
+        version='{0} {1}'.format(APP_NAME, APP_VERSION))
+    parser.add_option('', '--add',  dest='add_config_url', help='additional configuration URL')
+    parser.add_option('', '--ca',   dest='ca_url',         help='known CAs URL')
+    parser.add_option('', '--conf', dest='config_file',    help='configuration file')
+    parser.add_option('', '--host', dest='host',           help='host code')
+    options, args = parser.parse_args()
+    
+    try:
+        if not IsWindows: 
+            if os.geteuid() != 0:
+                raise ValueError('You are not the root user!')
+            if not os.path.exists('/etc/viri/'):
+                raise ValueError('The directory /etc/viri/ does not exist. Is Viri installed?')
+        
+        config_file = GetConfigurationFile(options)
+        if not os.path.isfile(config_file):
+            raise ValueError('Configuration file not found: {0}'.format(config_file))
+        
+        config = RawConfigParser()
+        config.read(config_file)
+        
+        SaveHostCode(options, config)
+        GetKnownCaFile(options)
+        GetExtraConf(options, config)
+        GenerateCertificate()
+        
+        new_config_file = config_file + '.new'
+        with open(new_config_file, 'w') as file:
+            config.write(file)
+        
+        if IsWindows:
+            # On Windows, if dst already exists, OSError will be raised even if it is a file; 
+            # there may be no way to implement an atomic rename when dst names an existing file.
+            os.remove(config_file)
+        os.rename(new_config_file, config_file) 
+    except Exception as exc:
+        sys.stderr.write('%s\n' % exc)
+        sys.exit(1)
