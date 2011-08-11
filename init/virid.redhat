@@ -70,7 +70,14 @@ rhstatus() {
 restart() {
     stop
     start
-}   
+}
+
+condrestart() {
+    if status -p $PIDFILE $PROG >&/dev/null; then
+	stop
+	start
+    fi
+}
 
 reload() {
     echo -n $"Reloading viri daemon configuration: "
@@ -93,11 +100,14 @@ case "$1" in
   reload)
     reload
     ;;
+  condrestart|try-restart)
+    condrestart
+    ;;
   status)
     rhstatus
     ;;
   *)
-    echo $"Usage: $0 {start|stop|status|reload|restart}"
+    echo $"Usage: $0 {start|stop|status|reload|restart|condrestart}"
     exit 1
 esac
 

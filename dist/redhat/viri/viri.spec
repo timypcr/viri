@@ -13,7 +13,10 @@ License: GPLv3
 URL: http://www.viriproject.com
 Source: viri-%{version}%{release}.tar.bz2
 BuildArch: noarch
-Requires: python-viri openssl
+BuildRequires: python-viri
+Requires: initscripts >= 8.36, python-viri, openssl
+Requires(pre): chkconfig
+Requires(post): chkconfig
 Prefix: %{__prefix}
 %description
 Viri is a daemon which is able to execute Python scripts. Execution is
@@ -34,16 +37,21 @@ make DESTDIR=$RPM_BUILD_ROOT os=redhat install
 
 %post
 mkdir -p /var/lib/viri
-chkconfig virid --add
-chkconfig virid on --level 2345
+/sbin/chkconfig --add virid
+/sbin/chkconfig on --level 2345
 
 %preun
-/etc/init.d/virid stop
-chkconfig virid --del
+if [ $1 = 0 ]; then
+	/sbin/service virid stop > /dev/null 2>&1
+	/sbin/chkconfig --del virid
+fi
 rm -rf /opt/python-viri/lib/python3.2/site-packages/libviri
 rm -rf /etc/viri
 rm -rf /var/lib/viri
 rm -f /var/log/virid.log
+
+%posttrans
+/sbin/service virid condrestart >/dev/null 2>&1
 
 %files
 %defattr(-,root,root,-)
@@ -56,17 +64,7 @@ rm -f /var/log/virid.log
 %{python3_sitelib}/libviri/objects.py
 %{python3_sitelib}/libviri/virirpc.py
 %{python3_sitelib}/libviri/viriorm.py
-#%{python3_sitelib}/libviri/__init__.pyc
-#%{python3_sitelib}/libviri/__init__.pyo
-#%{python3_sitelib}/libviri/objects.pyc
-#%{python3_sitelib}/libviri/objects.pyo
-#%{python3_sitelib}/libviri/rpcserver.pyc
-#%{python3_sitelib}/libviri/rpcserver.pyo
 %{python3_sitelib}/libviri/viric.py
-#%{python3_sitelib}/libviri/viric.pyc
-#%{python3_sitelib}/libviri/viric.pyo
-#%{python3_sitelib}/libviri/virirpc.pyc
-#%{python3_sitelib}/libviri/virirpc.pyo
 %config /etc/viri/virid.conf
 %attr(755, root, root) /etc/init.d/virid
 
