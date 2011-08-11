@@ -56,17 +56,17 @@ rm -f /var/log/virid.log
 %{python3_sitelib}/libviri/objects.py
 %{python3_sitelib}/libviri/virirpc.py
 %{python3_sitelib}/libviri/viriorm.py
-%{python3_sitelib}/libviri/__init__.pyc
-%{python3_sitelib}/libviri/__init__.pyo
-%{python3_sitelib}/libviri/objects.pyc
-%{python3_sitelib}/libviri/objects.pyo
-%{python3_sitelib}/libviri/rpcserver.pyc
-%{python3_sitelib}/libviri/rpcserver.pyo
+#%{python3_sitelib}/libviri/__init__.pyc
+#%{python3_sitelib}/libviri/__init__.pyo
+#%{python3_sitelib}/libviri/objects.pyc
+#%{python3_sitelib}/libviri/objects.pyo
+#%{python3_sitelib}/libviri/rpcserver.pyc
+#%{python3_sitelib}/libviri/rpcserver.pyo
 %{python3_sitelib}/libviri/viric.py
-%{python3_sitelib}/libviri/viric.pyc
-%{python3_sitelib}/libviri/viric.pyo
-%{python3_sitelib}/libviri/virirpc.pyc
-%{python3_sitelib}/libviri/virirpc.pyo
+#%{python3_sitelib}/libviri/viric.pyc
+#%{python3_sitelib}/libviri/viric.pyo
+#%{python3_sitelib}/libviri/virirpc.pyc
+#%{python3_sitelib}/libviri/virirpc.pyo
 %config /etc/viri/virid.conf
 %attr(755, root, root) /etc/init.d/virid
 
