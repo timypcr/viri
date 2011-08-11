@@ -28,16 +28,20 @@ class ViriError(Exception):
 
 
 class Viric(object):
-    def __init__(self, hosts, cert_file, key_file):
+    def __init__(self, hosts, certfile, keyfile=None):
         self.hosts = hosts
-        self.cert_file = cert_file
-        self.key_file = key_file
+        self.certfile = certfile
+        self.keyfile = keyfile
         self.current_host = self.hosts[0]
 
     @property
     def connection(self):
+        host_port = self.current_host
+        if ':' not in host_port:
+            host_port += ':' + str(DEFAULT_PORT)
+
         return XMLRPCClient(
-            'https://{0}/'.format(self.current_host),
+            'https://{0}/'.format(host_port),
             self.keyfile,
             self.certfile)
 
@@ -46,7 +50,7 @@ class Viric(object):
             return Binary(f.read())
 
     def _handle_result(self, result):
-        if not result[0]:
+        if result[0]:
             return result[1]
         else:
             # TODO make the traceback available
@@ -62,24 +66,12 @@ class Viric(object):
     def put(self, filename):
         res = self.connection.put(dict(
             file_name=os.path.basename(filename),
-            file_content=self._get_file_content(filename),
-            execute=False,
-            args=[]))
+            file_content=self._get_file_content(filename)))
         return self._handle_result(res)
 
-    def sched(self, filename_or_id, minute, hour, month_day, month, week_day,
-        year, delete=False):
-        res = self.connection.sched(dict(
-            filename_or_id=filename_or_id,
-            cron_def=' '.join((
-                minute,
-                hour,
-                month_day,
-                month,
-                week_day,
-                year)),
-            delete=delete))
-        return self._handle_result(res)
+    def put_exec(self, filename, args=[]):
+        script_id = self.put(filename)
+        return self.execute(script_id, args)
 
     def ls(self, sched):
         res = self.connection.ls(dict(
@@ -91,9 +83,6 @@ class Viric(object):
             file_name_or_id=file_name_or_id))
         return self._handle_result(res)
 
-    def history(self):
-        res = self.connection.get({})
-        return self._handle_result(res)
 
 
 class ArgsViric(Viric):
