@@ -1,6 +1,6 @@
 %define name viri
 %define version 0.1
-%define release rc2
+%define release rc3
 %define python3_sitelib %(/opt/python-viri/bin/python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 %define __prefix /usr
  

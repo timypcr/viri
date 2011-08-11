@@ -17,7 +17,7 @@
 # along with Viri.  If not, see <http://www.gnu.org/licenses/>.
 
 PACKAGE_NAME=viri
-PACKAGE_VERSION=0.1rc2
+PACKAGE_VERSION=0.1rc3
 PATH_TO_SOURCE_CODE_ROOT=../../..
 
 function create_local_rpm_tree_if_necessary {
