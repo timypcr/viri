@@ -40,6 +40,7 @@ make DESTDIR=$RPM_BUILD_ROOT os=redhat install
 
 # Manually invoke the python byte compile for each path that needs byte
 # compilation.
+mkdir $RPM_BUILD_ROOT%{python3_sitelib}/libviri/__pycache__ # TODO: Fix byte compilation in RHEL 5
 depth=`(find $RPM_BUILD_ROOT -type f -name "*.py" -print0 ; echo /) | \
        xargs -0 -n 1 dirname | sed 's,[^/],,g' | sort -u | tail -n 1 | wc -c`
 %{python3} -c 'import compileall, re, sys; sys.exit (not compileall.compile_dir("'"$RPM_BUILD_ROOT"'", '"$depth"', "/", 1, re.compile(r"'"/bin/|/sbin/|/usr/lib(64)?/python[0-9]\.[0-9]"'"), quiet=1))'
