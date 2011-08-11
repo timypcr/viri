@@ -55,10 +55,6 @@ if [ $1 = 0 ]; then
 	/sbin/service virid stop > /dev/null 2>&1
 	/sbin/chkconfig --del virid
 fi
-rm -rf /opt/python-viri/lib/python3.2/site-packages/libviri
-rm -rf /etc/viri
-rm -rf /var/lib/viri
-rm -f /var/log/virid.log
 
 %posttrans
 /sbin/service virid condrestart >/dev/null 2>&1
@@ -76,26 +72,16 @@ rm -f /var/log/virid.log
 %{python3_sitelib}/libviri/virirpc.py
 %{python3_sitelib}/libviri/viriorm.py
 %{python3_sitelib}/libviri/viric.py
-%{python3_sitelib}/libviri/__pycache__/__init__.cpython-32.pyc
-%{python3_sitelib}/libviri/__pycache__/__init__.cpython-32.pyo
-%{python3_sitelib}/libviri/__pycache__/objects.cpython-32.pyc
-%{python3_sitelib}/libviri/__pycache__/objects.cpython-32.pyo
-%{python3_sitelib}/libviri/__pycache__/rpcserver.cpython-32.pyc
-%{python3_sitelib}/libviri/__pycache__/rpcserver.cpython-32.pyo
-%{python3_sitelib}/libviri/__pycache__/viric.cpython-32.pyc
-%{python3_sitelib}/libviri/__pycache__/viric.cpython-32.pyo
-%{python3_sitelib}/libviri/__pycache__/viriorm.cpython-32.pyc
-%{python3_sitelib}/libviri/__pycache__/viriorm.cpython-32.pyo
-%{python3_sitelib}/libviri/__pycache__/virirpc.cpython-32.pyc
-%{python3_sitelib}/libviri/__pycache__/virirpc.cpython-32.pyo
-%config  %{_sysconfdir}/viri/virid.conf
-%attr(755, root, root) /etc/init.d/virid
+%exclude %{python3_sitelib}/libviri/__pycache__
+%attr(755, root, root) %{_sysconfdir}/init.d/virid
+%config(noreplace) %{_sysconfdir}/viri/*
 
 %changelog
 * Thu Aug 11 2011 Jesús Corrius <jcorrius@gmail.com> 0.1rc3
 - Make viri upgradable
 - Byte compile using viri's internal python3
 - Use FHS macros
+- Don't delete configuration files
 * Mon Aug 8 2011 Marc Garcia <garcia.marc@gmail.com> 0.1rc2
 - Library files updated to the new names
 - Creating database directory

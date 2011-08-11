@@ -21,7 +21,7 @@ from optparse import OptionParser
 from configparser import RawConfigParser
 from urllib import request
 
-APP_NAME = 'viridconf'
+APP_NAME = 'virid-conf'
 APP_DESC = 'Virid Configuration Helper'
 APP_VERSION = '0.1'
 
