@@ -1,5 +1,5 @@
 Name:           viri-release       
-Version:        0 
+Version:        0.1 
 Release:        1
 Summary:        Viri repository configuration
 
