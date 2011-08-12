@@ -12,17 +12,8 @@ Version: %{version}
 Release: %{release}
 License: PSF
 Group: Development/Languages
-Source: Python-%{version}.tar.bz2
-BuildRoot: %{_tmppath}/%{name}-%{version}-root
-BuildPrereq: gcc
-BuildPrereq: expat-devel
-BuildPrereq: db4-devel
-BuildPrereq: gdbm-devel
-BuildPrereq: sqlite-devel
-BuildPrereq: ncurses-devel
-BuildPrereq: readline-devel
-BuildPrereq: zlib-devel
-Prefix: %{__prefix}
+Source: http://www.python.org/ftp/python/%{version}/Python-%{version}.tar.bz2
+Requires(pre): gcc, expat-devel, db4-devel, gdbm-devel, sqlite-devel, ncurses-devel, readline-devel, zlib-devel
 Packager: Marc Garcia <garcia.marc@gmail.com>
 
 %description
@@ -46,7 +37,7 @@ Mac.
 %setup -n Python-%{version}
 
 %build
-./configure --enable-ipv6 --with-pymalloc --prefix=%{__prefix}
+./configure --enable-ipv6 --with-pymalloc --prefix=$RPM_BUILD_ROOT%{__prefix}
 make
 
 %install

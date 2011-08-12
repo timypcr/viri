@@ -27,7 +27,9 @@ function create_local_rpm_tree_if_necessary {
 }
 
 function download_and_copy_files {
-	wget http://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.bz2 -O $HOME/rpmbuild/SOURCES/Python-$PYTHON_VERSION.tar.bz2
+    if [ ! -f "$HOME/rpmbuild/SOURCES/Python-$PYTHON_VERSION.tar.bz2" ];
+		then wget http://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.bz2 -O $HOME/rpmbuild/SOURCES/Python-$PYTHON_VERSION.tar.bz2
+	fi
 }
 
 function create_rpm {
