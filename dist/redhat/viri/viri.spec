@@ -1,6 +1,5 @@
 %define name viri
-%define version 0.1
-%define release rc4
+%define version 0.1rc4
 %define python3 /opt/python-viri/bin/python3
 %define python3_sitelib %(%{python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 
@@ -9,17 +8,17 @@
 
 Name: %{name}
 Version: %{version}
-Release: %{release}
+Release: 1
 Summary: Remote execution of Python scripts
 Group: System Environment/Daemons
 License: GPLv3
 URL: http://www.viriproject.com
-Source: viri-%{version}%{release}.tar.bz2
+Source: viri-%{version}.tar.bz2
 BuildArch: noarch
 BuildRequires: python-viri
-Requires: initscripts >= 8.36, python-viri, openssl
-Requires(pre): chkconfig
-Requires(post): chkconfig
+Requires: initscripts, python-viri, openssl
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Packager: Jesús Corrius <jcorrius@gmail.com>
 
 %description
 Viri is a daemon which is able to execute Python scripts. Execution is
@@ -32,7 +31,7 @@ Some examples on what Viri can be useful for include monitoring, deployments,
 data gathering, data synchronization, etc.
 
 %prep
-%setup -n viri-%{version}%{release}
+%setup -n viri-%{version}
 
 %install
 [ -d "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -40,11 +39,10 @@ make DESTDIR=$RPM_BUILD_ROOT os=redhat install
 
 # Manually invoke the python byte compile for each path that needs byte
 # compilation.
-mkdir -p $RPM_BUILD_ROOT%{python3_sitelib}/libviri/__pycache__ # TODO: Fix byte compilation in RHEL 5
-depth=`(find $RPM_BUILD_ROOT -type f -name "*.py" -print0 ; echo /) | \
-       xargs -0 -n 1 dirname | sed 's,[^/],,g' | sort -u | tail -n 1 | wc -c`
-%{python3} -c 'import compileall, re, sys; sys.exit (not compileall.compile_dir("'"$RPM_BUILD_ROOT"'", '"$depth"', "/", 1, re.compile(r"'"/bin/|/sbin/|/usr/lib(64)?/python[0-9]\.[0-9]"'"), quiet=1))'
-%{python3} -O -c 'import compileall, re, sys; sys.exit(not compileall.compile_dir("'"$RPM_BUILD_ROOT"'", '"$depth"', "/", 1, re.compile(r"'"/bin/|/sbin/|/usr/lib(64)?/python[0-9]\.[0-9]"'"), quiet=1))' > /dev/null
+#depth=`(find $RPM_BUILD_ROOT -type f -name "*.py" -print0 ; echo /) | \
+#       xargs -0 -n 1 dirname | sed 's,[^/],,g' | sort -u | tail -n 1 | wc -c`
+#%{python3} -c 'import compileall, re, sys; sys.exit (not compileall.compile_dir("'"$RPM_BUILD_ROOT"'", '"$depth"', "/", 1, re.compile(r"'"/bin/|/sbin/|/usr/lib(64)?/python[0-9]\.[0-9]"'"), quiet=1))'
+#%{python3} -O -c 'import compileall, re, sys; sys.exit(not compileall.compile_dir("'"$RPM_BUILD_ROOT"'", '"$depth"', "/", 1, re.compile(r"'"/bin/|/sbin/|/usr/lib(64)?/python[0-9]\.[0-9]"'"), quiet=1))' > /dev/null
 
 %post
 mkdir -p /var/lib/viri
@@ -73,7 +71,6 @@ fi
 %{python3_sitelib}/libviri/virirpc.py
 %{python3_sitelib}/libviri/viriorm.py
 %{python3_sitelib}/libviri/viric.py
-%exclude %{python3_sitelib}/libviri/__pycache__
 %attr(755, root, root) %{_sysconfdir}/init.d/virid
 %config(noreplace) %{_sysconfdir}/viri/*
 
