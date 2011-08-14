@@ -16,8 +16,8 @@ Release: %{release}
 License: PSF
 Group: Development/Languages
 Source: http://www.python.org/ftp/python/%{version}/Python-%{version}.tar.bz2
-Requires(pre): gcc, expat-devel, db4-devel, gdbm-devel, sqlite-devel, ncurses-devel, readline-devel, zlib-devel
-Packager: Marc Garcia <garcia.marc@gmail.com>
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Packager: Jesús Corrius <jcorrius@gmail.com>
 
 %description
 Python is an interpreted, interactive, object-oriented programming
@@ -40,13 +40,13 @@ Mac.
 %setup -n Python-%{version}
 
 %build
-./configure --enable-ipv6 --with-pymalloc --prefix=$RPM_BUILD_ROOT%{__prefix}
+./configure --enable-ipv6 --with-pymalloc --prefix=%{__prefix}
 make
 
 %install
 [ -d "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{__prefix}/%{libdirname}/python%{libvers}
-make prefix=$RPM_BUILD_ROOT%{__prefix} install
+make prefix=%{__prefix} install DESTDIR=$RPM_BUILD_ROOT
 
 # creating version binary symlinks
 cd $RPM_BUILD_ROOT%{__prefix}/bin

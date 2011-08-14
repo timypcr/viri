@@ -13,7 +13,9 @@ Source2:        viri.repo
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildArch:     noarch
+BuildArch:      noarch
+
+Packager:       Jesús Corrius <jcorrius@gmail.com>
 
 %description
 This package contains the viri repository GPG key as well as configuration for yum.
