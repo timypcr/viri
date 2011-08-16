@@ -18,6 +18,8 @@ Group: Development/Languages
 Source: http://www.python.org/ftp/python/%{version}/Python-%{version}.tar.bz2
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Packager: Jesús Corrius <jcorrius@gmail.com>
+#BuildRequires:  db-devel fdupes gdbm-devel gmp-devel libbz2-devel libopenssl-devel ncurses-devel readline-devel sqlite-devel tk-devel xorg-x11-devel
+BuildRequires: expat-devel, db4-devel, gdbm-devel, sqlite-devel, ncurses-devel, readline-devel, zlib-devel, gmp-devel, openssl-devel, tk-devel
 
 %description
 Python is an interpreted, interactive, object-oriented programming
