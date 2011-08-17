@@ -25,7 +25,11 @@ datafiles = (
         ('/usr/sbin', ('bin/virid', 'bin/virid-conf')),
         ('/usr/bin', ('bin/viric',)),
         ('/etc/viri', ('conf/virid.conf',)),
-    ) if not is_windows else ()
+    ) if not is_windows else (
+        ('sbin', ('bin/virid', 'bin/virid-conf')),
+        ('bin', ('bin/viric',)),
+        ('etc', ('conf/virid.conf',)),
+    )
 
 kwargs = dict(name='viri',
     version='0.1',
