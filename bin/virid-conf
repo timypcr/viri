@@ -64,7 +64,7 @@ OPENSSL_CONFIGURATION ="""
  challengePassword      = A challenge password
 """
 
-IsWindows = sys.platform == 'nt'
+IsWindows = sys.platform == 'win32'
 
 def GetConfigurationFile(options):
     if options.config_file:
@@ -96,12 +96,16 @@ def GetExtraConf(options, config):
 
 def GenerateCertificate():
     output = DEFAULT_SSL_OUTPUT_FILE if not IsWindows else os.path.basename(DEFAULT_SSL_OUTPUT_FILE)
-    from tempfile import NamedTemporaryFile
-    with NamedTemporaryFile() as tmp:
-        tmp.write(bytes(OPENSSL_CONFIGURATION, 'ascii'))
-        tmp.flush()
-        os.system("openssl req -x509 -nodes -newkey rsa:4096 -keyout {0} -out {1} -config {2}".format(
-            output, output, tmp.name))
+    if not IsWindows:
+        from tempfile import NamedTemporaryFile
+        with NamedTemporaryFile() as tmp:
+            tmp.write(bytes(OPENSSL_CONFIGURATION, 'ascii'))
+            tmp.flush()
+            os.system("openssl req -x509 -nodes -newkey rsa:4096 -keyout {0} -out {1} -config {2}".format(
+                output, output, tmp.name))
+    else:
+        os.system("openssl req -x509 -nodes -newkey rsa:4096 -keyout {0} -out {1} -config openssl.cfg".format(
+                output, output))
 
 if __name__ == '__main__':
     parser = OptionParser(
