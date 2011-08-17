@@ -25,11 +25,20 @@ datafiles = (
         ('/usr/sbin', ('bin/virid', 'bin/virid-conf')),
         ('/usr/bin', ('bin/viric',)),
         ('/etc/viri', ('conf/virid.conf',)),
-    ) if not is_windows else (
+) if not is_windows else (
         ('sbin', ('bin/virid', 'bin/virid-conf')),
         ('bin', ('bin/viric',)),
         ('etc', ('conf/virid.conf',)),
-    )
+)
+
+entrypoints = {
+        'console_scripts': [
+            'viric = bin.viric:main',
+            'virid = bin.virid:main',
+            'virid-conf = bin.virid-conf:main',
+        ]
+} if is_windows else {}
+
 
 kwargs = dict(name='viri',
     version='0.1',
@@ -39,6 +48,7 @@ kwargs = dict(name='viri',
     url='http://www.viriproject.com',
     packages=('libviri',),
     data_files=datafiles,
+    entry_points = entrypoints,
     classifiers=(
         'Development Status :: 4 - Beta',
         'Environment :: No Input/Output (Daemon)',
