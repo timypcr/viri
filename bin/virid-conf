@@ -107,6 +107,13 @@ def GenerateCertificate():
         os.system("openssl req -x509 -nodes -newkey rsa:4096 -keyout {0} -out {1} -config openssl.cfg".format(
                 output, output))
 
+def FixWindowsPaths(config):
+    for item in config.items('paths'):
+        config.set('paths', item[0], os.path.basename(item[1]))
+    
+    value = os.path.basename(config.get('logging', 'log_file'))
+    config.set('logging', 'log_file', value)
+
 if __name__ == '__main__':
     parser = OptionParser(
         'Usage: %prog command [OPTIONS]',
@@ -136,6 +143,8 @@ if __name__ == '__main__':
         GetKnownCaFile(options)
         GetExtraConf(options, config)
         GenerateCertificate()
+
+        if IsWindows: FixWindowsPaths(config)
         
         new_config_file = config_file + '.new'
         with open(new_config_file, 'w') as file:
