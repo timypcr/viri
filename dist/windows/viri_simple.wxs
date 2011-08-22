@@ -48,14 +48,8 @@
             <Component Id="cmp031FCBBB852D3EA12729ED9522889F09" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil1AF77524A98DB53C7D4715A3163A5FFA" KeyPath="yes" Source="SourceDir\pythonw.exe" />
             </Component>
-            <Component Id="cmpAC31253FE1E27F4DC19B8FB40F130A5E" Directory="INSTALLLOCATION" Guid="*">
-                <File Id="filB72733A00CD3B410C78AF4D444771DD5" KeyPath="yes" Source="SourceDir\pywin32-wininst.log" />
-            </Component>
             <Component Id="cmp7C20FC88A6DD6B4C301C8506CB2FC666" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil5FC02122CD02DF3B86F297DF0A4AC7F5" KeyPath="yes" Source="SourceDir\pywintypes32.dll" />
-            </Component>
-            <Component Id="cmp6DE304FCF2EF9B79DD4CEAC6382EC8FB" Directory="INSTALLLOCATION" Guid="*">
-                <File Id="fil4DD92926700E7993FD18D122ACC925C5" KeyPath="yes" Source="SourceDir\Removepywin32.exe" />
             </Component>
             <Component Id="cmp92291E5EFC95CC76F335BE5FE0206D76" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="filB4D2C1803ABA33B13EA6AACB1153A8A7" KeyPath="yes" Source="SourceDir\ssleay32.dll" />
