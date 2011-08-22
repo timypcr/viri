@@ -27,7 +27,7 @@ datafiles = (
         ('/etc/viri', ('conf/virid.conf',)),
     ) if not is_windows else (
         ('.', (
-		'bin/viris', 'bin/virid-conf','bin/viric', 
+		'bin/viris.py', 'bin/virid-conf','bin/viric', 
 		'bin/viris.bat', 'bin/virid-conf.bat','bin/viric.bat',
 		'conf/virid.conf',
 		'dist/windows/openssl/openssl.exe',
