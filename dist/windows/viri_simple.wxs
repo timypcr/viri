@@ -5,7 +5,9 @@
         <Package Id='*' Keywords='Installer' Description="Viri Installer"
 		 Comments='Viri is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY' Manufacturer='Atlas Information Technology, SA'
 		 InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+		<SetDirectory Id="DIR_sys_" Value="[SystemFolder]"/>
 		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id = "DIR_sys_"/>
 			<Directory Id="ProgramFilesFolder">
 				<Directory Id="INSTALLLOCATION" Name="Viri" />
 			</Directory>
@@ -14,6 +16,15 @@
             <ComponentGroupRef Id="MyComponentGroup" />
         </Feature>
         <Media Id="1" Cabinet="viri.cab" EmbedCab="yes" />
+		<InstallExecuteSequence>
+			<Custom Action="PostInstallAction" After="InstallFiles" >NOT Installed</Custom>
+		</InstallExecuteSequence>
+		<CustomAction Id="PostInstallAction" ExeCommand="[INSTALLLOCATION]post_install.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="No" Return="asyncNoWait"/>
+		<InstallExecuteSequence>
+			<Custom Action="PreUninstallAction" Before="RemoveFiles" >Installed</Custom>
+		</InstallExecuteSequence>
+		<CustomAction Id="PreUninstallAction" ExeCommand="[INSTALLLOCATION]pre_uninstall.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="No" />
+
     </Product>
     <Fragment>
         <DirectoryRef Id="INSTALLLOCATION">
@@ -36,9 +47,9 @@
             <Component Id="cmp8215E43B1CF2FED62BED47B488FB702B" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="filE42D6CFB10F5988B40E74AD63F069A4C" KeyPath="yes" Source="SourceDir\python.exe" />
             </Component>
-            <Component Id="cmp56A9B72A03B744D340EC992F2AEA6160" Directory="INSTALLLOCATION" Guid="*">
-                <File Id="fil028CF9296A5FBF963C5166742221566E" KeyPath="yes" Source="SourceDir\python32.dll" />
-            </Component>
+			<Component Id="cmp56A9B72A03B744D340EC992F2AEA6160" Directory="DIR_sys_" Guid="15653850-141D-4005-830E-01D8B4B5EDBE">
+				<File Id="fil028CF9296A5FBF963C5166742221566E" KeyPath="yes" Source="SourceDir\python32.dll" />
+			</Component>
             <Component Id="cmp394C9B7ED25CDCAC1AC170DBAFFEFEA0" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil14282C3AC3B975C5A89D29B469B563D8" KeyPath="yes" Source="SourceDir\pythoncom32.dll" />
             </Component>
@@ -74,6 +85,12 @@
             </Component>
             <Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E800" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil6D51DBE6EFBE4298C403A85440A0AAEB" KeyPath="yes" Source="SourceDir\viris.bat" />
+            </Component>
+			<Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E801" Directory="INSTALLLOCATION" Guid="*">
+                <File Id="fil6D51DBE6EFBE4298C403A85440A0AAEC" KeyPath="yes" Source="SourceDir\post_install.bat" />
+            </Component>
+			<Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E802" Directory="INSTALLLOCATION" Guid="*">
+                <File Id="fil6D51DBE6EFBE4298C403A85440A0AAED" KeyPath="yes" Source="SourceDir\pre_uninstall.bat" />
             </Component>
             <Component Id="cmp8C0527BEC846DEECB35863EA6CD7324F" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil09D2B2C71C250D761E6F25CADA1C7C8A" KeyPath="yes" Source="SourceDir\w9xpopen.exe" />
@@ -1739,9 +1756,6 @@
             </Component>
             <Component Id="cmpBF6470ED36A0322445CCCBE17F16B045" Directory="dir5352E4094FA738A024AA59742F6B665A" Guid="*">
                 <File Id="filC5141CCDB639F7DA6A11D34D039A43A8" KeyPath="yes" Source="SourceDir\Lib\site-packages\pywin32-216.1-py3.2.egg-info" />
-            </Component>
-            <Component Id="cmpBC4416912270FFA9BCF023DBCDF5BE2B" Directory="dir5352E4094FA738A024AA59742F6B665A" Guid="*">
-                <File Id="fil1CEDAD9E5F4838A7AE30939ED335897B" KeyPath="yes" Source="SourceDir\Lib\site-packages\PyWin32.chm" />
             </Component>
             <Component Id="cmpCBCB6071D420C5997FCA3F7625A9AAAA" Directory="dir5352E4094FA738A024AA59742F6B665A" Guid="*">
                 <File Id="fil1823A3C6E08F0B653587EB7F3B24B034" KeyPath="yes" Source="SourceDir\Lib\site-packages\pywin32.pth" />
