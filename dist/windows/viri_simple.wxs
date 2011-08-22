@@ -70,7 +70,7 @@
                 <File Id="filC3AC7CC4C72B7391A6789F729E2A722D" KeyPath="yes" Source="SourceDir\virid.conf" />
             </Component>
             <Component Id="cmp12E332207767B0C3390D76D9947D65DE" Directory="INSTALLLOCATION" Guid="*">
-                <File Id="fil8CFDC4B30FF78F7FDE8C49C896163798" KeyPath="yes" Source="SourceDir\viris" />
+                <File Id="fil8CFDC4B30FF78F7FDE8C49C896163798" KeyPath="yes" Source="SourceDir\viris.py" />
             </Component>
             <Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E800" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil6D51DBE6EFBE4298C403A85440A0AAEB" KeyPath="yes" Source="SourceDir\viris.bat" />

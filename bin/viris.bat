@@ -1,2 +1,2 @@
 @echo off
-python viris %*
+python viris.py %*
