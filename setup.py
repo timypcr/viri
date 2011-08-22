@@ -30,6 +30,7 @@ datafiles = (
 		'bin/viris.py', 'bin/virid-conf','bin/viric', 
 		'bin/viris.bat', 'bin/virid-conf.bat','bin/viric.bat',
 		'conf/virid.conf',
+		'dist/windows/post_install.bat',
 		'dist/windows/openssl/openssl.exe',
 		'dist/windows/openssl/openssl.cfg',
 		'dist/windows/openssl/libeay32.dll',
