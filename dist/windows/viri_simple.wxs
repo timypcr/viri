@@ -17,7 +17,7 @@
         </Feature>
         <Media Id="1" Cabinet="viri.cab" EmbedCab="yes" />
 		<InstallExecuteSequence>
-			<Custom Action="PostInstallAction" After="InstallFinalize">NOT Installed</Custom>
+			<Custom Action="PostInstallAction" Before="InstallFinalize">NOT Installed</Custom>
 		</InstallExecuteSequence>
 		<CustomAction Id="PostInstallAction" ExeCommand="[INSTALLLOCATION]post_install.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" Return="asyncNoWait" />
 		<InstallExecuteSequence>
