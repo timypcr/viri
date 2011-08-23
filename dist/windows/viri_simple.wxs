@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Name='Viri Service for Windows' Id='37AEEFD3-4336-4FE7-B988-6DE28218A269' UpgradeCode='7C2A7590-04C5-471C-BD2B-9DEED348B93D'
+    <Product Name='Viri Service for Windows 0.1' Id='37AEEFD3-4336-4FE7-B988-6DE28218A269' UpgradeCode='7C2A7590-04C5-471C-BD2B-9DEED348B93D'
      Language='1033' Codepage='1252' Version='0.1.0' Manufacturer='Atlas Information Technology, SA'>
         <Package Id='*' Keywords='Installer' Description="Viri Installer"
 		 Comments='Viri is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY' Manufacturer='Atlas Information Technology, SA'
