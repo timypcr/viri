@@ -17,11 +17,11 @@
         </Feature>
         <Media Id="1" Cabinet="viri.cab" EmbedCab="yes" />
 		<InstallExecuteSequence>
-			<Custom Action="PostInstallAction" After="InstallFiles" >NOT Installed</Custom>
+			<Custom Action="PostInstallAction" After="InstallFinalize">NOT Installed</Custom>
 		</InstallExecuteSequence>
-		<CustomAction Id="PostInstallAction" ExeCommand="[INSTALLLOCATION]post_install.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" Return="asyncNoWait"/>
+		<CustomAction Id="PostInstallAction" ExeCommand="[INSTALLLOCATION]post_install.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" Return="asyncNoWait" />
 		<InstallExecuteSequence>
-			<Custom Action="PreUninstallAction" Before="RemoveFiles" >Installed</Custom>
+			<Custom Action="PreUninstallAction" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
 		</InstallExecuteSequence>
 		<CustomAction Id="PreUninstallAction" ExeCommand="[INSTALLLOCATION]pre_uninstall.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" />
 
