@@ -37,6 +37,7 @@
         <ComponentGroup Id="MyComponentGroup">
             <Component Id="cmp811792B1E2DCEC47D559FD39F8F12913" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="filCA78F5E01F84F3AD935B2CF62428FF96" KeyPath="yes" Source="SourceDir\libeay32.dll" />
+                 <RemoveFolder Id="INSTALLLOCATION" On="uninstall" /> 
             </Component>
             <Component Id="cmpCA55A91754D051DF2218009F1DF3CBA8" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil5E3E5D0B3F1D3A5F7CA31F0EF509271E" KeyPath="yes" Source="SourceDir\openssl.cfg" />
