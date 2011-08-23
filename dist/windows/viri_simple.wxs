@@ -19,11 +19,11 @@
 		<InstallExecuteSequence>
 			<Custom Action="PostInstallAction" After="InstallFiles" >NOT Installed</Custom>
 		</InstallExecuteSequence>
-		<CustomAction Id="PostInstallAction" ExeCommand="[INSTALLLOCATION]post_install.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="No" Return="asyncNoWait"/>
+		<CustomAction Id="PostInstallAction" ExeCommand="[INSTALLLOCATION]post_install.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" Return="asyncNoWait"/>
 		<InstallExecuteSequence>
 			<Custom Action="PreUninstallAction" Before="RemoveFiles" >Installed</Custom>
 		</InstallExecuteSequence>
-		<CustomAction Id="PreUninstallAction" ExeCommand="[INSTALLLOCATION]pre_uninstall.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="No" />
+		<CustomAction Id="PreUninstallAction" ExeCommand="[INSTALLLOCATION]pre_uninstall.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" />
 
     </Product>
     <Fragment>
