@@ -9,10 +9,19 @@
 		<Directory Id="TARGETDIR" Name="SourceDir">
 			<Directory Id = "DIR_sys_"/>
 			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLLOCATION" Name="Viri" />
+				<Directory Id="INSTALLLOCATION" Name="Viri">
+					<Component Id="Folder" Guid="{6FA20250-4987-4196-8CEF-4EFFB7DB4684}" 
+					SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+					Win64="no" Location="either">
+						<RemoveFile Id="Files" On="uninstall" Name="*.*"></RemoveFile>
+						<RemoveFolder Id= "MainFolder" On= "uninstall"/>
+						<CreateFolder/>
+					</Component>
+				</Directory>
 			</Directory>
 		</Directory>
         <Feature Id="ProductFeature" Level="1" Title="Viri Core">
+			<ComponentRef Id="Folder" />
             <ComponentGroupRef Id="MyComponentGroup" />
         </Feature>
         <Media Id="1" Cabinet="viri.cab" EmbedCab="yes" />
@@ -24,7 +33,6 @@
 			<Custom Action="PreUninstallAction" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
 		</InstallExecuteSequence>
 		<CustomAction Id="PreUninstallAction" ExeCommand="[INSTALLLOCATION]pre_uninstall.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" />
-
     </Product>
     <Fragment>
         <DirectoryRef Id="INSTALLLOCATION">
