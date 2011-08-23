@@ -59,16 +59,16 @@
 			<Component Id="cmp56A9B72A03B744D340EC992F2AEA6160" Directory="DIR_sys_" Guid="15653850-141D-4005-830E-01D8B4B5EDBE">
 				<File Id="fil028CF9296A5FBF963C5166742221566E" KeyPath="yes" Source="SourceDir\python32.dll" />
 			</Component>
-            <Component Id="cmp394C9B7ED25CDCAC1AC170DBAFFEFEA0" Directory="INSTALLLOCATION" Guid="*">
+            <Component Id="cmp394C9B7ED25CDCAC1AC170DBAFFEFEA0" Directory="DIR_sys_" Guid="15653850-141D-4005-830E-01D8B4B5EDBF">
                 <File Id="fil14282C3AC3B975C5A89D29B469B563D8" KeyPath="yes" Source="SourceDir\pythoncom32.dll" />
             </Component>
-            <Component Id="cmp27CB30851CB4ADCB7B4633EACFA03B66" Directory="INSTALLLOCATION" Guid="*">
+            <Component Id="cmp27CB30851CB4ADCB7B4633EACFA03B66" Directory="DIR_sys_" Guid="15653850-141D-4005-830E-01D8B4B5EDC0">
                 <File Id="fil59A7C487E7EC4B3998FC831930F3B4C9" KeyPath="yes" Source="SourceDir\pythoncomloader32.dll" />
             </Component>
             <Component Id="cmp031FCBBB852D3EA12729ED9522889F09" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil1AF77524A98DB53C7D4715A3163A5FFA" KeyPath="yes" Source="SourceDir\pythonw.exe" />
             </Component>
-            <Component Id="cmp7C20FC88A6DD6B4C301C8506CB2FC666" Directory="INSTALLLOCATION" Guid="*">
+            <Component Id="cmp7C20FC88A6DD6B4C301C8506CB2FC666" Directory="DIR_sys_" Guid="15653850-141D-4005-830E-01D8B4B5EDC1">
                 <File Id="fil5FC02122CD02DF3B86F297DF0A4AC7F5" KeyPath="yes" Source="SourceDir\pywintypes32.dll" />
             </Component>
             <Component Id="cmp92291E5EFC95CC76F335BE5FE0206D76" Directory="INSTALLLOCATION" Guid="*">
