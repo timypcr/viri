@@ -5,6 +5,12 @@
         <Package Id='*' Keywords='Installer' Description="Viri Installer"
 		 Comments='Viri is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY' Manufacturer='Atlas Information Technology, SA'
 		 InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+		<Property Id="HOST" Secure="yes"/>
+		<Property Id="CMD">
+			<DirectorySearch Id="CmdFolder" Path="[SystemFolder]" Depth="1">
+				<FileSearch Id="CmdExe" Name="cmd.exe" />
+			</DirectorySearch>
+		</Property>
 		<SetDirectory Id="DIR_sys_" Value="[SystemFolder]"/>
 		<Directory Id="TARGETDIR" Name="SourceDir">
 			<Directory Id = "DIR_sys_"/>
@@ -28,7 +34,7 @@
 		<InstallExecuteSequence>
 			<Custom Action="PostInstallAction" Before="InstallFinalize">NOT Installed</Custom>
 		</InstallExecuteSequence>
-		<CustomAction Id="PostInstallAction" ExeCommand="[INSTALLLOCATION]post_install.bat [HOST]" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" Return="asyncNoWait" />
+		<CustomAction Id="PostInstallAction" Property="CMD" Execute="deferred" Impersonate="yes" Return="check"  ExeCommand="/c &quot;&quot;[#PostInstallBat]&quot;  &quot;[INSTALLLOCATION]&quot;  &quot;[HOST]&quot;&quot;" />
 		<InstallExecuteSequence>
 			<Custom Action="PreUninstallAction" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
 		</InstallExecuteSequence>
@@ -45,7 +51,6 @@
         <ComponentGroup Id="MyComponentGroup">
             <Component Id="cmp811792B1E2DCEC47D559FD39F8F12913" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="filCA78F5E01F84F3AD935B2CF62428FF96" KeyPath="yes" Source="SourceDir\libeay32.dll" />
-                 <RemoveFolder Id="INSTALLLOCATION" On="uninstall" /> 
             </Component>
             <Component Id="cmpCA55A91754D051DF2218009F1DF3CBA8" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil5E3E5D0B3F1D3A5F7CA31F0EF509271E" KeyPath="yes" Source="SourceDir\openssl.cfg" />
@@ -96,10 +101,10 @@
                 <File Id="fil6D51DBE6EFBE4298C403A85440A0AAEB" KeyPath="yes" Source="SourceDir\viris.bat" />
             </Component>
 			<Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E801" Directory="INSTALLLOCATION" Guid="*">
-                <File Id="fil6D51DBE6EFBE4298C403A85440A0AAEC" KeyPath="yes" Source="SourceDir\post_install.bat" />
+                <File Id="PostInstallBat" KeyPath="yes" Source="SourceDir\post_install.bat" />
             </Component>
 			<Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E802" Directory="INSTALLLOCATION" Guid="*">
-                <File Id="fil6D51DBE6EFBE4298C403A85440A0AAED" KeyPath="yes" Source="SourceDir\pre_uninstall.bat" />
+                <File Id="PreUninstallBat" KeyPath="yes" Source="SourceDir\pre_uninstall.bat" />
             </Component>
             <Component Id="cmp8C0527BEC846DEECB35863EA6CD7324F" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil09D2B2C71C250D761E6F25CADA1C7C8A" KeyPath="yes" Source="SourceDir\w9xpopen.exe" />
