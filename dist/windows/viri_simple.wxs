@@ -34,7 +34,11 @@
 		<InstallExecuteSequence>
 			<Custom Action="PostInstallAction" Before="InstallFinalize">NOT Installed</Custom>
 		</InstallExecuteSequence>
-		<CustomAction Id="PostInstallAction" Property="CMD" Execute="deferred" Impersonate="yes" Return="check"  ExeCommand="/c &quot;&quot;[#PostInstallBat]&quot;  &quot;[INSTALLLOCATION]&quot;  &quot;[HOST]&quot;&quot;" />
+		<CustomAction Id="PostInstallAction" Property="CMD" Execute="deferred" Impersonate="yes" Return="check" ExeCommand="/c &quot;&quot;[#PostInstallBat]&quot;  &quot;[INSTALLLOCATION]&quot;  &quot;[HOST]&quot;&quot;" />
+        <InstallExecuteSequence>
+			<Custom Action="InstallVCRedist" Before="InstallFinalize">NOT REMOVE</Custom>
+		</InstallExecuteSequence>
+		<CustomAction Id="InstallVCRedist" FileKey="VCRedist" ExeCommand="/qb" Execute="deferred" Impersonate="no" Return="check"/>
 		<InstallExecuteSequence>
 			<Custom Action="PreUninstallAction" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
 		</InstallExecuteSequence>
@@ -44,11 +48,13 @@
         <DirectoryRef Id="INSTALLLOCATION">
             <Directory Id="dir502B1E9AB795277313CA09FE07E5D9FB" Name="DLLs" />
             <Directory Id="dir810DCA2B64B7D17DA7C08E7B0FC303C5" Name="Lib" />
-            <Directory Id="dir5BE73943D697E8B2015BAF5A24F1466B" Name="Microsoft.VC90.CRT" />
         </DirectoryRef>
     </Fragment>
     <Fragment>
         <ComponentGroup Id="MyComponentGroup">
+            <Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E803" Directory="INSTALLLOCATION" Guid="*">
+                <File Id="VCRedist" KeyPath="yes" Source="SourceDir\vcredist.exe" />
+            </Component>
             <Component Id="cmp811792B1E2DCEC47D559FD39F8F12913" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="filCA78F5E01F84F3AD935B2CF62428FF96" KeyPath="yes" Source="SourceDir\libeay32.dll" />
             </Component>
@@ -105,9 +111,6 @@
             </Component>
 			<Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E802" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="PreUninstallBat" KeyPath="yes" Source="SourceDir\pre_uninstall.bat" />
-            </Component>
-            <Component Id="cmp8C0527BEC846DEECB35863EA6CD7324F" Directory="INSTALLLOCATION" Guid="*">
-                <File Id="fil09D2B2C71C250D761E6F25CADA1C7C8A" KeyPath="yes" Source="SourceDir\w9xpopen.exe" />
             </Component>
             <Component Id="cmp8FBBF3134040F0EE9144994A8EA7DE29" Directory="dir502B1E9AB795277313CA09FE07E5D9FB" Guid="*">
                 <File Id="filF91D9A145D1DFE1449C3998EB2A0AA81" KeyPath="yes" Source="SourceDir\DLLs\bz2.pyd" />
@@ -1959,9 +1962,6 @@
             </Component>
             <Component Id="cmpA200A4950391CCA9AC918D60A7D00CA4" Directory="dir25203C8628812C456BEEAA08B371B400" Guid="*">
                 <File Id="filEFA8756C403A2C86A54B71A0100D006B" KeyPath="yes" Source="SourceDir\Lib\site-packages\pythonwin\win32uiole.pyd" />
-            </Component>
-            <Component Id="cmp25D27FBBE15BAF1B85D86850C0F63D04" Directory="dir5F3F391AF28042342CD9E1D537A805BB" Guid="*">
-                <File Id="fil5264B9E83274488063F30D6B0B0BD6BB" KeyPath="yes" Source="SourceDir\Lib\site-packages\pythonwin\pywin\default.cfc" />
             </Component>
             <Component Id="cmpAB6FA044B41B336B4EAAB526747774D2" Directory="dir5F3F391AF28042342CD9E1D537A805BB" Guid="*">
                 <File Id="filE24A4E404D62CA409F89AE752EBB39DB" KeyPath="yes" Source="SourceDir\Lib\site-packages\pythonwin\pywin\default.cfg" />
@@ -4516,18 +4516,6 @@
             <Component Id="cmp3AE06C31133913D1980D35949CADA81B" Directory="dir14735EEE947A1D80266C9358C406BDF4" Guid="*">
                 <File Id="filC273917439FB92225A9CD20D8D5C8A95" KeyPath="yes" Source="SourceDir\Lib\xmlrpc\__init__.py" />
             </Component>
-            <Component Id="cmp78711FB3AFC10B623CF07BD4D6FCFE81" Directory="dir5BE73943D697E8B2015BAF5A24F1466B" Guid="*">
-                <File Id="fil0E2EF42FB101C237D8FA141BF0EAE2C6" KeyPath="yes" Source="SourceDir\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" />
-            </Component>
-            <Component Id="cmp128F6998CADBF652159625A84562399A" Directory="dir5BE73943D697E8B2015BAF5A24F1466B" Guid="*">
-                <File Id="fil946843A4E752F02DBA37BE87DBB83F0D" KeyPath="yes" Source="SourceDir\Microsoft.VC90.CRT\msvcm90.dll" />
-            </Component>
-            <Component Id="cmpFB41A7E4DA4F009ABC9720B4D1F7B14B" Directory="dir5BE73943D697E8B2015BAF5A24F1466B" Guid="*">
-                <File Id="filCF1C26A9AC473D7C4A981FE743B90C9B" KeyPath="yes" Source="SourceDir\Microsoft.VC90.CRT\msvcp90.dll" />
-            </Component>
-            <Component Id="cmp58552B65E80478062489D8BE2D7AB9AA" Directory="dir5BE73943D697E8B2015BAF5A24F1466B" Guid="*">
-                <File Id="fil752764F1C1AD816A4DBD95CB0DDAF5D3" KeyPath="yes" Source="SourceDir\Microsoft.VC90.CRT\msvcr90.dll" />
-            </Component>
         </ComponentGroup>
     </Fragment>
     <Fragment>
@@ -4751,9 +4739,6 @@
     </Fragment>
     <Fragment>
         <DirectoryRef Id="dirDCFAD430ACE2C3AE07C13D727806A6D0" />
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir5BE73943D697E8B2015BAF5A24F1466B" />
     </Fragment>
     <Fragment>
         <DirectoryRef Id="dirB82593E3A657C83B94E8F7203159DBBB" />
