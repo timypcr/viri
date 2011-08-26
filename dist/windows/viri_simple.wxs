@@ -31,14 +31,21 @@
             <ComponentGroupRef Id="MyComponentGroup" />
         </Feature>
         <Media Id="1" Cabinet="viri.cab" EmbedCab="yes" />
+        <!-- Microsoft Visual C++ 2008 SP1 x86 Redistributable (9.0.30729)  -->
+        <Property Id="VC2008SP1REDIST_X86" Secure="yes">
+            <RegistrySearch Id="VC2008SP1REDIST_X86Value" Root="HKLM"
+                Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{9A25302D-30C0-39D9-BD6F-21E6EC160475}"
+                Name="Publisher" Type="raw" Win64="no" />
+        </Property>
+        <CustomAction Id="Install_2008SP1VCredist.x86" Impersonate="yes" Return="check" Execute="immediate" BinaryKey="vc2008SP1Redist_x86.exe" ExeCommand="/qb"/> 
+        <Binary Id="vc2008SP1Redist_x86.exe" SourceFile="SourceDir\vcredist_x86.exe"/>
+        <InstallExecuteSequence>
+            <Custom Action="Install_2008SP1VCredist.x86" Before="InstallFinalize">Not Installed And Not VC2008SP1REDIST_X86</Custom>
+        </InstallExecuteSequence>
         <InstallExecuteSequence>
             <Custom Action="PostInstallAction" Before="InstallFinalize">NOT Installed</Custom>
         </InstallExecuteSequence>
         <CustomAction Id="PostInstallAction" Property="CMD" Execute="deferred" Impersonate="yes" Return="check" ExeCommand="/c &quot;&quot;[#PostInstallBat]&quot;  &quot;[INSTALLLOCATION]&quot;  &quot;[HOST]&quot;&quot;" />
-        <InstallExecuteSequence>
-            <Custom Action="InstallVCRedist" Before="InstallFinalize">NOT Installed</Custom>
-        </InstallExecuteSequence>
-            <CustomAction Id="InstallVCRedist" FileKey="VCRedist" ExeCommand="/q" Execute="deferred" Impersonate="no" Return="ignore"/>
         <InstallExecuteSequence>
             <Custom Action="PreUninstallAction" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
         </InstallExecuteSequence>
