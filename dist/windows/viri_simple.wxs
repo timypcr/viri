@@ -3,46 +3,46 @@
     <Product Name='Viri Service for Windows 0.1' Id='37AEEFD3-4336-4FE7-B988-6DE28218A269' UpgradeCode='7C2A7590-04C5-471C-BD2B-9DEED348B93D'
      Language='1033' Codepage='1252' Version='0.1.0' Manufacturer='Atlas Information Technology, SA'>
         <Package Id='*' Keywords='Installer' Description="Viri Installer"
-		 Comments='Viri is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY' Manufacturer='Atlas Information Technology, SA'
-		 InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
-		<Property Id="HOST" Secure="yes"/>
-		<Property Id="CMD">
-			<DirectorySearch Id="CmdFolder" Path="[SystemFolder]" Depth="1">
-				<FileSearch Id="CmdExe" Name="cmd.exe" />
-			</DirectorySearch>
-		</Property>
-		<SetDirectory Id="DIR_sys_" Value="[SystemFolder]"/>
-		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id = "DIR_sys_"/>
-			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLLOCATION" Name="Viri">
-					<Component Id="Folder" Guid="{07985d84-8362-4c08-8092-054c135ea1f1}" 
-					SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-					Win64="no" Location="either">
-						<RemoveFile Id="Files" On="uninstall" Name="*.*"></RemoveFile>
-						<RemoveFolder Id= "MainFolder" On= "uninstall"/>
-						<CreateFolder/>
-					</Component>
-				</Directory>
-			</Directory>
-		</Directory>
+         Comments='Viri is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY' Manufacturer='Atlas Information Technology, SA'
+         InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+        <Property Id="HOST" Secure="yes"/>
+        <Property Id="CMD">
+            <DirectorySearch Id="CmdFolder" Path="[SystemFolder]" Depth="1">
+                <FileSearch Id="CmdExe" Name="cmd.exe" />
+            </DirectorySearch>
+        </Property>
+        <SetDirectory Id="DIR_sys_" Value="[SystemFolder]"/>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id = "DIR_sys_"/>
+            <Directory Id="ProgramFilesFolder">
+                <Directory Id="INSTALLLOCATION" Name="Viri">
+                    <Component Id="Folder" Guid="{07985d84-8362-4c08-8092-054c135ea1f1}" 
+                    SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                    Win64="no" Location="either">
+                        <RemoveFile Id="Files" On="uninstall" Name="*.*"></RemoveFile>
+                        <RemoveFolder Id= "MainFolder" On= "uninstall"/>
+                        <CreateFolder/>
+                    </Component>
+                </Directory>
+            </Directory>
+        </Directory>
         <Feature Id="ProductFeature" Level="1" Title="Viri Core">
-			<ComponentRef Id="Folder" />
+            <ComponentRef Id="Folder" />
             <ComponentGroupRef Id="MyComponentGroup" />
         </Feature>
         <Media Id="1" Cabinet="viri.cab" EmbedCab="yes" />
-		<InstallExecuteSequence>
-			<Custom Action="PostInstallAction" Before="InstallFinalize">NOT Installed</Custom>
-		</InstallExecuteSequence>
-		<CustomAction Id="PostInstallAction" Property="CMD" Execute="deferred" Impersonate="yes" Return="check" ExeCommand="/c &quot;&quot;[#PostInstallBat]&quot;  &quot;[INSTALLLOCATION]&quot;  &quot;[HOST]&quot;&quot;" />
         <InstallExecuteSequence>
-			<Custom Action="InstallVCRedist" Before="InstallFinalize">NOT REMOVE</Custom>
-		</InstallExecuteSequence>
-		<CustomAction Id="InstallVCRedist" FileKey="VCRedist" ExeCommand="/qb" Execute="deferred" Impersonate="no" Return="check"/>
-		<InstallExecuteSequence>
-			<Custom Action="PreUninstallAction" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
-		</InstallExecuteSequence>
-		<CustomAction Id="PreUninstallAction" ExeCommand="[INSTALLLOCATION]pre_uninstall.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" />
+            <Custom Action="PostInstallAction" Before="InstallFinalize">NOT Installed</Custom>
+        </InstallExecuteSequence>
+        <CustomAction Id="PostInstallAction" Property="CMD" Execute="deferred" Impersonate="yes" Return="check" ExeCommand="/c &quot;&quot;[#PostInstallBat]&quot;  &quot;[INSTALLLOCATION]&quot;  &quot;[HOST]&quot;&quot;" />
+        <InstallExecuteSequence>
+            <Custom Action="InstallVCRedist" Before="InstallFinalize">NOT Installed</Custom>
+        </InstallExecuteSequence>
+            <CustomAction Id="InstallVCRedist" FileKey="VCRedist" ExeCommand="/q" Execute="deferred" Impersonate="no" Return="ignore"/>
+        <InstallExecuteSequence>
+            <Custom Action="PreUninstallAction" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+        </InstallExecuteSequence>
+        <CustomAction Id="PreUninstallAction" ExeCommand="[INSTALLLOCATION]pre_uninstall.bat" Directory="INSTALLLOCATION" Execute="deferred" Impersonate="no" />
     </Product>
     <Fragment>
         <DirectoryRef Id="INSTALLLOCATION">
@@ -67,9 +67,9 @@
             <Component Id="cmp8215E43B1CF2FED62BED47B488FB702B" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="filE42D6CFB10F5988B40E74AD63F069A4C" KeyPath="yes" Source="SourceDir\python.exe" />
             </Component>
-			<Component Id="cmp56A9B72A03B744D340EC992F2AEA6160" Directory="DIR_sys_" Guid="5b71ca25-1d22-4003-9bb6-a1f494090cb7">
-				<File Id="fil028CF9296A5FBF963C5166742221566E" KeyPath="yes" Source="SourceDir\python32.dll" />
-			</Component>
+            <Component Id="cmp56A9B72A03B744D340EC992F2AEA6160" Directory="DIR_sys_" Guid="5b71ca25-1d22-4003-9bb6-a1f494090cb7">
+                <File Id="fil028CF9296A5FBF963C5166742221566E" KeyPath="yes" Source="SourceDir\python32.dll" />
+            </Component>
             <Component Id="cmp394C9B7ED25CDCAC1AC170DBAFFEFEA0" Directory="DIR_sys_" Guid="41b31820-4e10-4a2c-8e74-bff845506994">
                 <File Id="fil14282C3AC3B975C5A89D29B469B563D8" KeyPath="yes" Source="SourceDir\pythoncom32.dll" />
             </Component>
@@ -106,10 +106,10 @@
             <Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E800" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="fil6D51DBE6EFBE4298C403A85440A0AAEB" KeyPath="yes" Source="SourceDir\viris.bat" />
             </Component>
-			<Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E801" Directory="INSTALLLOCATION" Guid="*">
+            <Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E801" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="PostInstallBat" KeyPath="yes" Source="SourceDir\post_install.bat" />
             </Component>
-			<Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E802" Directory="INSTALLLOCATION" Guid="*">
+            <Component Id="cmp4734D17BE3EE7472BDCBA4BEBD06E802" Directory="INSTALLLOCATION" Guid="*">
                 <File Id="PreUninstallBat" KeyPath="yes" Source="SourceDir\pre_uninstall.bat" />
             </Component>
             <Component Id="cmp8FBBF3134040F0EE9144994A8EA7DE29" Directory="dir502B1E9AB795277313CA09FE07E5D9FB" Guid="*">
