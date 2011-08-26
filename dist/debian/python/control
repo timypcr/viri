@@ -9,7 +9,7 @@ Homepage: http://www.viriproject.com
 
 Package: python-viri
 Architecture: any
-Depends: (= ${binary:Version}), mime-support, ${shlibs:Depends}, ${misc:Depends}
+Depends: mime-support, ${shlibs:Depends}, ${misc:Depends}
 Description: An interactive high-level object-oriented language (version 3.2)
  Version 3.2 of the high-level, interactive object oriented language,
  includes an extensive class library with lots of goodies for

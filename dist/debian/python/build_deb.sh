@@ -27,7 +27,7 @@ tar -xjvf $PY_SRC
 
 mkdir $PY_DIR/debian/
 cd ..
-cp changelog compat control control.in control.stdlib copyright postinst postrm prerm rules $BUILD_DIR/$PY_DIR/debian/
+cp changelog compat control copyright rules $BUILD_DIR/$PY_DIR/debian/
 
 cd $BUILD_DIR/$PY_DIR
 debuild

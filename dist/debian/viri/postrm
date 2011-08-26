@@ -1,15 +1,16 @@
 #!/bin/sh
+
 set -e
 
 case "$1" in
     purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
-        rm -f /usr/lib/python3/dist-packages/viri
-    ;;
-
+        invoke-rc.d virid stop || true
+        update-rc.d -f virid remove
+        rm -rf /opt/python-viri/lib/python3.2/site-packages/libviri
+        ;;
     *)
         echo "postinst called with unknown argument \`$1'" >&2
         exit 1
-    ;;
 esac
 
 #DEBHELPER#

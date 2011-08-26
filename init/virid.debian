@@ -15,13 +15,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Viri.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Launcher for the virid daemon
+
+### BEGIN INIT INFO
+# Provides:          virid
+# Required-Start:    $remote_fs $network $syslog
+# Required-Stop:     $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Launcher for the virid daemon
+### END INIT INFO
 
 PIDFILE=/var/run/virid.pid
 EXEC=/usr/sbin/virid
 
-test -f $EXEC || exit 0
+test -f $EXEC || exit 1
 
 set -e
 

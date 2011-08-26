@@ -12,12 +12,13 @@ then
     exit 1
 fi
 
+BUILD_DIR=`dirname $0`/build
 VERSION=$1
 PROJECT_NAME=Viri-$VERSION
 
-mkdir -p /tmp/$PROJECT_NAME/debian
-cp -r ./* /tmp/$PROJECT_NAME/
-cp * /tmp/$PROJECT_NAME/debian/
-cd /tmp/$PROJECT_NAME
+mkdir -p $BUILD_DIR/$PROJECT_NAME/debian
+cp -r ./* $BUILD_DIR/$PROJECT_NAME/debian
+cp -r ../../../* $BUILD_DIR/$PROJECT_NAME/
+cd $BUILD_DIR/$PROJECT_NAME/
 debuild
-
+debsign -kEE272E72

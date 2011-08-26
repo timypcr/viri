@@ -1,5 +1,12 @@
-viri (0.1) UNRELEASED; urgency=low
+viri (0.1-1) stable; urgency=low
 
-  * Initial release. (Closes: #XXXXXX)
+  * Adding postinst and postrm scripts
 
- -- Marc Garcia <garcia.marc@gmail.com>  Tue, 31 May 2011 11:09:46 +0200
+ -- Marc Garcia <garcia.marc@gmail.com>  Wed, 24 Aug 2011 10:42:46 +0200
+
+viri (0.1) stable; urgency=low
+
+  * Initial release.
+
+ -- Marc Garcia <garcia.marc@gmail.com>  Wed, 24 Aug 2011 09:31:46 +0200
+

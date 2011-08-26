@@ -4,17 +4,14 @@ set -e
 
 case "$1" in
     configure)
-        ln -s /usr/share/pyshared/viri /usr/lib/python3/dist-packages/
-    ;;
-
+        update-rc.d -f virid defaults
+        ;;
     abort-upgrade|abort-remove|abort-deconfigure)
-        rm -f /usr/lib/python3/dist-packages/viri
-    ;;
-
+        update-rc.d -f virid remove
+        ;;
     *)
         echo "postinst called with unknown argument \`$1'" >&2
         exit 1
-    ;;
 esac
 
 #DEBHELPER#

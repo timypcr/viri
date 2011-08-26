@@ -1,2 +1,74 @@
 #!/usr/bin/make -f
+# -*- makefile -*-
+
+PREFIX := /opt/python-viri
+BUILD_DIR := $(CURDIR)/debian/python-viri
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f configure-stamp build-stamp
+	dh_clean
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	./configure --enable-ipv6 --with-pymalloc --prefix=$(PREFIX)
+	touch configure-stamp
+
+build: configure-stamp build-stamp
+build-stamp:
+	dh_testdir
+	$(MAKE)
+	touch build-stamp
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_prep
+	$(MAKE) DESTDIR=$(BUILD_DIR) install
+	strip $(BUILD_DIR)$(PREFIX)/bin/python3.2
+	strip $(BUILD_DIR)$(PREFIX)/lib/python3.2/lib-dynload/*.so
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/python3
+	ln -s $(PREFIX)/bin/python3.2 $(BUILD_DIR)$(PREFIX)/bin/python3
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/python3.2-config
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/python3-config
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/2to3
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/idle3
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/pydoc3
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/2to3-3.2
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/idle3.2
+	rm -f $(BUILD_DIR)$(PREFIX)/bin/pydoc3.2
+	rm -f $(BUILD_DIR)$(PREFIX)/lib/python3.2/lib-dynload/_tkinter*.so
+	rm -rf $(BUILD_DIR)$(PREFIX)/lib/python3.2/turtledemo
+	rm -rf $(BUILD_DIR)$(PREFIX)/lib/python3.2/idlelib
+	rm -rf $(BUILD_DIR)$(PREFIX)/lib/python3.2/lib2to3
+	rm -rf $(BUILD_DIR)$(PREFIX)/lib/python3.2/tkinter
+	for f in `find $(BUILD_DIR)$(PREFIX) -type d -name test`; do rm -rf $$f; done
+
+binary-indep: build-stamp install
+	dh_testdir -i
+	dh_testroot -i
+	dh_compress -i $(dh_args)
+	dh_fixperms -i $(dh_args)
+	dh_installdeb -i $(dh_args)
+	dh_gencontrol -i $(dh_args)
+	dh_md5sums -i $(dh_args)
+	dh_builddeb -i $(dh_args)
+
+binary-arch: build-stamp install
+	dh_testdir -a
+	dh_testroot -a
+	dh_fixperms -a
+	dh_installdeb -a
+	dh_shlibdeps -a
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+binary: binary-indep binary-arch
+	dh_testdir
+	dh_testroot
+
+.PHONY: clean configure build install binary-arch binary-indep binary
 

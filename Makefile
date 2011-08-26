@@ -1,6 +1,6 @@
 SBINDIR = $(DESTDIR)/usr/sbin
 BINDIR = $(DESTDIR)/usr/bin
-LIBDIR = $(DESTDIR)`/opt/python-viri/bin/python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`/libviri
+LIBDIR = $(DESTDIR)/opt/python-viri/lib/python3.2/site-packages/libviri
 ETCDIR = $(DESTDIR)/etc/viri
 INITDIR = $(DESTDIR)/etc/init.d
 VARDIR = $(DESTDIR)/var/lib/viri
