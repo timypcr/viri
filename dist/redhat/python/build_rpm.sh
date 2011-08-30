@@ -30,13 +30,14 @@ function download_and_copy_files {
     if [ ! -f "$HOME/rpmbuild/SOURCES/Python-$PYTHON_VERSION.tar.bz2" ];
 		then wget http://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.bz2 -O $HOME/rpmbuild/SOURCES/Python-$PYTHON_VERSION.tar.bz2
 	fi
+    cp python-3.2.1-disable-tkinter.patch $HOME/rpmbuild/SOURCES/
 }
 
 function create_rpm {
-	QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign $PACKAGE_NAME.spec
-	QA_RPATHS=$[ 0x0001|0x0010 ] setarch i386 rpmbuild -ba --target i386 --sign $PACKAGE_NAME.spec
+	QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -bb --sign $PACKAGE_NAME.spec
 }
 
 create_local_rpm_tree_if_necessary
 download_and_copy_files
 create_rpm
+
