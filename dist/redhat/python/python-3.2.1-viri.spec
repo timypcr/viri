@@ -33,6 +33,12 @@ brands of UNIX, on PCs under Windows, MS-DOS, and OS/2, and on the
 Mac.
 
 %changelog
+* Wed Aug 31 2011 Jesús Corrius <jcorrius@gmail.com> [3.2.1-1]
+- Use normal release numbers
+- Remove dependency on tkinter
+- Don't delete /opt/python-viri when updating the package
+- Condrestart virid after updating python-viri
+- Disable bytecompiling of python-viri (provisional)
 * Thu Aug 4 2011 Marc Garcia <garcia.marc@gmail.com> [3.2.1-viri]
 - Updated for Python3.2.1, package renamed to python-viri
 * Sun Jun 12 2011 Marc Garcia <garcia.marc@gmail.com> [3.1.3-viri]
