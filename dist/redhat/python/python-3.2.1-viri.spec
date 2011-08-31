@@ -19,7 +19,6 @@ Source: http://www.python.org/ftp/python/%{version}/Python-%{version}.tar.bz2
 Patch: python-3.2.1-disable-tkinter.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Packager: Jesús Corrius <jcorrius@gmail.com>
-#BuildRequires:  db-devel fdupes gdbm-devel gmp-devel libbz2-devel libopenssl-devel ncurses-devel readline-devel sqlite-devel tk-devel xorg-x11-devel
 BuildRequires: expat-devel, db4-devel, gdbm-devel, sqlite-devel, ncurses-devel, readline-devel, zlib-devel, gmp-devel, openssl-devel
 
 %description
@@ -88,9 +87,10 @@ $FIXFILE
 
 %postun
 if [ "$1" = "1" ]; then
-  # If the first argument to %preun and %postun is 1, the action is an upgrade.
+  # If the first argument to %postun is 1, the action is an upgrade.
+  /sbin/service virid condrestart >/dev/null 2>&1
 elif [ "$1" = "0" ]; then 
-  # If the first argument to %preun and %postun is 0, the action is uninstallation.
+  # If the first argument to %postun is 0, the action is uninstallation.
   [ -n /opt/python-viri ] && rm -rf /opt/python-viri
 fi
 
