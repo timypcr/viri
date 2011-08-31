@@ -87,7 +87,12 @@ $FIXFILE
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %postun
-[ -n /opt/python-viri ] && rm -rf /opt/python-viri
+if [ "$1" = "1" ]; then
+  # If the first argument to %preun and %postun is 1, the action is an upgrade.
+elif [ "$1" = "0" ]; then 
+  # If the first argument to %preun and %postun is 0, the action is uninstallation.
+  [ -n /opt/python-viri ] && rm -rf /opt/python-viri
+fi
 
 %files
 %defattr(-,root,root)
