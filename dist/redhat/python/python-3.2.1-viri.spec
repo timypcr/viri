@@ -16,7 +16,7 @@ Release: %{release}
 License: PSF
 Group: Development/Languages
 Source: http://www.python.org/ftp/python/%{version}/Python-%{version}.tar.bz2
-Patch: python-3.2.1-disable-tkinter.patch
+Patch0: python-3.2.1-disable-tkinter.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Packager: Jesús Corrius <jcorrius@gmail.com>
 BuildRequires: expat-devel, db4-devel, gdbm-devel, sqlite-devel, ncurses-devel, readline-devel, zlib-devel, gmp-devel, openssl-devel
