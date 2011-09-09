@@ -73,7 +73,7 @@ class Put(Command):
 
 
 class PutExec(Command):
-    def run(self, filename, args=()):
+    def run(self, filename, *args):
         with open(filename, 'rb') as f:
             content = f.read()
         file_id = sha1(content).hexdigest()
