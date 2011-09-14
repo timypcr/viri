@@ -33,9 +33,9 @@ def public(func):
     import logging
     import traceback
 
-    def inner(self, kwargs):
+    def inner(self, kwargs, cert):
         try:
-            res = func(self, **kwargs)
+            res = func(self, cert, **kwargs)
         except:
             res = traceback.format_exc()
             logging.error(res)
@@ -84,7 +84,7 @@ class RPCServer:
         self.server.shutdown()
 
     @public
-    def execute(self, file_name_or_id, args):
+    def execute(self, cert, file_name_or_id, args):
         """Executes a script and returns the script id and the execution
         result, which can be the return of the script in case of success
         or the traceback and error message in case of failure.
@@ -97,7 +97,7 @@ class RPCServer:
 
         try:
             success, res = File.execute(self.db, file_name_or_id,
-                args, self.context)
+                args, self.context, cert)
         except File.Missing:
             return (ERROR, 'File not found')
         except:
@@ -107,7 +107,7 @@ class RPCServer:
             return (SUCCESS if success else ERROR, str(res))
 
     @public
-    def put(self, file_name, file_content):
+    def put(self, cert, file_name, file_content):
         """Receives a script or a data file from viric, and saves it in the
         viri database. A content hash is used as id, so if the file exists,
         it's not saved again.
@@ -126,7 +126,7 @@ class RPCServer:
             )['file_id'])
 
     @public
-    def get(self, file_name_or_id):
+    def get(self, cert, file_name_or_id):
         """Returns the content of a file"""
         import xmlrpc.client
         from libviri.objects import File
@@ -138,7 +138,7 @@ class RPCServer:
             return (ERROR, 'File not found')
 
     @public
-    def ls(self):
+    def ls(self, cert):
         """List files on the database"""
         from libviri.objects import File
 
@@ -147,7 +147,7 @@ class RPCServer:
             order=('saved',)))
 
     @public
-    def mv(self, file_id, new_file_name):
+    def mv(self, cert, file_id, new_file_name):
         """Renames file with the given id"""
         import logging
         from libviri.objects import File
@@ -162,7 +162,7 @@ class RPCServer:
             return (ERROR, 'File not found')
 
     @public
-    def rm(self, file_id):
+    def rm(self, cert, file_id):
         """Removes a file given its id"""
         import logging
         from libviri.objects import File
@@ -175,7 +175,7 @@ class RPCServer:
             return (ERROR, 'File not found')
 
     @public
-    def exists(self, file_id):
+    def exists(self, cert, file_id):
         """Returns True if a file with the given id exists."""
         from libviri.objects import File
 
