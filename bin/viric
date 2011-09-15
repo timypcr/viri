@@ -44,9 +44,9 @@ class Viric:
             command_name = mod.__name__
             local_class = mod.Local()
             subparser = subparsers.add_parser(
-                command_name,
-                help=mod.__doc__)
+                command_name)
             local_class.add_arguments(subparser)
+            subparser.help = subparser.description
             subparser.set_defaults(run=local_class.connect_and_run)
 
         return parser.parse_args()

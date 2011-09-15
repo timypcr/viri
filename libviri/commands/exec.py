@@ -21,14 +21,13 @@ class Local:
         parser.add_argument('program', help='program name (it can be a '
             'command or executable in the remote host, or a executable in '
             'the local host, if --send argument is specified')
-        parser.add_argument('arguments', nargs='*',
-            help='space delimited list of arguments, that will be set as '
-            'arguments when executing the program in the remote host')
+        parser.add_argument('argument', nargs='*',
+            help='program arguments, given when executed on remote hosts')
         parser.add_argument('-s', '--send', dest='send',
             action='store_true', help='send the program file (program '
             'argument must be a local executable)')
 
-    def run(self, program, arguments, send):
+    def run(self, program, argument, send):
         script_id = self.send_file(__file__)
 
         if send:
@@ -39,10 +38,7 @@ class Local:
 
         success, result = self.connection.execute({
             'file_name_or_id': script_id,
-            'args': (program, is_command) + tuple(arguments)})
-        print(success)
-        print(result)
-        print(type(result))
+            'args': (program, is_command) + tuple(argument)})
         if success:
             return result
         else:
