@@ -18,173 +18,81 @@
 
 import sys
 import os
-from hashlib import sha1
-from optparse import OptionParser
-from libviri.virirpc import XMLRPCClient, Binary
+import argparse
+from libviri import __version__
+from libviri.viric import get_all_commands, ViriError
 
+EXIT_COMMAND_ERRORS = 1
+EXIT_DIFFERENT_RETVALS = 2
 
-APP_NAME = 'viric'
-APP_DESC = 'Remote execution of Python scripts'
-APP_VERSION = '0.1'
-DEFAULT_PORT = 6808
-DATE_FORMAT = '%Y-%m-%d %H-%M'
-SUCCESS = True
-ERROR = False
+class Viric:
+    def parse_args(self):
+        parser = argparse.ArgumentParser(
+            description='Remote execution of Python scripts')
+        subparsers = parser.add_subparsers(help='command to execute')
+        parser.add_argument('-H', '--hosts', dest='hosts', default='localhost',
+            help='remote hosts (e.g. localhost or 192.168.1.1:6808,10.0.0.1:6808')
+        parser.add_argument('-k', '--keyfile', dest='keyfile', default=None,
+            help='path to TLS key (omit if provided with TLS certificate)')
+        parser.add_argument('-c', '--certfile', dest='certfile',
+            default=os.path.expanduser('~/.viri/viric.pem'),
+            help='path to TLS certificate')
+        parser.add_argument('-v', '--version', action='version',
+            version='viric ' + __version__)
 
+        for mod in get_all_commands():
+            command_name = mod.__name__
+            local_class = mod.Local()
+            subparser = subparsers.add_parser(
+                command_name,
+                help=mod.__doc__)
+            local_class.add_arguments(subparser)
+            subparser.set_defaults(run=local_class.connect_and_run)
 
-class Command(object):
-    def __init__(self, keyfile, certfile):
-        self.keyfile = keyfile
-        self.certfile = certfile
+        return parser.parse_args()
 
-    def connect(self, host):
-        if ':' not in host: host += ':' + str(DEFAULT_PORT)
-        self.server = XMLRPCClient(
-            'https://{0}/'.format(host),
-            self.keyfile,
-            self.certfile)
-
-    def format(self, success, value):
-        return value
-
-
-class Execute(Command):
-    def run(self, filename_or_id, *args):
-        return self.server.execute({
-            'file_name_or_id': filename_or_id,
-            'args': args})
-
-
-class Put(Command):
-    def run(self, filename):
-        with open(filename, 'rb') as f:
-            content = f.read()
-        file_id = sha1(content).hexdigest()
-        success, value = self.server.exists({'file_id': file_id})
-        if success:
-            if not value:
-                return self.server.put({
-                    'file_name': os.path.basename(filename),
-                    'file_content': Binary(content)})
-            else:
-                return (SUCCESS, 'File exists with name {0}'.format(value))
+    def get_hosts(self, hosts_arg):
+        filename = os.path.expanduser(os.path.join(
+            '~',
+            '.viri',
+            'hosts',
+            hosts_arg))
+        if os.path.isfile(filename):
+            with open(filename, 'r') as f:
+                hosts = f.read().split('\n')
+            hosts = map(str.strip, hosts)
+            hosts = filter(lambda x: x and x[0] != '#', hosts)
         else:
-            return (success, value)
+            hosts = hosts_arg.split(',')
 
-
-class PutExec(Command):
-    def run(self, filename, args=()):
-        with open(filename, 'rb') as f:
-            content = f.read()
-        file_id = sha1(content).hexdigest()
-        success, exists_value = self.server.exists({'file_id': file_id})
-        if success:
-            if not exists_value:
-                success, put_value = self.server.put({
-                    'file_name': os.path.basename(filename),
-                    'file_content': Binary(content)})
-            if success:
-                success, exec_value = self.server.execute({
-                    'file_name_or_id': file_id,
-                    'args': args})
-                return (success, '\n'.join([file_id, exec_value]))
-            else:
-                return (success, put_value)
-        else:
-            return (success, exists_value)
-
-
-class Get(Command):
-    def format(self, success, value):
-        return value.data if success else value
-
-    def run(self, filename_or_id):
-        return self.server.get({
-            'file_name_or_id': filename_or_id})
-
-
-class Ls(Command):
-    def format(self, success, value):
-        if success:
-            res = ''
-            for row in value:
-                res += '\t'.join([
-                    row['saved'].strftime(DATE_FORMAT),
-                    row['file_id'],
-                    row['file_name']]) + os.linesep
-            return res
-        else:
-            return value
+        return hosts
 
     def run(self):
-        return self.server.ls({})
+        args = self.parse_args()
+        retvals = set()
+        hosts = self.get_hosts(args.hosts)
 
+        for host in hosts:
+            try:
+                retval, stdout, stderr = args.run(host, **vars(args))
+            except ViriError as exc:
+                sys.stderr.write(str(exc) + '\n')
+                sys.exit(EXIT_COMMAND_ERRORS)
+            else:
+                retvals.add(retval)
+                if len(hosts) > 1:
+                    sys.stderr.write('{} ({}) >>>\n'.format(
+                            host.split(':')[0],
+                            'SUCCESS' if retval == 0 else 'ERROR'))
+                if stderr: sys.stderr.write(stderr)
+                if stdout: sys.stdout.write(stdout)
 
-class Mv(Command):
-    def run(self, file_id, new_file_name):
-        return self.server.mv({
-            'file_id': file_id,
-            'new_file_name': new_file_name})
-
-
-class Rm(Command):
-    def run(self, *file_id_list):
-        cnt_ok = 0
-        cnt_err = 0
-        for file_id in file_id_list:
-            success, value = self.server.rm({
-                'file_id': file_id})
-            if success: cnt_ok += 1
-            else: cnt_err += 1
-        if not cnt_err:
-            return (True, '{0} file(s) successfully removed'.format(cnt_ok))
+        if len(retvals) == 1:
+            sys.exit(retvals.pop())
         else:
-            return (False, '{0} file(s) successfully removed\n'.format(cnt_ok) +
-                '{0} file(s) not found'.format(cnt_err))
+            sys.exit(EXIT_DIFFERENT_RETVALS)
 
 
 if __name__ == '__main__':
-    CMD_MAP = {
-        'exec': Execute,
-        'put': Put,
-        'put-exec': PutExec,
-        'get': Get,
-        'ls': Ls,
-        'mv': Mv,
-        'rm': Rm,
-    }
-    parser = OptionParser(
-        'Usage: %prog command [OPTIONS]',
-        description=APP_DESC,
-        version='{0} {1}'.format(APP_NAME, APP_VERSION))
-    parser.add_option('-H', '--hosts', dest='hosts',
-        default='localhost', help='destination host')
-    parser.add_option('-k', '--keyfile', dest='keyfile', default=None,
-        help='TLS key (only if it is not included on the TLS certificate)')
-    parser.add_option('-c', '--certfile', dest='certfile',
-        default=os.path.expanduser('~/.viri/viric.pem'),
-        help='TLS certificate')
-    options, args = parser.parse_args()
-
-    if not args:
-        sys.stderr.write('viric: command argument missing\n')
-        sys.exit(1)
-    elif args[0] in CMD_MAP.keys():
-        # TODO verify if certificates exist and look valid, and raise
-        # useful message to user if not
-        cmd = CMD_MAP[args[0]](options.keyfile, options.certfile)
-        hosts = options.hosts.split(',')
-        for host in hosts:
-            cmd.connect(host)
-            success, value = cmd.run(*args[1:])
-            if len(hosts) > 1:
-                print('Executed on host {0} returned {1}. Response:'.format(
-                    host.split(':')[0],
-                    'SUCCESS' if success else 'ERROR'))
-            print(cmd.format(success, value))
-            print('')
-        sys.exit(0)
-    else:
-        sys.stderr.write('viric: unknown command {0}\n'.format(args[0]))
-        sys.exit(1)
+    Viric().run()
 
