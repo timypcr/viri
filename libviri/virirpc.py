@@ -36,16 +36,17 @@ else:
             self.crl = self.server.crl_file_url
             self.revoked = False
 
-            # Check if the certificate has been revoked
-            # We handle the situation in the do_POST() method
-            # because we can't do it properly here.
-            try: 
-                crl = load_crl_from_url(self.crl)
-                serial = self.cert['serialNumber']
-                if serial in crl.get_revoked():
+            if self.crl != 'None':
+                # Check if the certificate has been revoked
+                # We handle the situation in the do_POST() method
+                # because we can't do it properly here.
+                try: 
+                    crl = load_crl_from_url(self.crl)
+                    serial = self.cert['serialNumber']
+                    if serial in crl.get_revoked():
+                        self.revoked = True
+                except CRLError:
                     self.revoked = True
-            except CRLError:
-                self.revoked = True
 
             super(SimpleXMLRPCRequestHandler, self).handle()
 

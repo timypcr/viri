@@ -39,7 +39,7 @@ DEFAULTS = {
     'security': {
         'known_ca': '/etc/viri/ca.cert',
         'certKey_file': '/etc/viri/virid.pem',
-        'crl_file_url': 'http://viri.atlasit.com/crl.pem'},
+        'crl_file_url': 'None'},
     'database': {
         'database_file': '/var/lib/viri/viri.db'},
     'logging': {
