@@ -36,13 +36,15 @@ DEFAULT_CONFIG_FILE = '/etc/viri/virid.conf'
 DEFAULTS = {
     'general': {
         'port': '6806'},
-    'paths': {
+    'security': {
         'known_ca': '/etc/viri/ca.cert',
         'certKey_file': '/etc/viri/virid.pem',
+        'crl_file_url': 'http://viri.atlasit.com/crl.pem'},
+    'database': {
         'database_file': '/var/lib/viri/viri.db'},
     'logging': {
         'log_file': '/var/log/virid.log',
-        'log_level': 'WARNING',
+        'log_level': 'INFO',
         'log_format': '%(levelname)s::%(asctime)s::%(message)s'},
 }
 
@@ -98,9 +100,10 @@ class ViriDaemon:
         config.read((self.config_file,))
 
         self.port = int(config.get('general', 'port'))
-        self.ca_file = config.get('paths', 'known_ca')
-        self.cert_key_file = config.get('paths', 'cert_key_file')
-        self.db_file = config.get('paths', 'database_file')
+        self.ca_file = config.get('security', 'known_ca')
+        self.cert_key_file = config.get('security', 'cert_key_file')
+        self.crl_file_url = config.get('security', 'crl_file_url')
+        self.db_file = config.get('database', 'database_file')
         self.logfile = config.get('logging', 'log_file')
         self.loglevel = config.get('logging', 'log_level')
         self.logformat = config.get('logging', 'log_format')
