@@ -17,7 +17,7 @@
 from libviri.virirpc import XMLRPCServer
 
 
-RPC_METHODS = ['execute', 'put', 'get', 'ls', 'mv', 'rm', 'exists']
+RPC_METHODS = ['execute', 'put', 'get', 'ls', 'mv', 'rm', 'exists', 'version']
 SUCCESS = True
 ERROR = False
 
@@ -104,10 +104,9 @@ class RPCServer:
         except File.Missing:
             return (ERROR, 'File not found')
         except:
-            res = traceback.format_exc()
-            return (ERROR, res)
+            return (ERROR, traceback.format_exc())
         else:
-            return (SUCCESS if success else ERROR, str(res))
+            return (SUCCESS if success else ERROR, res)
 
     @public
     def put(self, cert, file_name, file_content):
@@ -183,4 +182,11 @@ class RPCServer:
         from libviri.objects import File
 
         return (SUCCESS, File.exists(self.db, file_id))
+
+    @public
+    def version(self):
+        """Returns Viri version"""
+        import libviri
+
+        return (SUCCESS, libviri.__version__)
 
