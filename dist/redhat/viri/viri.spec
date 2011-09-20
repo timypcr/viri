@@ -1,5 +1,5 @@
 %define name viri
-%define version 0.1rc4
+%define version 0.1
 %define python3 /opt/python-viri/bin/python3
 %define python3_sitelib %(%{python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 
@@ -75,6 +75,8 @@ fi
 %config(noreplace) %{_sysconfdir}/viri/*
 
 %changelog
+* Tue Sep 20 2011 Jesús Corrius <jcorrius@gmail.com> 0.1
+- Bump version to 0.1
 * Thu Aug 11 2011 Jesús Corrius <jcorrius@gmail.com> 0.1rc3
 - Make viri upgradable
 - Byte compile using viri's internal python3
