@@ -153,7 +153,8 @@ class ViriDaemon:
             self.ca_file,
             self.cert_key_file,
             self.db,
-            self.context)
+            self.context,
+            self.crl_file_url)
         t = threading.Thread(target=self.rpc_server.start)
         t.daemon = True
         t.start()

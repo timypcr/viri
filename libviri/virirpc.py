@@ -33,6 +33,20 @@ else:
     class XMLRPCRequestHandler(SimpleXMLRPCRequestHandler):    
         def handle(self):
             self.cert = self.request.getpeercert()
+            self.crl = self.server.crl_file_url
+            self.revoked = False
+
+            # Check if the certificate has been revoked
+            # We handle the situation in the do_POST() method
+            # because we can't do it properly here.
+            try: 
+                crl = load_crl_from_url(self.crl)
+                serial = self.cert['serialNumber']
+                if serial in crl.get_revoked():
+                    self.revoked = True
+            except CRLError:
+                self.revoked = True
+
             super(SimpleXMLRPCRequestHandler, self).handle()
 
         def do_POST(self):
@@ -41,7 +55,12 @@ else:
             Attempts to interpret all HTTP POST requests as XML-RPC calls,
             which are forwarded to the server's _dispatch method for handling.
             """
-
+            
+            # Check if the certificate is revoked
+            if self.revoked == True:
+                self.send_response(401)
+                return
+                
             # Check that the path is legal
             if not self.is_rpc_path_valid():
                 self.report_404()
@@ -119,7 +138,8 @@ else:
         """
         def __init__(self, addr, ca_file, cert_key_file,
             requestHandler=XMLRPCRequestHandler, logRequests=True,
-            allow_none=False, encoding=None, bind_and_activate=True):
+            allow_none=False, encoding=None, bind_and_activate=True, 
+            crl_file_url=None):
             """Overriding __init__ method of the SimpleXMLRPCServer
 
             The method is a copy, except for the TCPServer __init__
@@ -129,6 +149,7 @@ else:
             import socketserver
 
             self.logRequests = logRequests
+            self.crl_file_url =  crl_file_url
             SimpleXMLRPCDispatcher.__init__(self, allow_none, encoding)
             socketserver.BaseServer.__init__(self, addr, requestHandler)
             self.socket = ssl.wrap_socket(
@@ -166,7 +187,7 @@ class HTTPConnectionTLS(http_client.HTTPSConnection):
             self.sock = sock
             self._tunnel()
         self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
-            cert_reqs=ssl.CERT_REQUIRED, ssl_version=PROTOCOL)
+            ssl_version=PROTOCOL)
 
 
 class TransportTLS(xmlrpc_client.Transport, object):
@@ -204,6 +225,45 @@ class TransportTLS(xmlrpc_client.Transport, object):
         self.verbose = verbose
         return self.parse_response(resp)
 
+
+class CRLError(ValueError):
+    pass
+
+
+class CRL:
+    """
+    X509 Certificate Revocation List
+    """
+    revoked = None
+    def __init__(self, crl=None):
+        if crl is not None:
+            self.revoked = self.parse_crl(crl)
+        else:
+            self.revoked = list()
+
+    def parse_crl(self, crl):
+        revoked = list()
+        for line in crl.split('\n'):
+            if 'Serial Number' in line:
+                number = line.split(':')[1].strip()
+                revoked.append(number)
+        return revoked
+
+    def get_revoked(self):
+        return self.revoked
+
+
+def load_crl_from_url(url):
+    """
+    Load CRL from url.
+    """
+    import urllib.request
+    try:
+        f = urllib.request.urlopen(url)
+        crl_data = f.readall().decode('utf-8')
+        return CRL(crl_data)
+    except Exception as exc:
+        raise CRLError('Could not get the CRL from the specified url') from exc
 
 class XMLRPCClient:
     def __init__(self, url, key_file, cert_file):

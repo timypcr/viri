@@ -48,7 +48,7 @@ def public(func):
 class RPCServer:
     """XML-RPC server, implementing the main functionality of the application.
     """
-    def __init__(self, port, ca_file, cert_key_file, db, context):
+    def __init__(self, port, ca_file, cert_key_file, db, context, crl_file_url):
         """Saves arguments as class attributes and prepares
         task and data directories
         
@@ -61,12 +61,14 @@ class RPCServer:
         context - functions and data that will be made available on viri
             scripts. This is custom settings, Script, DataFile objects and the
             viri db
+        crl_file_url - URL of a certificate revocation list (CRL)
         """
         self.port = port
         self.ca_file = ca_file
         self.cert_key_file = cert_key_file
         self.db = db
         self.context = context
+        self.crl_file_url = crl_file_url
 
     def start(self):
         """Starts the XML-RPC server, and registers all public methods."""
@@ -75,7 +77,8 @@ class RPCServer:
             ca_file=self.ca_file,
             cert_key_file=self.cert_key_file,
             logRequests=False,
-            allow_none=True)
+            allow_none=True,
+            crl_file_url=self.crl_file_url)
         for method in RPC_METHODS:
             self.server.register_function(getattr(self, method), method)
         self.server.serve_forever()
