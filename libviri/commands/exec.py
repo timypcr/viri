@@ -44,7 +44,7 @@ class Local:
         else:
             return (1, None, result)
 
-class ViriScript:
+class Remote:
     def run(self, program, is_command, *args):
         import os
         import shutil
@@ -71,4 +71,6 @@ class ViriScript:
         return [retval,
             proc.stdout.read().decode('utf-8'),
             proc.stderr.read().decode('utf-8')]
+
+ViriScript = Remote
 
