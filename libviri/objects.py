@@ -16,7 +16,7 @@
 
 from libviri import viriorm
 
-EXECUTION_LOG_MSG = 'Script {} with id {} executed with result: {}'
+EXECUTION_LOG_MSG = 'Script {} with id {} executed by {} with result: {}'
 
 class File(viriorm.Model):
     """This model represents a file, which can be a Python script, or also a
@@ -106,7 +106,7 @@ class File(viriorm.Model):
             return (False, get_internal_traceback(path))
 
     @classmethod
-    def execute(cls, db, file_name_or_id, args, context):
+    def execute(cls, db, file_name_or_id, args, context, cert):
         """Executes a Python script saved as a File, saving it to a temporary
         directory to import it. Exceptions are captured and returned as
         strings. All executions are recorded in the log."""
@@ -127,13 +127,17 @@ class File(viriorm.Model):
         except Exception as exc:
             success = False
             result = str(exc)
+        
+        for list in cert['subject']:
+            if list[0][0] == "commonName":
+                name = list[0][1]
 
         if success:
             logging.info(EXECUTION_LOG_MSG.format(
-                script['file_name'], script['file_id'], 'SUCCESS'))
+                script['file_name'], script['file_id'], name, 'SUCCESS'))
         else:
             logging.warn(EXECUTION_LOG_MSG.format(
-                script['file_name'], script['file_id'], 'ERROR') +
+                script['file_name'], script['file_id'], name, 'ERROR') +
                 '\n{}'.format(result))
 
         shutil.rmtree(temp_dir)

@@ -2,7 +2,7 @@
 %define version 3.2.1
 %define binsuffix 3.2
 %define libvers 3.2
-%define release viri 
+%define release 1
 %define __prefix /opt/python-viri
 %define libdirname lib
 
@@ -16,10 +16,10 @@ Release: %{release}
 License: PSF
 Group: Development/Languages
 Source: http://www.python.org/ftp/python/%{version}/Python-%{version}.tar.bz2
+Patch0: python-3.2.1-disable-tkinter.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Packager: Jesús Corrius <jcorrius@gmail.com>
-#BuildRequires:  db-devel fdupes gdbm-devel gmp-devel libbz2-devel libopenssl-devel ncurses-devel readline-devel sqlite-devel tk-devel xorg-x11-devel
-BuildRequires: expat-devel, db4-devel, gdbm-devel, sqlite-devel, ncurses-devel, readline-devel, zlib-devel, gmp-devel, openssl-devel, tk-devel
+BuildRequires: expat-devel, db4-devel, gdbm-devel, sqlite-devel, ncurses-devel, readline-devel, zlib-devel, gmp-devel, openssl-devel
 
 %description
 Python is an interpreted, interactive, object-oriented programming
@@ -33,6 +33,12 @@ brands of UNIX, on PCs under Windows, MS-DOS, and OS/2, and on the
 Mac.
 
 %changelog
+* Wed Aug 31 2011 Jesús Corrius <jcorrius@gmail.com> [3.2.1-1]
+- Use normal release numbers
+- Remove dependency on tkinter
+- Don't delete /opt/python-viri when updating the package
+- Condrestart virid after updating python-viri
+- Disable bytecompiling of python-viri (provisional)
 * Thu Aug 4 2011 Marc Garcia <garcia.marc@gmail.com> [3.2.1-viri]
 - Updated for Python3.2.1, package renamed to python-viri
 * Sun Jun 12 2011 Marc Garcia <garcia.marc@gmail.com> [3.1.3-viri]
@@ -40,6 +46,7 @@ Mac.
 
 %prep
 %setup -n Python-%{version}
+%patch0 -p1
 
 %build
 ./configure --enable-ipv6 --with-pymalloc --prefix=%{__prefix}
@@ -85,7 +92,13 @@ $FIXFILE
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %postun
-[ -n /opt/python-viri ] && rm -rf /opt/python-viri
+if [ "$1" = "1" ]; then
+  # If the first argument to %postun is 1, the action is an upgrade.
+  /sbin/service virid condrestart >/dev/null 2>&1
+elif [ "$1" = "0" ]; then 
+  # If the first argument to %postun is 0, the action is uninstallation.
+  [ -n /opt/python-viri ] && rm -rf /opt/python-viri
+fi
 
 %files
 %defattr(-,root,root)

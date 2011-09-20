@@ -30,14 +30,116 @@ else:
     from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCDispatcher, \
         SimpleXMLRPCRequestHandler
 
+    class XMLRPCRequestHandler(SimpleXMLRPCRequestHandler):    
+        def handle(self):
+            self.cert = self.request.getpeercert()
+            self.crl = self.server.crl_file_url
+            self.revoked = False
+
+            # Check if the certificate has been revoked
+            # We handle the situation in the do_POST() method
+            # because we can't do it properly here.
+            try: 
+                crl = load_crl_from_url(self.crl)
+                serial = self.cert['serialNumber']
+                if serial in crl.get_revoked():
+                    self.revoked = True
+            except CRLError:
+                self.revoked = True
+
+            super(SimpleXMLRPCRequestHandler, self).handle()
+
+        def do_POST(self):
+            """Handles the HTTP POST request.
+
+            Attempts to interpret all HTTP POST requests as XML-RPC calls,
+            which are forwarded to the server's _dispatch method for handling.
+            """
+            
+            # Check if the certificate is revoked
+            if self.revoked == True:
+                self.send_response(401)
+                return
+                
+            # Check that the path is legal
+            if not self.is_rpc_path_valid():
+                self.report_404()
+                return
+    
+            try:
+                # Get arguments by reading body of request.
+                # We read this in chunks to avoid straining
+                # socket.read(); around the 10 or 15Mb mark, some platforms
+                # begin to have problems (bug #792570).
+                max_chunk_size = 10*1024*1024
+                size_remaining = int(self.headers["content-length"])
+                L = []
+                while size_remaining:
+                    chunk_size = min(size_remaining, max_chunk_size)
+                    L.append(self.rfile.read(chunk_size))
+                    size_remaining -= len(L[-1])
+                data = b''.join(L)
+    
+                data = self.decode_request_content(data)
+                if data is None:
+                    return #response has been sent
+
+                # Add the certificate information into the XMLRPCRequest
+                # as a parameter of the function. Blame Jesus.
+                xml = xmlrpc_client.loads(data)
+                function_name = xml[1]
+                arguments = list(xml[0])
+                arguments.append(self.cert)
+                arguments = tuple(arguments)
+                data = xmlrpc_client.dumps(arguments, function_name)
+    
+                # In previous versions of SimpleXMLRPCServer, _dispatch
+                # could be overridden in this class, instead of in
+                # SimpleXMLRPCDispatcher. To maintain backwards compatibility,
+                # check to see if a subclass implements _dispatch and dispatch
+                # using that method if present.
+                response = self.server._marshaled_dispatch(
+                        data, getattr(self, '_dispatch', None), self.path
+                    )
+            except Exception as e: # This should only happen if the module is buggy
+                # internal error, report as HTTP server error
+                self.send_response(500)
+    
+                # Send information about the exception if requested
+                if hasattr(self.server, '_send_traceback_header') and \
+                        self.server._send_traceback_header:
+                    self.send_header("X-exception", str(e))
+                    trace = traceback.format_exc()
+                    trace = str(trace.encode('ASCII', 'backslashreplace'), 'ASCII')
+                    self.send_header("X-traceback", trace)
+    
+                self.send_header("Content-length", "0")
+                self.end_headers()
+            else:
+                self.send_response(200)
+                self.send_header("Content-type", "text/xml")
+                if self.encode_threshold is not None:
+                    if len(response) > self.encode_threshold:
+                        q = self.accept_encodings().get("gzip", 0)
+                        if q:
+                            try:
+                                response = gzip_encode(response)
+                                self.send_header("Content-Encoding", "gzip")
+                            except NotImplementedError:
+                                pass
+                self.send_header("Content-length", str(len(response)))
+                self.end_headers()
+                self.wfile.write(response)
+        
     class XMLRPCServer(SimpleXMLRPCServer):
         """Overriding standard xmlrpc.server.SimpleXMLRPCServer to run over TLS.
         Changes inspired by
         http://www.cs.technion.ac.il/~danken/SecureXMLRPCServer.py
         """
         def __init__(self, addr, ca_file, cert_key_file,
-            requestHandler=SimpleXMLRPCRequestHandler, logRequests=True,
-            allow_none=False, encoding=None, bind_and_activate=True):
+            requestHandler=XMLRPCRequestHandler, logRequests=True,
+            allow_none=False, encoding=None, bind_and_activate=True, 
+            crl_file_url=None):
             """Overriding __init__ method of the SimpleXMLRPCServer
 
             The method is a copy, except for the TCPServer __init__
@@ -47,6 +149,7 @@ else:
             import socketserver
 
             self.logRequests = logRequests
+            self.crl_file_url =  crl_file_url
             SimpleXMLRPCDispatcher.__init__(self, allow_none, encoding)
             socketserver.BaseServer.__init__(self, addr, requestHandler)
             self.socket = ssl.wrap_socket(
@@ -122,6 +225,45 @@ class TransportTLS(xmlrpc_client.Transport, object):
         self.verbose = verbose
         return self.parse_response(resp)
 
+
+class CRLError(ValueError):
+    pass
+
+
+class CRL:
+    """
+    X509 Certificate Revocation List
+    """
+    revoked = None
+    def __init__(self, crl=None):
+        if crl is not None:
+            self.revoked = self.parse_crl(crl)
+        else:
+            self.revoked = list()
+
+    def parse_crl(self, crl):
+        revoked = list()
+        for line in crl.split('\n'):
+            if 'Serial Number' in line:
+                number = line.split(':')[1].strip()
+                revoked.append(number)
+        return revoked
+
+    def get_revoked(self):
+        return self.revoked
+
+
+def load_crl_from_url(url):
+    """
+    Load CRL from url.
+    """
+    import urllib.request
+    try:
+        f = urllib.request.urlopen(url)
+        crl_data = f.readall().decode('utf-8')
+        return CRL(crl_data)
+    except Exception as exc:
+        raise CRLError('Could not get the CRL from the specified url') from exc
 
 class XMLRPCClient:
     def __init__(self, url, key_file, cert_file):
