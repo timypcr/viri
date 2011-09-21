@@ -108,8 +108,12 @@ def GenerateCertificate():
                 output, output))
 
 def FixWindowsPaths(config):
-    for item in config.items('paths'):
-        config.set('paths', item[0], os.path.basename(item[1]))
+    for item in config.items('security'):
+        if item[0] is 'crl_file_url': continue
+        config.set('security', item[0], os.path.basename(item[1]))
+
+    for item in config.items('database'):
+        config.set('database', item[0], os.path.basename(item[1]))
     
     value = os.path.basename(config.get('logging', 'log_file'))
     config.set('logging', 'log_file', value)
