@@ -18,15 +18,19 @@
 class Local:
     def add_arguments(self, parser):
         parser.description = 'gets and returns the content of a remote file'
-        parser.add_argument('file path', help='path of the file to return')
+        parser.add_argument('path', help='path of the file to return')
 
-    def run(self):
+    def run(self, path):
         script_id = self.send_file(__file__)
 
-        return self.connection.execute({
+        success, result = self.connection.execute({
             'file_name_or_id': script_id,
-            'args': (self.args.filename,)})
+            'args': (path,)})
 
+        if success:
+            return result
+        else:
+            return (1, None, result)
 
 class Remote:
     def run(self, path):
@@ -34,10 +38,9 @@ class Remote:
 
         if os.path.isfile(path):
             with open(path, 'r') as f:
-                return f.read()
+                return [True, f.read(), None]
         else:
-            return 'File not found'
-
+            return [False, None, 'File not found']
 
 ViriScript = Remote # for compatibility with old versions
 

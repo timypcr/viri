@@ -28,10 +28,13 @@ class Local:
         script_id = self.send_file(__file__)
         file_id = self.send_file(local_path)
 
-        return self.connection.execute({
+        success, result = self.connection.execute({
             'file_name_or_id': script_id,
             'args': (file_id, remote_path, force)})
-
+        if success:
+            return result
+        else:
+            return (1, None, result)
 
 class Remote:
     def save_file(self, file_id, path, force):
@@ -62,11 +65,11 @@ class Remote:
             filename = os.path.join(
                 path,
                 self.File.get_obj(self.db, file_id)['file_name'])
-            res = self.save_file(file_id, filename, force)
+            res = [True, self.save_file(file_id, filename, force), None]
         elif os.path.isdir(os.path.dirname(path)):
-            res = self.save_file(file_id, path, force)
+            res = [True, self.save_file(file_id, path, force), None]
         else:
-            res = 'Directory does not exist'
+            res = [False, None, 'Directory does not exist']
 
         return res
 
