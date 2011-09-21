@@ -1,6 +1,7 @@
 SBINDIR = $(DESTDIR)/usr/sbin
 BINDIR = $(DESTDIR)/usr/bin
 LIBDIR = $(DESTDIR)/opt/python-viri/lib/python3.2/site-packages/libviri
+COMDIR = $(LIBDIR)/commands
 ETCDIR = $(DESTDIR)/etc/viri
 INITDIR = $(DESTDIR)/etc/init.d
 VARDIR = $(DESTDIR)/var/lib/viri
@@ -15,6 +16,7 @@ install:
 	mkdir -p $(SBINDIR) ; cp bin/virid $(SBINDIR)/ ; cp bin/virid-conf $(SBINDIR)/
 	mkdir -p $(BINDIR) ; cp bin/viric $(BINDIR)/
 	mkdir -p $(LIBDIR) ; cp libviri/*.py $(LIBDIR)/
+	mkdir -p $(COMDIR) ; cp libviri/commands/*.py $(COMDIR)/
 	mkdir -p $(ETCDIR) ; cp conf/virid.conf $(ETCDIR)/
 	mkdir -p $(VARDIR)
 ifneq ($(os), '')
