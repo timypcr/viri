@@ -71,11 +71,17 @@ fi
 %{python3_sitelib}/libviri/virirpc.py
 %{python3_sitelib}/libviri/viriorm.py
 %{python3_sitelib}/libviri/viric.py
+%dir %{python3_sitelib}/libviri/commands
+%{python3_sitelib}/libviri/commands/__init__.py
+%{python3_sitelib}/libviri/commands/get.py
+%{python3_sitelib}/libviri/commands/put.py
+%{python3_sitelib}/libviri/commands/exec.py
 %attr(755, root, root) %{_sysconfdir}/init.d/virid
 %config(noreplace) %{_sysconfdir}/viri/*
 
 %changelog
-* Tue Sep 20 2011 Jesús Corrius <jcorrius@gmail.com> 0.1
+* Tue Sep 21 2011 Jesús Corrius <jcorrius@gmail.com> 0.1
+- Add new commands directory and files to the spec
 - Bump version to 0.1
 * Thu Aug 11 2011 Jesús Corrius <jcorrius@gmail.com> 0.1rc3
 - Make viri upgradable
