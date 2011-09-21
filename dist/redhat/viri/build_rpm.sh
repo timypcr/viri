@@ -39,8 +39,7 @@ function generate_and_copy_files {
 }
 
 function create_rpm {
-	QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -ba --sign $PACKAGE_NAME.spec
-	QA_RPATHS=$[ 0x0001|0x0010 ] setarch i386 rpmbuild -ba --target i386 --sign $PACKAGE_NAME.spec
+	QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild -bb --sign $PACKAGE_NAME.spec
 }
 
 create_local_rpm_tree_if_necessary
