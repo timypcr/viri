@@ -76,6 +76,7 @@ fi
 %{python3_sitelib}/libviri/commands/get.py
 %{python3_sitelib}/libviri/commands/put.py
 %{python3_sitelib}/libviri/commands/exec.py
+%{python3_sitelib}/libviri/commands/version.py
 %attr(755, root, root) %{_sysconfdir}/init.d/virid
 %config(noreplace) %{_sysconfdir}/viri/*
 
