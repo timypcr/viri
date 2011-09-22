@@ -4,10 +4,10 @@ set -e
 
 case "$1" in
     purge|remove|failed-upgrade|abort-install|abort-upgrade|disappear)
-        [ -n /opt/python-viri/lib/python3.2/site-packages/libviri ] && rm -rf /opt/python-viri/lib/python3.2/site-packages/libviri
+        [ -n /opt/python-viri ] && rm -rf /opt/python-viri
         ;;
     upgrade)
-        update-rc.d -f virid defaults
+        invoke-rc.d virid stop || true
         invoke-rc.d virid start || true
         ;;
     *)
