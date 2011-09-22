@@ -95,8 +95,9 @@ class ViriDaemon:
         if not os.path.isfile(self.config_file):
             raise ValueError('Configuration file not found: {}'.format(
                 self.config_file))
-        
-        config = RawConfigParser(DEFAULTS)
+             
+        #config = RawConfigParser(DEFAULTS)
+        config = RawConfigParser()
         config.read((self.config_file,))
 
         self.port = int(config.get('general', 'port'))
