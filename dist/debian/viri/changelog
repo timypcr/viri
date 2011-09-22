@@ -1,3 +1,9 @@
+viri (0.1-2) stable; urgency=low
+
+  * Fixes in postrm and addition of a prerm script
+
+ -- Jesús Corrius <jcorrius@gmail.com>  Thu, 22 Sep 2011 17:02:59 +0200
+
 viri (0.1-1) stable; urgency=low
 
   * Adding postinst and postrm scripts
