@@ -1,6 +1,7 @@
-python-viri (3.2.1-1) stable; urgency=low
+python-viri (3.2.2) stable; urgency=low
 
-  * Add postrm script
+    * Update Python to version 3.2.2  
+    * Add postrm script
 
  -- Jesús Corrius <jcorrius@gmail.com>  Thu, 22 Sep 2011 17:40:05 +0200
 

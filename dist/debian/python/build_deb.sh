@@ -7,7 +7,7 @@ then
 fi
 
 BUILD_DIR=`dirname $0`/build
-PY_VER="3.2.1"
+PY_VER="3.2.2"
 PY_DIR="Python-$PY_VER"
 PY_SRC="$PY_DIR.tar.bz2"
 
