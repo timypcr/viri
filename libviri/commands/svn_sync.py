@@ -36,9 +36,9 @@ class Local:
         
         if username and password:
             if sversion:
-                os.system('svn export --username {0} --password {1} -r {2} {3} {4}'.format(username, password, sversion, svn_server_path, tmp_file_name))
+                os.system('svn export --no-auth-cache --username {0} --password {1} -r {2} {3} {4}'.format(username, password, sversion, svn_server_path, tmp_file_name))
             else:
-                os.system('svn export --username {0} --password {1} {2} {3}'.format(username, password, svn_server_path, tmp_file_name))
+                os.system('svn export --no-auth-cache --username {0} --password {1} {2} {3}'.format(username, password, svn_server_path, tmp_file_name))
         else:
             if sversion:
                 os.system('svn export -r {0} {1} {2}'.format(sversion, svn_server_path, tmp_file_name))
