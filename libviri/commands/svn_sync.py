@@ -27,8 +27,12 @@ class Local:
             help='password to access svn repository')
         parser.add_argument('-sv', '--sversion', type=int, dest='sversion',
             help='Subversion version of the file in the repository')
+        parser.add_argument('-m', '--chmod', dest='chmod', default='',
+            help='chmod mode of the remote file')
+        parser.add_argument('-o', '--chown', dest='chown', default='',
+            help='username and groupname of the remote file, separated by a colon')
             
-    def run(self, svn_server_path, remote_path, username, password, sversion):                    
+    def run(self, svn_server_path, remote_path, username, password, sversion, chmod, chown):            
         import os, tempfile
      
         file_name = os.path.basename(svn_server_path)
@@ -53,7 +57,7 @@ class Local:
 
         success, result = self.connection.execute({
             'file_name_or_id': script_id,
-            'args': (file_id, remote_path)})
+            'args': (file_id, remote_path, chmod, chown)})
         
         if success:
             return result
@@ -68,16 +72,24 @@ class Remote:
         file_name = os.path.basename(name)
         return directory + '/' + '.' + file_name + '.sha1'
         
-    def save_file(self, file_id, path):
+    def save_file(self, file_id, path, chmod, chown):
         import os
         
         self.File.save_content(self.db, file_id, path)
+        
         sha1_filename = self.get_sha1sum_filename(path)
         with open(sha1_filename, mode='w', encoding='utf-8') as f:
-            f.write(file_id)    
+            f.write(file_id)
+            
+        if chmod:
+           os.system('chmod {0} {1}'.format(chmod, path))
+           
+        if chown:
+           os.system('chown {0} {1}'.format(chown, path))
+        
         return 'Remote file saved.\n'
 
-    def run(self, file_id, path):
+    def run(self, file_id, path, chmod, chown):
         import os
 
         if os.path.isdir(path):
@@ -98,7 +110,7 @@ class Remote:
                 if sha1file != sha1sum:
                     return [False, None, 'I refuse to update. Remote file has been modified.\n']
                 
-            res = [True, self.save_file(file_id, filename), None]
+            res = [True, self.save_file(file_id, filename, chmod, chown), None]
         else:
             res = [False, None, 'Destination directory does not exist.\n']
 
