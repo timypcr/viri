@@ -1,7 +1,0 @@
-=========
-rpcserver
-=========
-
-.. automodule:: rpcserver
-   :members:
-

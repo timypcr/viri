@@ -1,7 +1,0 @@
-=====
-virid
-=====
-
-.. automodule:: virid
-   :members:
-
