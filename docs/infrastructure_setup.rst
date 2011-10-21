@@ -1,12 +1,14 @@
-**User documentation**
+.. container:: doc-toc
 
-* :doc:`Overview <index>`
-* :doc:`Viri commands reference <command_ref>`
-* :doc:`Writing custom commands <custom_commands>`
+   **User documentation**
 
-**Administrator documentation**
+   * :doc:`Overview <index>`
+   * :doc:`Viri commands reference <command_ref>`
+   * :doc:`Writing custom commands <custom_commands>`
 
-* `Setting up a Viri infrastructure`_
+   **Administrator documentation**
+
+   * `Setting up a Viri infrastructure`_
 
 --------------------------------------------------------------------------------
 
