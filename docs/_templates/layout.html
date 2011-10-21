@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html> 
+    <head> 
+        <title>Viri &raquo; Documentation</title> 
+        <link rel="stylesheet" type="text/css" href="http://www.viriproject.com/static/css/styles.css"/> 
+        <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
+    </head> 
+    <body> 
+        <div id="container"> 
+            <div id="header"> 
+                <ul id="navbar"> 
+                    <li><a href="http://www.viriproject.com">Home</a></li> 
+                    <li><a href="http://www.viriproject.com/installation/">Installation</a></li> 
+                    <li><a href="http://docs.viriproject.com" class="selected">Documentation</a></li> 
+                    <li><a href="http://www.viriproject.com/community/">Community</a></li> 
+                    <li><a href="http://www.viriproject.com/blog/">Blog</a></li> 
+                </ul> 
+            </div>
+            <div id="content"> 
+                {% block body %}{% endblock %}
+                <div class="clear"></div> 
+            </div> 
+            <div id="footer"> 
+                <div id="support">
+                    <p>With the support of:</p>
+                    <a href="http://www.eu.ntt.com/en/index.html">
+                        <img src="http://www.viriproject.com/static/img/nttlogo.png" alt="ntt communications"/>
+                    </a> 
+                    <a href="http://code.google.com/appengine/">
+                        <img src="http://code.google.com/appengine/images/appengine-silver-120x30.gif" alt="Powered by Google App Engine"/>
+                    </a>
+                </div> 
+            </div> 
+        </div> 
+    </body> 
+</html> 
+
