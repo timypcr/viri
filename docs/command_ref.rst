@@ -22,6 +22,7 @@ Returns the version of the Viri daemon running on the remote host.
 **Usage:**
 
 .. code-block:: none
+
    viric version
 
 exec
@@ -32,6 +33,7 @@ Executes a command or a program in the remote host.
 **Usage:**
 
 .. code-block:: none
+
    viric exec program [argument_list] [-s]
 
 **Arguments:**
@@ -58,6 +60,7 @@ it.
 **Examples:**
 
 .. code-block:: none
+
    viric exec tail "-n20 /var/log/syslog"
 
    viric exec myscript.py -s
@@ -70,6 +73,7 @@ Downloads a file from the remote host.
 **Usage:**
 
 .. code-block:: none
+
    viric get remote_file
 
 **Arguments:**
@@ -86,6 +90,7 @@ Uploads a file to the remote host.
 **Usage:**
 
 .. code-block:: none
+
    viric put local_file remote_path [-f]
 
 **Arguments:**
