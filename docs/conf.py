@@ -13,7 +13,8 @@ copyright = u'2011, Marc Garcia'
 version = '0.1'
 release = '0.1'
 
-html_theme = 'default'
+html_theme_path = ['_themes']
+html_theme = 'viriproject'
 html_static_path = []
 
 latex_documents = []
