@@ -1,4 +1,4 @@
-.. container:: doc-toc
+.. container:: doc-toc main-doc-toc
 
    User documentation
 
@@ -13,6 +13,10 @@
 ================================
 Setting up a Viri infrastructure
 ================================
+
+.. contents::
+   :local:
+   :class: doc-toc
 
 Under construction
 

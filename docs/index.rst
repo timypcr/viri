@@ -1,4 +1,4 @@
-.. container:: doc-toc
+.. container:: doc-toc main-doc-toc
 
    User documentation
 
@@ -13,6 +13,10 @@
 ========
 Overview
 ========
+
+.. contents::
+   :local:
+   :class: doc-toc
 
 What is Viri?
 =============
