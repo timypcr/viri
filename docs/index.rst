@@ -30,7 +30,7 @@ Basic examples
 
 To start understanding Viri, let us start with some examples.
 
-.. code-block:: bash
+.. code-block:: none
 
    viric exec which sendmail --hosts=209.85.169.121
    /usr/sbin/sendmail
@@ -40,7 +40,7 @@ if installed in the specified host.
 
 In this case, we could also write:
 
-.. code-block:: bash
+.. code-block:: none
 
    viric exec which sendmail --hosts=209.85.169.122 || echo "Not installed"
    Not installed
@@ -57,7 +57,7 @@ Working with multiple hosts
 
 Now, let us see how to deal with more than one host.
 
-.. code-block:: bash
+.. code-block:: none
 
    viric exec hostname --hosts=209.85.169.106,72.30.2.43,65.55.175.254
    209.85.169.106 (SUCCESS) >>>
@@ -93,7 +93,7 @@ next content:
 
 Then, you can just execute:
 
-.. code-block:: bash
+.. code-block:: none
 
    viric exec runlevel --hosts=production
    209.85.169.121 (SUCCESS) >>>
@@ -117,7 +117,7 @@ Previous examples are based on UNIX systems. But Viri works on Windows systems t
 
 See this example:
 
-.. code-block:: bash
+.. code-block:: none
 
    viric exec ver --hosts=209.85.169.128
    Microsoft Windows [Versoin 5.2.3790]
