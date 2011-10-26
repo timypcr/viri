@@ -1,22 +1,10 @@
-.. container:: doc-toc main-doc-toc
-
-   User documentation
-
-   * :doc:`Overview <index>`
-   * `Viri commands reference`_
-   * :doc:`Writing custom commands <custom_commands>`
-
-   Administrator documentation
-
-   * :doc:`Setting up a Viri infrastructure <infrastructure_setup>`
-
 =======================
 Viri commands reference
 =======================
 
 .. contents::
    :local:
-   :class: doc-toc
+   :class: toctree-wrapper
 
 version
 -------
