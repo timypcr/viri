@@ -27,16 +27,16 @@ datafiles = (
         ('/etc/viri', ('conf/virid.conf',)),
     ) if not is_windows else (
         ('.', (
-		'bin/viris.py', 'bin/virid-conf','bin/viric', 
-		'bin/viris.bat', 'bin/virid-conf.bat','bin/viric.bat',
-		'conf/virid.conf',
-		'dist/windows/post_install.bat',
-		'dist/windows/pre_uninstall.bat',
-		'dist/windows/openssl/openssl.exe',
-		'dist/windows/openssl/openssl.cfg',
-		'dist/windows/openssl/libeay32.dll',
-		'dist/windows/openssl/ssleay32.dll',
-		)),
+        'bin/viris.py', 'bin/virid-conf','bin/viric', 
+        'bin/viris.bat', 'bin/virid-conf.bat','bin/viric.bat',
+        'conf/virid.conf',
+        'dist/windows/post_install.bat',
+        'dist/windows/pre_uninstall.bat',
+        'dist/windows/openssl/openssl.exe',
+        'dist/windows/openssl/openssl.cfg',
+        'dist/windows/openssl/libeay32.dll',
+        'dist/windows/openssl/ssleay32.dll',
+        )),
     )
 
 kwargs = dict(name='viri',
