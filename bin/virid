@@ -80,6 +80,9 @@ class ViriDaemon:
         maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
         maxfd = 1024 if maxfd == resource.RLIM_INFINITY else maxfd
         for fd in range(0, maxfd):
+            # syslog uses fd 3, we shouldn't close it on systems where the
+            # service is running. The child process will inherit it.
+            if fd == 3: continue
             try:
                 os.close(fd)
             except OSError:
