@@ -8,7 +8,7 @@
 
 Name: %{name}
 Version: %{version}
-Release: 1
+Release: 2
 Summary: Remote execution of Python scripts
 Group: System Environment/Daemons
 License: GPLv3
