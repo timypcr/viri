@@ -8,7 +8,7 @@
 
 Name: %{name}
 Version: %{version}
-Release: 2
+Release: 3
 Summary: Remote execution of Python scripts
 Group: System Environment/Daemons
 License: GPLv3
@@ -81,6 +81,9 @@ fi
 %config(noreplace) %{_sysconfdir}/viri/*
 
 %changelog
+* Tue Dec 06 2011 Jesús Corrius <jcorrius@gmail.com> 0.1-3
+- Make virid init script stop in old versions of RHEL
+- Bump version to 0.1-3
 * Tue Sep 21 2011 Jesús Corrius <jcorrius@gmail.com> 0.1
 - Add new commands directory and files to the spec
 - Bump version to 0.1
