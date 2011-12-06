@@ -56,7 +56,9 @@ stop() {
         echo
         return 1;
     fi
-    killproc -p $PIDFILE $PROG
+    # Redhat 4 to 5.3 doesn't support the syntax: killproc -p $PIDFILE $PROG
+    # using the old syntax that works in any redhat version
+    killproc $PROG
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && rm -f $LOCKFILE;
@@ -64,7 +66,7 @@ stop() {
 }   
 
 rhstatus() {
-    status virid
+    status $PROG
 }   
 
 restart() {
@@ -81,7 +83,7 @@ condrestart() {
 
 reload() {
     echo -n $"Reloading viri daemon configuration: "
-    killproc virid -HUP
+    killproc $PROG -HUP
     RETVAL=$?
     echo
     return $RETVAL
