@@ -45,7 +45,7 @@ kwargs = dict(name='viri',
     author='Marc Garcia',
     author_email='garcia.marc@gmail.com',
     url='http://www.viriproject.com',
-    packages=('libviri',),
+    packages=('libviri', 'libviri/commands'),
     data_files=datafiles,
     classifiers=(
         'Development Status :: 4 - Beta',
