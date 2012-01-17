@@ -183,6 +183,7 @@ class HTTPConnectionTLS(http_client.HTTPSConnection):
     protocol we want to use (we'll use TLS instead SSL)
     """
     def connect(self):
+        self.timeout = 60 # Don't block if the server doesn't respond
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
             self.sock = sock
