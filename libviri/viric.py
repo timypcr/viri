@@ -32,14 +32,15 @@ class BaseCommand(object):
 
     def run(self):
         pass
-
-    def connect_and_run(self, host, run, hosts, keyfile, certfile, **args):
+        
+    def connect_and_run(self, host, run, hosts, keyfile, certfile, timeout, **args):        
         self.connection = XMLRPCClient(
             'https://{0}/'.format(
                 host if ':' in host else ':'.join(
                     [host, str(DEFAULT_PORT)])),
             keyfile,
-            certfile)
+            certfile,
+            timeout)
         result = self.run(**args)
 
         check_std = lambda x: isinstance(x, str) or x == None

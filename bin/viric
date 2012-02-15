@@ -37,6 +37,9 @@ class Viric:
         parser.add_argument('-c', '--certfile', dest='certfile',
             default=os.path.expanduser('~/.viri/viric.pem'),
             help='path to TLS certificate')
+        parser.add_argument('-t', '--timeout', dest='timeout',
+            default=300,
+            help='time to wait for the handshake operation (in seconds)')
         parser.add_argument('-v', '--version', action='version',
             version='viric ' + __version__)
 
@@ -66,7 +69,7 @@ class Viric:
             hosts = hosts_arg.split(',')
 
         return hosts
-
+        
     def run(self):
         args = self.parse_args()
         retvals = set()

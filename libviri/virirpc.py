@@ -19,6 +19,7 @@ import ssl
 import socket
 
 PROTOCOL = ssl.PROTOCOL_TLSv1
+time_out = None
 
 # This file works in both Python 2 (>= 2.6) and Python 3
 if sys.version_info[0] == 2:
@@ -183,7 +184,8 @@ class HTTPConnectionTLS(http_client.HTTPSConnection):
     protocol we want to use (we'll use TLS instead SSL)
     """
     def connect(self):
-        self.timeout = 120 # Don't block if the server doesn't respond
+        global time_out
+        self.timeout = float(time_out)
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
             self.sock = sock
@@ -268,7 +270,9 @@ def load_crl_from_url(url):
         raise CRLError('Could not get the CRL from the specified url') from exc
 
 class XMLRPCClient:
-    def __init__(self, url, key_file, cert_file):
+    def __init__(self, url, key_file, cert_file, timeout):
+        global time_out
+        time_out = timeout
         self.server = xmlrpc_client.ServerProxy(
             url,
             transport=TransportTLS(
